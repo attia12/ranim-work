@@ -14,7 +14,18 @@
       "Bash(pip install:*)",
       "Bash(node:*)",
       "Bash(curl:*)",
-      "Bash(/dev/null:*)"
+      "Bash(/dev/null:*)",
+      "Bash(node -e \"require\\(''karma-junit-reporter''\\)\")",
+      "Bash(npx ng:*)",
+      "Bash(xargs grep:*)",
+      "Bash(python3:*)",
+      "Bash(./mvnw test:*)",
+      "Bash(./mvnw -pl . test -Dtest=\"CampsiteControllerTest#create_camperRole_returns403\" -Dspring.security.debug=true)",
+      "Bash(./mvnw -pl . test -Dtest=\"CampsiteControllerTest#create_camperRole_returns403\")",
+      "Bash(./mvnw -pl . test -Dtest=\"CampsiteControllerTest#create_camperRole_returns403\" -Dlogging.level.org.springframework.security=TRACE)",
+      "Bash(./mvnw -pl . test -Dtest=\"CampsiteControllerTest#create_camperRole_returns403\" -Dlogging.level.root=DEBUG)",
+      "Bash(find /c/Users/ops/Documents/ranim/front/src/app -type d \\\\\\(-name campsites -o -name campsite* -o -name outdoor* -o -name my-bookings \\\\\\))",
+      "Bash(find /c/Users/ops/Documents/ranim/front/src/app/services -type f -name *campsite* -o -name *outdoor* -o -name *booking*)"
     ]
   }
 }

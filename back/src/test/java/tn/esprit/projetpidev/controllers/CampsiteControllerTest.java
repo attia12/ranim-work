@@ -4,7 +4,11 @@ package tn.esprit.projetpidev.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import tn.esprit.projetpidev.jwt.PasswordConfig;
+import tn.esprit.projetpidev.jwt.SecurityConfig;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +19,10 @@ import tn.esprit.projetpidev.domain.enums.CampsiteStatus;
 import tn.esprit.projetpidev.domain.enums.CampsiteType;
 import tn.esprit.projetpidev.dto.campsite.CampsiteRequest;
 import tn.esprit.projetpidev.dto.campsite.CampsiteResponse;
+import tn.esprit.projetpidev.domain.User;
+import tn.esprit.projetpidev.domain.enums.Role;
+import tn.esprit.projetpidev.jwt.CustomUserDetailsService;
+import tn.esprit.projetpidev.jwt.JwtService;
 import tn.esprit.projetpidev.services.ICampsiteService;
 
 import java.math.BigDecimal;
@@ -24,10 +32,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(CampsiteController.class)
+@WebMvcTest(value = CampsiteController.class, excludeAutoConfiguration = UserDetailsServiceAutoConfiguration.class)
+@Import({SecurityConfig.class, PasswordConfig.class})
 class CampsiteControllerTest {
 
     @Autowired
@@ -35,6 +45,12 @@ class CampsiteControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockBean
+    private JwtService jwtService;
+
+    @MockBean
+    private CustomUserDetailsService customUserDetailsService;
 
     @MockBean
     private ICampsiteService campsiteService;
@@ -61,13 +77,13 @@ class CampsiteControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "COMPSITEOWNERS")
     void create_ownerRole_returns201() throws Exception {
         CampsiteRequest request = buildRequest();
         CampsiteResponse response = buildResponse();
         when(campsiteService.create(any(), any())).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/campsites")
+                        .with(user(buildMockUser(Role.COMPSITEOWNERS)))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -76,9 +92,9 @@ class CampsiteControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "COMPERS")
     void create_camperRole_returns403() throws Exception {
         mockMvc.perform(post("/api/v1/campsites")
+                        .with(user(buildMockUser(Role.COMPERS)))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(buildRequest())))
@@ -86,11 +102,12 @@ class CampsiteControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void suspend_adminRole_returns200() throws Exception {
         when(campsiteService.suspend(1L)).thenReturn(buildResponse());
 
-        mockMvc.perform(patch("/api/v1/campsites/1/suspend").with(csrf()))
+        mockMvc.perform(patch("/api/v1/campsites/1/suspend")
+                        .with(user(buildMockUser(Role.ADMIN)))
+                        .with(csrf()))
                 .andExpect(status().isOk());
     }
 
@@ -104,6 +121,10 @@ class CampsiteControllerTest {
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
+
+    private User buildMockUser(Role role) {
+        return User.builder().id(1L).email("test@test.com").password("pw").role(role).build();
+    }
 
     private CampsiteRequest buildRequest() {
         CampsiteRequest r = new CampsiteRequest();

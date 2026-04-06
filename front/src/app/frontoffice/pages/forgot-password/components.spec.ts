@@ -49,21 +49,24 @@ describe('LoginComponent', () => {
   it('should call authService.login with correct credentials on submit', () => {
     authServiceSpy.login.and.returnValue(of({ token: 'tok' }));
     component.credentials = { email: 'test@test.com', password: 'pass123' };
-    component.onSubmit();
+    const mockForm = { valid: true } as any;
+    component.onSubmit(mockForm);
     expect(authServiceSpy.login).toHaveBeenCalledWith('test@test.com', 'pass123');
   });
 
   it('should navigate to /home on successful login', () => {
     authServiceSpy.login.and.returnValue(of({ token: 'tok' }));
     component.credentials = { email: 'test@test.com', password: 'pass' };
-    component.onSubmit();
+    const mockForm = { valid: true } as any;
+    component.onSubmit(mockForm);
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/home']);
   });
 
   it('should not navigate on login error', () => {
     authServiceSpy.login.and.returnValue(throwError(() => new Error('Invalid credentials')));
     component.credentials = { email: 'bad@test.com', password: 'wrong' };
-    component.onSubmit();
+    const mockForm = { valid: true } as any;
+    component.onSubmit(mockForm);
     expect(routerSpy.navigate).not.toHaveBeenCalled();
   });
 });

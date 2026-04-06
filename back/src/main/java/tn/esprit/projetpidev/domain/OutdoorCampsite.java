@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.UpdateTimestamp;
 import tn.esprit.projetpidev.domain.enums.AccessDifficulty;
 import tn.esprit.projetpidev.domain.enums.OutdoorCampsiteStatus;
@@ -66,6 +68,7 @@ public class OutdoorCampsite {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by_id")
+    @NotFound(action = NotFoundAction.IGNORE)
     private User approvedBy;
 
     private LocalDateTime approvedAt;

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Outdoor Campsite Proposal</title>
+  <style>
+    body { margin:0; padding:0; background:#f4f6f9; font-family: 'Segoe UI', Arial, sans-serif; }
+    .wrapper { max-width:600px; margin:40px auto; background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,.08); }
+    .header-approved { background:#2e7d32; padding:36px 40px; text-align:center; }
+    .header-rejected { background:#c62828; padding:36px 40px; text-align:center; }
+    .header-approved h1, .header-rejected h1 { color:#fff; margin:0; font-size:26px; }
+    .icon { font-size:48px; display:block; margin-bottom:12px; }
+    .body    { padding:40px; color:#333; }
+    .body h2 { margin-top:0; }
+    .body h2.approved { color:#2e7d32; }
+    .body h2.rejected { color:#c62828; }
+    .details { border-radius:8px; padding:20px 24px; margin:24px 0; }
+    .details.approved { background:#f0f7f0; }
+    .details.rejected { background:#fff5f5; }
+    .note-box { background:#fff8e1; border-left:4px solid #f9a825; padding:12px 16px; border-radius:0 6px 6px 0; margin-top:16px; font-size:14px; color:#555; }
+    .btn { display:inline-block; margin-top:28px; padding:14px 32px; color:#fff; text-decoration:none; border-radius:6px; font-size:15px; font-weight:600; }
+    .btn-approved { background:#2e7d32; }
+    .btn-rejected { background:#c62828; }
+    .footer { background:#f4f6f9; padding:20px 40px; text-align:center; font-size:12px; color:#999; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div th:if="${approved}" class="header-approved">
+    <span class="icon">✅</span>
+    <h1>Proposal Approved!</h1>
+  </div>
+  <div th:unless="${approved}" class="header-rejected">
+    <span class="icon">❌</span>
+    <h1>Proposal Not Approved</h1>
+  </div>
+
+  <div class="body">
+    <h2 th:class="${approved} ? 'approved' : 'rejected'">
+      Hello, <span th:text="${proposerName}">Proposer</span>!
+    </h2>
+
+    <p th:if="${approved}">
+      We're happy to let you know that your outdoor campsite proposal has been
+      <strong>approved</strong> and is now visible to campers on CampWay.
+    </p>
+    <p th:unless="${approved}">
+      After review, we were unable to approve your outdoor campsite proposal at this time.
+      Please see the admin note below for details.
+    </p>
+
+    <div th:class="${approved} ? 'details approved' : 'details rejected'">
+      <strong>Campsite:</strong> <span th:text="${campsiteName}">Campsite Name</span><br/>
+      <strong>Decision:</strong> <span th:text="${status}">APPROVED</span>
+    </div>
+
+    <div class="note-box" th:if="${adminNote != null and !#strings.isEmpty(adminNote)}">
+      <strong>Admin Note:</strong><br/>
+      <span th:text="${adminNote}">Note from admin...</span>
+    </div>
+
+    <a th:if="${approved}"
+       th:href="${frontendUrl + '/outdoor-campsites'}"
+       class="btn btn-approved">View on CampWay</a>
+
+    <a th:unless="${approved}"
+       th:href="${frontendUrl + '/propose-outdoor'}"
+       class="btn btn-rejected">Submit a New Proposal</a>
+
+    <p style="margin-top:32px; color:#666; font-size:14px;">
+      Thank you for contributing to the CampWay community!
+    </p>
+  </div>
+  <div class="footer">
+    &copy; 2025 CampWay &bull; Explore the wild, responsibly.
+  </div>
+</div>
+</body>
+</html>

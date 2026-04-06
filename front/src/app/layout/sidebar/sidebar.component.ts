@@ -40,7 +40,9 @@ export class SidebarComponent implements OnInit {
         { title: 'Contracts', icon: 'fa-file-signature', link: '/admin/contracts', roles: [UserRole.ADMIN] },
         { title: 'Forum Moderation', icon: 'fa-comments', link: '/admin/forum-mod', roles: [UserRole.ADMIN] },
         { title: 'Trips', icon: 'fa-compass', link: '/admin/guide', roles: [UserRole.ADMIN] },
-        { title: 'Events', icon: 'fa-calendar-alt', link: '/admin/events', roles: [UserRole.ADMIN] }
+        { title: 'Events', icon: 'fa-calendar-alt', link: '/admin/events', roles: [UserRole.ADMIN] },
+        { title: 'Outdoor Moderation', icon: 'fa-mountain', link: '/admin/outdoor-moderation', roles: [UserRole.ADMIN] },
+        { title: 'Booking Management', icon: 'fa-calendar-check', link: '/admin/campsite-manager', roles: [UserRole.ADMIN] }
       ]
     },
     { title: 'My Gear', icon: 'fa-shopping-bag', link: '/admin/gear-provider', roles: [UserRole.GEAR_PROVIDER] },

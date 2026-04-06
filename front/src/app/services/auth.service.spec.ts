@@ -54,6 +54,8 @@ describe('AuthService', () => {
     service.login('test@test.com', 'password').subscribe();
     const req = httpMock.expectOne('http://localhost:9099/auth/login');
     req.flush(mockResponse);
+    const meReq = httpMock.match('http://localhost:9099/auth/me');
+    meReq.forEach(r => r.flush(mockResponse));
 
     expect(service.isLoggedIn()).toBeTrue();
   });
@@ -71,6 +73,7 @@ describe('AuthService', () => {
 
     service.login('jane@test.com', 'pass').subscribe();
     httpMock.expectOne('http://localhost:9099/auth/login').flush(mockResponse);
+    httpMock.match('http://localhost:9099/auth/me').forEach(r => r.flush(mockResponse));
 
     expect(localStorage.getItem('token')).toBe('my-jwt-token');
   });
@@ -86,6 +89,7 @@ describe('AuthService', () => {
 
     service.login('bob@test.com', 'pass').subscribe();
     httpMock.expectOne('http://localhost:9099/auth/login').flush(mockResponse);
+    httpMock.match('http://localhost:9099/auth/me').forEach(r => r.flush(mockResponse));
 
     expect(localStorage.getItem('userId')).toBe('99');
   });
@@ -94,6 +98,7 @@ describe('AuthService', () => {
     const mockResponse = { token: 'tok', userId: 5, fullname: 'Ali', role: UserRole.CAMPER };
     service.login('ali@test.com', 'pass').subscribe();
     httpMock.expectOne('http://localhost:9099/auth/login').flush(mockResponse);
+    httpMock.match('http://localhost:9099/auth/me').forEach(r => r.flush(mockResponse));
     expect(notifServiceSpy.initForUser).toHaveBeenCalledWith('5');
   });
 
@@ -150,6 +155,7 @@ describe('AuthService', () => {
     const mockResponse = { token: 'tok', userId: 1, fullname: 'Admin', role: UserRole.ADMIN };
     service.login('admin@test.com', 'pass').subscribe();
     httpMock.expectOne('http://localhost:9099/auth/login').flush(mockResponse);
+    httpMock.match('http://localhost:9099/auth/me').forEach(r => r.flush(mockResponse));
     expect(service.hasRole(UserRole.ADMIN)).toBeTrue();
   });
 
@@ -157,6 +163,7 @@ describe('AuthService', () => {
     const mockResponse = { token: 'tok', userId: 1, fullname: 'Admin', role: UserRole.ADMIN };
     service.login('admin@test.com', 'pass').subscribe();
     httpMock.expectOne('http://localhost:9099/auth/login').flush(mockResponse);
+    httpMock.match('http://localhost:9099/auth/me').forEach(r => r.flush(mockResponse));
     expect(service.hasRole(UserRole.CAMPER)).toBeFalse();
   });
 

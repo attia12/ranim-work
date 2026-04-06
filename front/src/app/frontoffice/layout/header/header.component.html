@@ -21,8 +21,22 @@
         <li class="nav-item">
           <a class="nav-link px-3" routerLink="/campsites" routerLinkActive="active">Campsites</a>
         </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link px-3 dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+             routerLinkActive="active" [routerLinkActiveOptions]="{exact:false}">
+            Outdoor
+          </a>
+          <ul class="dropdown-menu shadow border-0 mt-2">
+            <li><a class="dropdown-item" routerLink="/outdoor-campsites">
+              <i class="fas fa-mountain me-2 text-success"></i>Outdoor Trips</a></li>
+            <li><a class="dropdown-item" routerLink="/propose-outdoor">
+              <i class="fas fa-map-marker-alt me-2 text-success"></i>Propose a Spot</a></li>
+            <li><a class="dropdown-item" routerLink="/my-proposals">
+              <i class="fas fa-list me-2 text-success"></i>My Proposals</a></li>
+          </ul>
+        </li>
         <li class="nav-item">
-          <a class="nav-link px-3" routerLink="/bookings" routerLinkActive="active">My Bookings</a>
+          <a class="nav-link px-3" routerLink="/my-bookings" routerLinkActive="active">My Bookings</a>
         </li>
         <li class="nav-item">
           <a class="nav-link px-3" routerLink="/shop" routerLinkActive="active">Shop</a>
@@ -45,6 +59,9 @@
           </li>
           <li class="nav-item">
             <a class="nav-link px-3" routerLink="/campsites" routerLinkActive="active">Campsites</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link px-3" routerLink="/outdoor-campsites" routerLinkActive="active">Outdoor Trips</a>
           </li>
           <li class="nav-item">
             <a class="nav-link px-3" routerLink="/shop" routerLinkActive="active">Shop</a>

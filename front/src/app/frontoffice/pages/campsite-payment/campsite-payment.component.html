@@ -1,0 +1,132 @@
+<!-- Module: Official Campsite & Booking | Layer: Frontend Component -->
+<div class="container py-5" style="max-width:580px;">
+
+  <!-- ── SUCCESS STATE ─────────────────────────────────────────────────── -->
+  <div *ngIf="paid" class="text-center py-5 success-card">
+    <div class="checkmark-circle mx-auto mb-4">
+      <i class="fas fa-check fa-3x text-white"></i>
+    </div>
+    <h2 class="font-weight-bold text-success mb-2">Payment Successful!</h2>
+    <p class="text-muted mb-1">Your campsite booking is confirmed.</p>
+    <p class="text-muted mb-4">
+      <strong>Amount paid: {{ amount | currency:'TND':'symbol':'1.2-2' }}</strong>
+    </p>
+    <p class="text-muted small mb-4">
+      A confirmation email has been sent to you.
+    </p>
+    <button class="btn btn-success btn-lg rounded-pill px-5" (click)="goToBookings()">
+      <i class="fas fa-calendar-check mr-2"></i> View My Bookings
+    </button>
+  </div>
+
+  <!-- ── PAYMENT FORM ──────────────────────────────────────────────────── -->
+  <div *ngIf="!paid">
+
+    <!-- Header -->
+    <div class="mb-4 text-center">
+      <div class="payment-icon mx-auto mb-3">
+        <i class="fas fa-lock fa-2x text-success"></i>
+      </div>
+      <h3 class="font-weight-bold mb-1">Secure Payment</h3>
+      <p class="text-muted">
+        Booking #{{ bookingId }} &nbsp;·&nbsp;
+        <strong class="text-success">{{ amount | currency:'TND':'symbol':'1.2-2' }}</strong>
+      </p>
+    </div>
+
+    <!-- Error -->
+    <div class="alert alert-danger small" *ngIf="error" role="alert">
+      <i class="fas fa-exclamation-circle mr-1"></i>{{ error }}
+    </div>
+
+    <!-- Method selector -->
+    <div class="d-flex mb-4" style="gap:.75rem;">
+      <button class="btn flex-fill method-btn"
+              [class.method-active]="selectedMethod === 'CARD'"
+              (click)="selectMethod('CARD')">
+        <i class="fas fa-credit-card d-block mb-1"></i>
+        <span class="small">Card</span>
+      </button>
+      <button class="btn flex-fill method-btn"
+              [class.method-active]="selectedMethod === 'PAYPAL'"
+              (click)="selectMethod('PAYPAL')">
+        <i class="fab fa-paypal d-block mb-1"></i>
+        <span class="small">PayPal</span>
+      </button>
+      <button class="btn flex-fill method-btn"
+              [class.method-active]="selectedMethod === 'BANK_TRANSFER'"
+              (click)="selectMethod('BANK_TRANSFER')">
+        <i class="fas fa-university d-block mb-1"></i>
+        <span class="small">Bank Transfer</span>
+      </button>
+    </div>
+
+    <!-- Card form -->
+    <div class="card border-0 shadow-sm p-4" *ngIf="selectedMethod === 'CARD'">
+      <div class="form-group">
+        <label class="small font-weight-bold text-muted text-uppercase">Card Number</label>
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="0000 0000 0000 0000"
+                 maxlength="19" inputmode="numeric"
+                 [value]="cardNumber"
+                 (input)="formatCardNumber($event)">
+          <div class="input-group-append">
+            <span class="input-group-text bg-white border-left-0">
+              <i class="fab" [ngClass]="cardBrandIcon"></i>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="small font-weight-bold text-muted text-uppercase">Cardholder Name</label>
+        <input type="text" class="form-control" placeholder="Name as on card"
+               [(ngModel)]="cardName" autocomplete="cc-name">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col-7">
+          <label class="small font-weight-bold text-muted text-uppercase">Expiry</label>
+          <input type="text" class="form-control" placeholder="MM/YY"
+                 maxlength="5" [class.is-invalid]="expiryExpired"
+                 [value]="cardExpiry"
+                 (input)="formatExpiry($event)">
+          <div class="invalid-feedback">Card has expired.</div>
+        </div>
+        <div class="form-group col-5">
+          <label class="small font-weight-bold text-muted text-uppercase">CVV</label>
+          <input type="password" class="form-control" placeholder="•••"
+                 maxlength="4" inputmode="numeric"
+                 [value]="cardCVV"
+                 (input)="sanitizeCVV($event)">
+        </div>
+      </div>
+    </div>
+
+    <!-- PayPal placeholder -->
+    <div class="card border-0 shadow-sm p-4 text-center" *ngIf="selectedMethod === 'PAYPAL'">
+      <i class="fab fa-paypal fa-3x text-primary mb-3"></i>
+      <p class="text-muted mb-0">You will be redirected to PayPal to complete the payment securely.</p>
+    </div>
+
+    <!-- Bank Transfer placeholder -->
+    <div class="card border-0 shadow-sm p-4" *ngIf="selectedMethod === 'BANK_TRANSFER'">
+      <p class="text-muted small mb-2"><strong>Bank:</strong> Attijari Bank Tunisia</p>
+      <p class="text-muted small mb-2"><strong>IBAN:</strong> TN59 1000 6035 1835 9874 0100</p>
+      <p class="text-muted small mb-0"><strong>Reference:</strong> BOOKING-{{ bookingId }}</p>
+    </div>
+
+    <!-- Pay button -->
+    <button class="btn btn-success btn-block btn-lg mt-4 rounded-pill"
+            [disabled]="processing || !isCardValid"
+            (click)="pay()">
+      <span *ngIf="processing" class="spinner-border spinner-border-sm mr-2"></span>
+      <i class="fas fa-lock mr-2" *ngIf="!processing"></i>
+      {{ processing ? 'Processing...' : ('Pay ' + (amount | currency:'TND':'symbol':'1.2-2')) }}
+    </button>
+
+    <p class="text-center text-muted small mt-3">
+      <i class="fas fa-shield-alt mr-1"></i> Secured with 256-bit SSL encryption
+    </p>
+  </div>
+</div>

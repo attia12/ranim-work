@@ -51,6 +51,7 @@ import { MyProposalsComponent } from './frontoffice/pages/my-proposals/my-propos
 import { AdminOutdoorModerationComponent } from './dashboards/admin-outdoor-moderation/admin-outdoor-moderation.component';
 import { OutdoorCampsiteDetailComponent } from './frontoffice/pages/outdoor-campsite-detail/outdoor-campsite-detail.component';
 import { OutdoorBookingComponent } from './frontoffice/pages/outdoor-booking/outdoor-booking.component';
+import { CampsitePaymentComponent } from './frontoffice/pages/campsite-payment/campsite-payment.component';
 
 import { adminGuard } from './guards/admin.guard';
 import { authGuard } from './guards/auth.guard';
@@ -91,6 +92,7 @@ const routes: Routes = [
       { path: 'campsites/:id',       component: CampsiteDetailComponent },
       { path: 'campsites/:id/book',  component: CampsiteBookingComponent, canActivate: [requireAuthGuard] },
       { path: 'my-bookings',         component: MyBookingsComponent,      canActivate: [requireAuthGuard] },
+      { path: 'campsite-payment',    component: CampsitePaymentComponent, canActivate: [requireAuthGuard] },
 
       // Module: Outdoor Campsite & Booking
       { path: 'outdoor-campsites',          component: OutdoorTripsComponent },

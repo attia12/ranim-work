@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Booking Confirmed</title>
+  <style>
+    body { margin:0; padding:0; background:#f4f6f9; font-family: 'Segoe UI', Arial, sans-serif; }
+    .wrapper { max-width:600px; margin:40px auto; background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,.08); }
+    .header  { background:#2e7d32; padding:36px 40px; text-align:center; }
+    .header h1 { color:#fff; margin:0; font-size:26px; letter-spacing:.5px; }
+    .header .icon { font-size:48px; display:block; margin-bottom:12px; }
+    .body    { padding:40px; color:#333; }
+    .body h2 { color:#2e7d32; margin-top:0; }
+    .details { background:#f0f7f0; border-radius:8px; padding:20px 24px; margin:24px 0; }
+    .details table { width:100%; border-collapse:collapse; }
+    .details td { padding:8px 4px; font-size:15px; }
+    .details td:first-child { color:#666; width:140px; }
+    .details td:last-child  { font-weight:600; color:#1a1a1a; }
+    .btn { display:inline-block; margin-top:28px; padding:14px 32px; background:#2e7d32; color:#fff; text-decoration:none; border-radius:6px; font-size:15px; font-weight:600; }
+    .footer { background:#f4f6f9; padding:20px 40px; text-align:center; font-size:12px; color:#999; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <span class="icon">🏕️</span>
+    <h1>Booking Confirmed!</h1>
+  </div>
+  <div class="body">
+    <h2>Hello, <span th:text="${camperName}">Camper</span>!</h2>
+    <p>Great news — your booking has been <strong>confirmed</strong>. We can't wait to see you there!</p>
+
+    <div class="details">
+      <table>
+        <tr>
+          <td>Campsite</td>
+          <td th:text="${campsiteName}">Campsite Name</td>
+        </tr>
+        <tr>
+          <td>Check-in</td>
+          <td th:text="${checkIn}">2025-01-01</td>
+        </tr>
+        <tr>
+          <td>Check-out</td>
+          <td th:text="${checkOut}">2025-01-05</td>
+        </tr>
+        <tr>
+          <td>Total Price</td>
+          <td th:text="${totalPrice}">200.00 TND</td>
+        </tr>
+      </table>
+    </div>
+
+    <p>You can view or manage your booking in your account.</p>
+    <a th:href="${frontendUrl + '/my-bookings'}" class="btn">View My Bookings</a>
+
+    <p style="margin-top:32px; color:#666; font-size:14px;">
+      If you have any questions, feel free to contact our support team.
+    </p>
+  </div>
+  <div class="footer">
+    &copy; 2025 CampWay &bull; Explore the wild, responsibly.
+  </div>
+</div>
+</body>
+</html>
