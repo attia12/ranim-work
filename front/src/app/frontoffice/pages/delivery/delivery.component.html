@@ -1,0 +1,92 @@
+<div class="delivery-page py-5 bg-light min-vh-100">
+    <div class="container">
+        <div class="card border-0 shadow-sm rounded-lg p-5">
+            <!-- Loading state -->
+            <div *ngIf="isLoading" class="text-center py-5">
+                <div class="spinner-border text-success" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 text-muted">Loading delivery information...</p>
+            </div>
+
+            <!-- Error state -->
+            <div *ngIf="error && !isLoading" class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+            </div>
+
+            <!-- Success state -->
+            <ng-container *ngIf="!isLoading && !error && deliveryData">
+                <div class="text-center mb-5">
+                    <div class="mb-4">
+                        <div class="status-badge bg-success-light text-success d-inline-block px-4 py-2 rounded-pill fw-bold">
+                            <i class="fas fa-truck me-2"></i> {{ status }}
+                        </div>
+                    </div>
+                    <h2 class="fw-bold mb-1">Track Your Order</h2>
+                    <p class="text-muted">Order ID: <span class="text-dark fw-bold">#{{ orderId }}</span></p>
+                </div>
+
+                <!-- Timeline -->
+                <div class="delivery-timeline mb-5">
+                    <div class="timeline-track"></div>
+                    <div class="timeline-steps">
+                        <div class="step" [class.active]="step >= 1">
+                            <div class="step-icon"><i class="fas fa-check"></i></div>
+                            <div class="step-label">Ordered</div>
+                            <div class="step-date small text-muted">{{ deliveryData.orderedDate | date:'MMM d' }}</div>
+                        </div>
+                        <div class="step" [class.active]="step >= 2">
+                            <div class="step-icon"><i class="fas fa-box"></i></div>
+                            <div class="step-label">Processing</div>
+                            <div class="step-date small text-muted">{{ deliveryData.processingDate | date:'MMM d' }}</div>
+                        </div>
+                        <div class="step" [class.active]="step >= 3">
+                            <div class="step-icon"><i class="fas fa-shipping-fast"></i></div>
+                            <div class="step-label">In Transit</div>
+                            <div class="step-date small text-muted">{{ deliveryData.transitDate | date:'MMM d' }}</div>
+                        </div>
+                        <div class="step" [class.active]="step >= 4">
+                            <div class="step-icon"><i class="fas fa-home"></i></div>
+                            <div class="step-label">Delivered</div>
+                            <div class="step-date small text-muted">{{ deliveryData.expectedDeliveryDate | date:'MMM d' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row pt-4 border-top">
+                    <div class="col-md-6 mb-4 mb-md-0">
+                        <h5 class="fw-bold mb-3">Shipping Address</h5>
+                        <p class="text-muted mb-0">
+                            {{ deliveryData.recipientName }}<br>
+                            {{ deliveryData.address }}<br>
+                            {{ deliveryData.city }}, {{ deliveryData.postalCode }}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="fw-bold mb-3">Delivery Personnel</h5>
+                        <div class="d-flex align-items-center" *ngIf="deliveryData.deliveryPersonnel">
+                            <div class="bg-light rounded-circle p-3 me-3">
+                                <i class="fas fa-user-tie fa-2x text-muted"></i>
+                            </div>
+                            <div>
+                                <p class="mb-0 fw-bold">{{ deliveryData.deliveryPersonnel.name }}</p>
+                                <p class="mb-0 text-muted small">ID: #{{ deliveryData.deliveryPersonnel.id }}</p>
+                            </div>
+                        </div>
+                        <div *ngIf="!deliveryData.deliveryPersonnel" class="text-muted">
+                            <p class="mb-0 small">Personnel not yet assigned</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-5">
+                    <button class="btn btn-outline-success rounded-pill px-5" routerLink="/shop">
+                        Continue Shopping
+                    </button>
+                </div>
+            </ng-container>
+        </div>
+    </div>
+</div>
+
+

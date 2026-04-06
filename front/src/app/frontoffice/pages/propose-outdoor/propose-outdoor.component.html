@@ -1,0 +1,99 @@
+<!-- Module: Outdoor Campsite & Booking | Layer: Frontend Component -->
+<div class="container py-5" style="max-width:700px;">
+  <h3 class="font-weight-bold mb-1" i18n>Propose an Outdoor Campsite</h3>
+  <p class="text-muted mb-4" i18n>Share a wild spot with the Campway community. Our team will review it.</p>
+
+  <div class="alert alert-success" *ngIf="success" role="alert">
+    <i class="fas fa-check-circle mr-2"></i>
+    <span i18n>Proposal submitted! Redirecting to My Proposals...</span>
+  </div>
+  <div class="alert alert-danger" *ngIf="error" role="alert">{{ error }}</div>
+
+  <div class="card border-0 shadow-sm" *ngIf="!success">
+    <div class="card-body p-4">
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+        <div class="form-group">
+          <label class="font-weight-bold" i18n>Name *</label>
+          <input class="form-control" formControlName="name" placeholder="e.g. Hidden Forest Clearing"
+                 [class.is-invalid]="hasError('name')" aria-label="Campsite name" i18n-placeholder>
+          <div class="invalid-feedback" i18n>Name is required (min 3 characters).</div>
+        </div>
+
+        <div class="form-group">
+          <label class="font-weight-bold" i18n>Description</label>
+          <textarea class="form-control" formControlName="description" rows="3"
+                    aria-label="Description" placeholder="Describe what makes this spot special..." i18n-placeholder></textarea>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="font-weight-bold" i18n>Country *</label>
+              <input class="form-control" formControlName="country" placeholder="e.g. Tunisia"
+                     [class.is-invalid]="hasError('country')" aria-label="Country" i18n-placeholder>
+              <div class="invalid-feedback" i18n>Country is required.</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="font-weight-bold" i18n>City *</label>
+              <input class="form-control" formControlName="city" placeholder="e.g. Ain Draham"
+                     [class.is-invalid]="hasError('city')" aria-label="City" i18n-placeholder>
+              <div class="invalid-feedback" i18n>City is required.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- [ASSUMPTION: D] No map library — using lat/lng inputs -->
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="font-weight-bold" i18n>Latitude</label>
+              <input type="number" step="any" class="form-control" formControlName="latitude"
+                     placeholder="e.g. 36.7525" aria-label="Latitude" i18n-placeholder>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="font-weight-bold" i18n>Longitude</label>
+              <input type="number" step="any" class="form-control" formControlName="longitude"
+                     placeholder="e.g. 8.7369" aria-label="Longitude" i18n-placeholder>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="font-weight-bold" i18n>Photo URLs</label>
+          <input class="form-control" formControlName="pictures"
+                 placeholder="Comma-separated URLs: https://..., https://..."
+                 aria-label="Photo URLs" i18n-placeholder>
+          <small class="text-muted" i18n>Separate multiple URLs with commas.</small>
+        </div>
+
+        <div class="form-group">
+          <label class="font-weight-bold" i18n>Natural Features</label>
+          <input class="form-control" formControlName="naturalFeatures"
+                 placeholder="e.g. River,Forest,Mountains"
+                 aria-label="Natural features" i18n-placeholder>
+          <small class="text-muted" i18n>Separate features with commas.</small>
+        </div>
+
+        <div class="form-group">
+          <label class="font-weight-bold" i18n>Access Difficulty</label>
+          <select class="form-control" formControlName="accessDifficulty" aria-label="Access difficulty">
+            <option value="" i18n>Select difficulty...</option>
+            <option *ngFor="let d of difficulties" [value]="d">{{ d }}</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-block btn-lg"
+                [disabled]="submitting" aria-label="Submit proposal" i18n>
+          <span *ngIf="submitting" class="spinner-border spinner-border-sm mr-2"></span>
+          {{ submitting ? 'Submitting...' : 'Submit Proposal' }}
+        </button>
+
+      </form>
+    </div>
+  </div>
+</div>

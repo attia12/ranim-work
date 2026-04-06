@@ -1,0 +1,241 @@
+<div class="payment-page py-5 bg-light min-vh-100">
+  <div class="container">
+
+    <div *ngIf="isLoadingOrder" class="text-center py-5">
+      <div class="spinner-border text-success"></div>
+      <p class="mt-2 text-muted">Loading order...</p>
+    </div>
+
+    <div *ngIf="orderError" class="alert alert-danger">{{ orderError }}</div>
+
+    <div *ngIf="!isLoadingOrder && order" class="row justify-content-center">
+
+      <!-- Left: Payment form -->
+      <div class="col-lg-7 mb-4">
+        <div class="card border-0 shadow-sm p-4 p-md-5" style="border-radius:20px;">
+          <h3 class="font-weight-bold mb-1">
+            <i class="fas fa-lock text-success mr-2"></i>Secure Payment
+          </h3>
+          <p class="text-muted small mb-4">Order #{{ order.orderNumber }}</p>
+
+          <!-- Payment method selector -->
+          <h6 class="font-weight-bold mb-3">Payment Method</h6>
+          <div class="row mb-4">
+            <div class="col-6 mb-2" *ngFor="let method of paymentMethods">
+              <button class="btn btn-block py-3 text-center border" style="border-radius:12px;"
+                      [class.btn-success]="selectedMethod === method.key"
+                      [class.text-white]="selectedMethod === method.key"
+                      [class.bg-white]="selectedMethod !== method.key"
+                      (click)="selectMethod(method.key)"
+                      [title]="method.description">
+                <i [class]="method.icon + ' fa-lg d-block mb-1'"></i>
+                <small>{{ method.label }}</small>
+              </button>
+            </div>
+          </div>
+
+          <!-- Card form -->
+          <form #cardForm="ngForm" novalidate *ngIf="selectedMethod === 'BANK_CARD'">
+
+            <!-- Card Number -->
+            <div class="form-group">
+              <label class="small font-weight-bold text-muted text-uppercase">Card Number</label>
+              <div class="input-group" [class.is-invalid-group]="cardNumberRef.invalid && cardNumberRef.touched">
+                <div class="input-group-prepend">
+                                    <span class="input-group-text card-icon-prefix"
+                                          [class.border-danger]="cardNumberRef.invalid && cardNumberRef.touched">
+                                        <i class="far fa-credit-card text-muted"></i>
+                                    </span>
+                </div>
+                <input type="text" class="form-control card-input"
+                       [class.is-invalid]="cardNumberRef.invalid && cardNumberRef.touched"
+                       name="cardNumber" #cardNumberRef="ngModel"
+                       [(ngModel)]="cardNumber"
+                       placeholder="1234 5678 9012 3456"
+                       maxlength="19"
+                       (input)="formatCardNumber($event)"
+                       pattern="^[0-9]{4} [0-9]{4} [0-9]{4} [0-9]{4}$"
+                       required>
+                <div class="input-group-append">
+                                    <span class="input-group-text card-brand-badge">
+                                        <i class="fab" [ngClass]="cardBrandIcon" style="font-size:1.2rem;"></i>
+                                    </span>
+                </div>
+              </div>
+              <div class="invalid-feedback d-block" *ngIf="cardNumberRef.invalid && cardNumberRef.touched">
+                <i class="fas fa-exclamation-triangle mr-1"></i>
+                <span *ngIf="cardNumberRef.errors?.['required']">Card number is required.</span>
+                <span *ngIf="cardNumberRef.errors?.['pattern']">Please enter a valid 16-digit card number.</span>
+              </div>
+            </div>
+
+            <!-- Name on Card -->
+            <div class="form-group">
+              <label class="small font-weight-bold text-muted text-uppercase">Name on Card</label>
+              <div class="input-group" [class.is-invalid-group]="cardNameRef.invalid && cardNameRef.touched">
+                <div class="input-group-prepend">
+                                    <span class="input-group-text card-icon-prefix"
+                                          [class.border-danger]="cardNameRef.invalid && cardNameRef.touched">
+                                        <i class="fas fa-user text-muted"></i>
+                                    </span>
+                </div>
+                <input type="text" class="form-control card-input"
+                       [class.is-invalid]="cardNameRef.invalid && cardNameRef.touched"
+                       name="cardName" #cardNameRef="ngModel"
+                       [(ngModel)]="cardName"
+                       placeholder="JOHN DOE"
+                       pattern="^[A-Za-z\s\-']{2,26}$"
+                       required>
+              </div>
+              <div class="invalid-feedback d-block" *ngIf="cardNameRef.invalid && cardNameRef.touched">
+                <i class="fas fa-exclamation-triangle mr-1"></i>
+                <span *ngIf="cardNameRef.errors?.['required']">Cardholder name is required.</span>
+                <span *ngIf="cardNameRef.errors?.['pattern']">Letters only, 2–26 characters.</span>
+              </div>
+            </div>
+
+            <!-- Expiry + CVV -->
+            <div class="row">
+              <div class="col-6">
+                <div class="form-group">
+                  <label class="small font-weight-bold text-muted text-uppercase">Expiry Date</label>
+                  <div class="input-group" [class.is-invalid-group]="cardExpiryRef.invalid && cardExpiryRef.touched">
+                    <div class="input-group-prepend">
+                                            <span class="input-group-text card-icon-prefix"
+                                                  [class.border-danger]="cardExpiryRef.invalid && cardExpiryRef.touched">
+                                                <i class="fas fa-calendar-alt text-muted"></i>
+                                            </span>
+                    </div>
+                    <input type="text" class="form-control card-input"
+                           [class.is-invalid]="cardExpiryRef.invalid && cardExpiryRef.touched"
+                           name="cardExpiry" #cardExpiryRef="ngModel"
+                           [(ngModel)]="cardExpiry"
+                           placeholder="MM/YY"
+                           maxlength="5"
+                           (input)="formatExpiry($event)"
+                           pattern="^(0[1-9]|1[0-2])\/([0-9]{2})$"
+                           required>
+                  </div>
+                  <div class="invalid-feedback d-block" *ngIf="cardExpiryRef.invalid && cardExpiryRef.touched">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    <span *ngIf="cardExpiryRef.errors?.['required']">Expiry is required.</span>
+                    <span *ngIf="cardExpiryRef.errors?.['pattern']">Format must be MM/YY.</span>
+                  </div>
+                  <div class="invalid-feedback d-block"
+                       *ngIf="expiryExpired && cardExpiryRef.touched && !cardExpiryRef.errors?.['pattern']">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>Card has expired.
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-6">
+                <div class="form-group">
+                  <label class="small font-weight-bold text-muted text-uppercase">
+                    CVV
+                    <i class="fas fa-question-circle text-muted ml-1"
+                       title="3-digit code on back of card (4 digits for Amex)"
+                       style="font-size:11px;cursor:help;"></i>
+                  </label>
+                  <div class="input-group" [class.is-invalid-group]="cardCVVRef.invalid && cardCVVRef.touched">
+                    <div class="input-group-prepend">
+                                            <span class="input-group-text card-icon-prefix"
+                                                  [class.border-danger]="cardCVVRef.invalid && cardCVVRef.touched">
+                                                <i class="fas fa-lock text-muted"></i>
+                                            </span>
+                    </div>
+                    <input type="password" class="form-control card-input"
+                           [class.is-invalid]="cardCVVRef.invalid && cardCVVRef.touched"
+                           name="cardCVV" #cardCVVRef="ngModel"
+                           [(ngModel)]="cardCVV"
+                           placeholder="•••"
+                           maxlength="4"
+                           (input)="sanitizeCVV($event)"
+                           pattern="^[0-9]{3,4}$"
+                           required>
+                  </div>
+                  <div class="invalid-feedback d-block" *ngIf="cardCVVRef.invalid && cardCVVRef.touched">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    <span *ngIf="cardCVVRef.errors?.['required']">CVV is required.</span>
+                    <span *ngIf="cardCVVRef.errors?.['pattern']">Must be 3 or 4 digits.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Accepted cards -->
+            <div class="d-flex align-items-center mb-3">
+              <small class="text-muted mr-2">Accepted:</small>
+              <i class="fab fa-cc-visa fa-lg text-primary mr-1" title="Visa"></i>
+              <i class="fab fa-cc-mastercard fa-lg text-danger mr-1" title="Mastercard"></i>
+              <i class="fab fa-cc-amex fa-lg text-info" title="American Express"></i>
+            </div>
+
+          </form>
+
+          <!-- D17 notice -->
+          <div *ngIf="selectedMethod === 'D17'" class="alert alert-info mb-4 text-center py-4">
+            <i class="fas fa-university fa-3x mb-3 text-info"></i>
+            <p class="mb-0">You will be redirected to the D17 / La Poste Tunisienne portal to complete your payment securely.</p>
+          </div>
+
+          <div *ngIf="paymentError" class="alert alert-danger">{{ paymentError }}</div>
+
+          <button class="btn btn-success btn-block btn-lg rounded-pill font-weight-bold py-3 shadow-sm"
+                  (click)="pay()" [disabled]="isProcessing">
+            <span *ngIf="isProcessing" class="spinner-border spinner-border-sm mr-2"></span>
+            <span *ngIf="isProcessing">Processing payment...</span>
+            <span *ngIf="!isProcessing">
+                            Pay {{ formatAmount(order.totalAmount) }}
+              <i class="fas fa-lock ml-2"></i>
+                        </span>
+          </button>
+
+          <div class="text-center mt-3">
+            <small class="text-muted">
+              <i class="fas fa-shield-alt mr-1 text-success"></i>
+              Your payment is secured with 256-bit SSL encryption
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Order summary -->
+      <div class="col-lg-5">
+        <div class="card border-0 shadow-sm p-4" style="border-radius:20px;">
+          <h5 class="font-weight-bold mb-4">Order Summary</h5>
+          <div *ngFor="let item of order.items" class="d-flex justify-content-between mb-3">
+            <div>
+              <p class="mb-0 font-weight-bold small">{{ item.equipmentName }}</p>
+              <small class="text-muted">
+                {{ item.transactionType }} × {{ item.quantity }}
+                <span *ngIf="item.transactionType === 'RENT'">
+                                    · {{ item.rentalDays }} day{{ item.rentalDays !== 1 ? 's' : '' }}
+                                </span>
+              </small>
+            </div>
+            <span class="font-weight-bold text-success small">{{ formatAmount(item.subtotal) }}</span>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Subtotal</span>
+            <span>{{ formatAmount(order.totalAmount) }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Shipping</span>
+            <span class="text-muted small">Calculated at checkout</span>
+          </div>
+          <div *ngIf="order.discountAmount > 0" class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Discount</span>
+            <span class="text-danger">- {{ formatAmount(order.discountAmount) }}</span>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between h5 font-weight-bold">
+            <span>Total</span>
+            <span class="text-success">{{ formatAmount(order.totalAmount) }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

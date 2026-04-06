@@ -1,0 +1,66 @@
+html {
+  height: auto !important;
+}
+
+body {
+  height: auto !important;
+  overflow-y: auto !important;
+  color: var(--color-text-secondary);
+  background-color: var(--color-bg-light);
+}
+
+app-root,
+app-main-layout {
+  display: block;
+}
+
+:root {
+  --color-primary:        #2d5016;   /* deep forest green - main brand */
+  --color-primary-light:  #4a7c2c;   /* medium green - hover/gradient end */
+  --color-primary-dark:   #1a3d0a;   /* dark green - sidebar bg */
+  --color-accent-brown:   #6B4226;   /* warm brown - accents, icons */
+  --color-accent-earth:   #D4A96A;   /* sandy beige - highlights, badges */
+  --color-accent-terra:   #C1440E;   /* terracotta - alerts, CTAs */
+  --color-bg-light:       #F5F0E8;   /* warm cream - page backgrounds */
+  --color-bg-card:        #FDFAF5;   /* off-white - card backgrounds */
+  --color-text-primary:   #2C1810;   /* dark brown - headings */
+  --color-text-secondary: #6B5B4E;   /* medium brown - body text */
+}
+
+/* You can add global styles to this file, and also import other style files */
+
+
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    color: var(--color-text-primary);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    border: none;
+    color: white;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+    color: white;
+}
+
+.card {
+    background-color: var(--color-bg-card);
+}
+
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.modal-backdrop.show {
+    opacity: 0.5;
+    background-color: #000;
+}
+
+.modal.show.d-block {
+    background: rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
+}

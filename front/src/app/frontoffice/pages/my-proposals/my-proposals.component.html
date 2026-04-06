@@ -1,0 +1,43 @@
+<!-- Module: Outdoor Campsite & Booking | Layer: Frontend Component -->
+<div class="container py-5">
+  <h3 class="font-weight-bold mb-4" i18n>My Proposals</h3>
+
+  <div class="text-center py-5" *ngIf="loading">
+    <div class="spinner-border text-success" role="status">
+      <span class="sr-only" i18n>Loading...</span>
+    </div>
+  </div>
+  <div class="alert alert-danger" *ngIf="error" role="alert">{{ error }}</div>
+
+  <div class="text-center text-muted py-4" *ngIf="!loading && !error && proposals.length === 0">
+    <i class="fas fa-map-marked-alt fa-3x mb-3"></i>
+    <h5 i18n>No proposals yet.</h5>
+    <a routerLink="/propose-outdoor" class="btn btn-success rounded-pill px-4 mt-2" i18n>
+      Propose Your First Spot
+    </a>
+  </div>
+
+  <div class="card border-0 shadow-sm mb-3" *ngFor="let p of proposals">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <h5 class="font-weight-bold mb-1">{{ p.name }}</h5>
+          <p class="text-muted small mb-1">
+            <i class="fas fa-map-marker-alt text-success mr-1"></i>
+            {{ p.city }}, {{ p.country }}
+          </p>
+          <p class="text-muted small mb-0" *ngIf="p.adminNote">
+            <i class="fas fa-comment-alt text-info mr-1"></i>
+            <span i18n>Admin note:</span> {{ p.adminNote }}
+          </p>
+        </div>
+        <div class="text-right">
+          <span class="badge px-2 py-1" [ngClass]="statusBadgeClass(p.status)">{{ p.status }}</span>
+          <p class="text-muted small mt-1 mb-0" *ngIf="p.approvedAt">
+            <span i18n>Reviewed:</span> {{ p.approvedAt | date:'mediumDate' }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

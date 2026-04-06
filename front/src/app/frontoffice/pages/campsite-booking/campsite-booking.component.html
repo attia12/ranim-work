@@ -1,0 +1,54 @@
+<!-- Module: Official Campsite & Booking | Layer: Frontend Component -->
+<div class="container py-5" style="max-width:700px;">
+  <h3 class="font-weight-bold mb-1" i18n>Book Campsite</h3>
+  <p class="text-muted mb-4" *ngIf="campsite">{{ campsite.name }} — {{ campsite.city }}, {{ campsite.country }}</p>
+
+  <div class="alert alert-danger" *ngIf="error" role="alert">{{ error }}</div>
+
+  <div class="card border-0 shadow-sm" *ngIf="!loading">
+    <div class="card-body p-4">
+      <form [formGroup]="bookingForm" (ngSubmit)="submit()" novalidate>
+
+        <div class="form-group">
+          <label class="font-weight-bold" i18n>Check-in Date</label>
+          <input type="date" class="form-control" formControlName="checkInDate"
+                 [min]="today" aria-label="Check-in date"
+                 [class.is-invalid]="bookingForm.get('checkInDate')?.invalid && bookingForm.get('checkInDate')?.touched">
+          <div class="invalid-feedback" i18n>Check-in date is required.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="font-weight-bold" i18n>Check-out Date</label>
+          <input type="date" class="form-control" formControlName="checkOutDate"
+                 [min]="bookingForm.get('checkInDate')?.value || today" aria-label="Check-out date"
+                 [class.is-invalid]="bookingForm.get('checkOutDate')?.invalid && bookingForm.get('checkOutDate')?.touched">
+          <div class="invalid-feedback" i18n>Check-out date is required.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="font-weight-bold" i18n>Number of Guests</label>
+          <input type="number" class="form-control" formControlName="numberOfGuests"
+                 min="1" [max]="campsite?.capacity ?? null" aria-label="Number of guests"
+                 [class.is-invalid]="bookingForm.get('numberOfGuests')?.invalid && bookingForm.get('numberOfGuests')?.touched">
+          <div class="invalid-feedback" i18n>At least 1 guest required.</div>
+        </div>
+
+        <!-- Price summary -->
+        <div class="card bg-light border-0 p-3 mb-4" *ngIf="nights > 0">
+          <div class="d-flex justify-content-between">
+            <span class="text-muted" i18n>{{ nights }} night(s) × {{ campsite?.pricePerNight | currency:'TND':'symbol':'1.0-2' }}</span>
+            <strong class="text-success">{{ totalPrice | currency:'TND':'symbol':'1.0-2' }}</strong>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-block btn-lg"
+                [disabled]="bookingForm.invalid || submitting || nights === 0"
+                aria-label="Confirm booking" i18n>
+          <span *ngIf="submitting" class="spinner-border spinner-border-sm mr-2"></span>
+          {{ submitting ? 'Processing...' : 'Proceed to Payment' }}
+        </button>
+
+      </form>
+    </div>
+  </div>
+</div>

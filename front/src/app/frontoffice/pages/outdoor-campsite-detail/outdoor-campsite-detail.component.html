@@ -1,0 +1,138 @@
+<!-- Module: Outdoor Campsite & Booking | Layer: Frontend Component -->
+<div class="container py-5">
+
+  <!-- Loading skeleton -->
+  <div *ngIf="loading" class="row">
+    <div class="col-md-7">
+      <div class="bg-secondary rounded mb-3" style="height:400px;opacity:.12;"></div>
+    </div>
+    <div class="col-md-5">
+      <div class="bg-secondary rounded mb-2" style="height:30px;opacity:.12;"></div>
+      <div class="bg-secondary rounded mb-2" style="height:20px;width:50%;opacity:.1;"></div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="alert alert-danger" *ngIf="error" role="alert">{{ error }}</div>
+
+  <div *ngIf="!loading && site">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+      <ol class="breadcrumb bg-transparent px-0">
+        <li class="breadcrumb-item"><a routerLink="/outdoor-campsites" i18n>Outdoor Trips</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ site.name }}</li>
+      </ol>
+    </nav>
+
+    <div class="row">
+      <!-- Image gallery -->
+      <div class="col-md-7 mb-4">
+        <div class="position-relative">
+          <img [src]="activeImage" class="img-fluid rounded shadow w-100 mb-2"
+               [alt]="site.name" style="max-height:420px;object-fit:cover;">
+          <span class="badge badge-success position-absolute"
+                style="top:12px;left:12px;padding:6px 14px;border-radius:20px;font-size:.85rem;" i18n>
+            FREE
+          </span>
+          <span class="badge position-absolute"
+                [ngClass]="difficultyBadge(site.accessDifficulty)"
+                style="top:12px;right:12px;padding:6px 14px;border-radius:20px;font-size:.85rem;"
+                *ngIf="site.accessDifficulty">
+            {{ site.accessDifficulty }}
+          </span>
+        </div>
+        <div class="d-flex flex-wrap" style="gap:.4rem;" *ngIf="(site.pictures?.length ?? 0) > 1">
+          <img *ngFor="let pic of site.pictures; let i = index"
+               [src]="pic" [alt]="site.name + ' image ' + (i+1)"
+               class="rounded" style="height:60px;width:80px;object-fit:cover;cursor:pointer;border:2px solid transparent;"
+               [style.border-color]="i === activeImageIndex ? '#28a745' : 'transparent'"
+               (click)="setActiveImage(i)" tabindex="0" (keyup.enter)="setActiveImage(i)">
+        </div>
+      </div>
+
+      <!-- Details -->
+      <div class="col-md-5">
+        <h2 class="font-weight-bold mb-1">{{ site.name }}</h2>
+        <p class="text-muted mb-3">
+          <i class="fas fa-map-marker-alt text-success mr-1"></i>
+          {{ site.city }}, {{ site.country }}
+          <span *ngIf="site.latitude">
+            &nbsp;({{ site.latitude }}, {{ site.longitude }})
+          </span>
+        </p>
+
+        <p class="mb-4" *ngIf="site.description">{{ site.description }}</p>
+
+        <!-- Natural features chips -->
+        <div class="mb-4" *ngIf="site.naturalFeatures?.length">
+          <h6 class="font-weight-bold mb-2" i18n>Natural Features</h6>
+          <div class="d-flex flex-wrap" style="gap:.4rem;">
+            <span class="badge badge-light border px-2 py-1" *ngFor="let f of site.naturalFeatures">
+              <i class="fas fa-leaf text-success mr-1"></i>{{ f }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Book CTA (FREE) -->
+        <div class="card border-0 bg-light p-3 rounded mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="h3 font-weight-bold text-success mb-0" i18n>FREE</span>
+              <div class="small text-muted mt-1" i18n>No booking fee</div>
+            </div>
+            <button class="btn btn-success btn-lg rounded-pill px-4"
+                    (click)="bookNow()"
+                    *ngIf="site.status === 'APPROVED'"
+                    aria-label="Book this outdoor campsite" i18n>
+              <i class="fas fa-tent mr-1"></i> Book Now
+            </button>
+            <span class="badge badge-secondary px-3 py-2" *ngIf="site.status !== 'APPROVED'" i18n>
+              Not Available
+            </span>
+          </div>
+        </div>
+
+        <!-- Proposer info -->
+        <p class="text-muted small">
+          <i class="fas fa-user mr-1"></i>
+          <span i18n>Proposed by</span> <strong>{{ site.proposedByName }}</strong>
+          <span *ngIf="site.createdAt"> &middot; {{ site.createdAt | date:'mediumDate' }}</span>
+        </p>
+        <p class="text-muted small" *ngIf="site.approvedByName">
+          <i class="fas fa-check-circle text-success mr-1"></i>
+          <span i18n>Verified by</span> <strong>{{ site.approvedByName }}</strong>
+          <span *ngIf="site.approvedAt"> &middot; {{ site.approvedAt | date:'mediumDate' }}</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Availability windows -->
+    <div class="mt-5" *ngIf="availabilities.length">
+      <h5 class="font-weight-bold mb-3" i18n>Available Dates</h5>
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered table-hover">
+          <thead class="thead-light">
+            <tr>
+              <th i18n>From</th>
+              <th i18n>To</th>
+              <th i18n>Notes</th>
+              <th i18n>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let av of availabilities">
+              <td>{{ av.startDate }}</td>
+              <td>{{ av.endDate }}</td>
+              <td>{{ av.note || '-' }}</td>
+              <td>
+                <span class="badge badge-success" i18n>Available</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>

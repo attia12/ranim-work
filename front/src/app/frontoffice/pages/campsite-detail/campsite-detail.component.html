@@ -1,0 +1,129 @@
+<!-- Module: Official Campsite & Booking | Layer: Frontend Component -->
+<div class="container py-5">
+
+  <!-- Loading skeleton -->
+  <div *ngIf="loading" class="row">
+    <div class="col-md-7">
+      <div class="bg-secondary rounded mb-3" style="height:400px;opacity:.12;"></div>
+    </div>
+    <div class="col-md-5">
+      <div class="bg-secondary rounded mb-2" style="height:30px;opacity:.12;"></div>
+      <div class="bg-secondary rounded mb-2" style="height:20px;width:50%;opacity:.1;"></div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="alert alert-danger" *ngIf="error" role="alert">{{ error }}</div>
+
+  <div *ngIf="!loading && campsite">
+    <div class="row">
+      <!-- Image gallery -->
+      <div class="col-md-7 mb-4">
+        <img [src]="activeImage" class="img-fluid rounded shadow w-100 mb-2"
+             [alt]="campsite.name" style="max-height:420px;object-fit:cover;">
+        <div class="d-flex flex-wrap" style="gap:.4rem;" *ngIf="(campsite.pictures?.length ?? 0) > 1">
+          <img *ngFor="let pic of campsite.pictures; let i = index"
+               [src]="pic" [alt]="campsite.name + ' image ' + (i+1)"
+               class="rounded" style="height:60px;width:80px;object-fit:cover;cursor:pointer;border:2px solid transparent;"
+               [style.border-color]="i === activeImageIndex ? '#28a745' : 'transparent'"
+               (click)="setActiveImage(i)" tabindex="0" (keyup.enter)="setActiveImage(i)">
+        </div>
+      </div>
+
+      <!-- Details -->
+      <div class="col-md-5">
+        <div class="d-flex align-items-center mb-2">
+          <span class="badge mr-2"
+                [class.badge-primary]="campsite.type === 'OFFICIAL'"
+                [class.badge-success]="campsite.type === 'OUTDOOR'">
+            {{ campsite.type }}
+          </span>
+          <span class="badge badge-light border">
+            <i class="fas fa-users text-muted mr-1"></i>{{ campsite.capacity }} max
+          </span>
+        </div>
+        <h2 class="font-weight-bold mb-1">{{ campsite.name }}</h2>
+        <p class="text-muted mb-3">
+          <i class="fas fa-map-marker-alt text-success mr-1"></i>
+          {{ campsite.city }}, {{ campsite.country }}
+          <span *ngIf="campsite.address"> — {{ campsite.address }}</span>
+        </p>
+
+        <p class="mb-4">{{ campsite.description }}</p>
+
+        <!-- Amenities chips -->
+        <div class="mb-4" *ngIf="campsite.amenities?.length">
+          <h6 class="font-weight-bold mb-2" i18n>Amenities</h6>
+          <div class="d-flex flex-wrap" style="gap:.4rem;">
+            <span class="badge badge-light border px-2 py-1" *ngFor="let am of campsite.amenities">
+              <i class="fas fa-check text-success mr-1"></i>{{ am }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Rules -->
+        <div class="mb-4" *ngIf="campsite.rules">
+          <h6 class="font-weight-bold mb-2" i18n>Rules</h6>
+          <p class="small text-muted">{{ campsite.rules }}</p>
+        </div>
+
+        <!-- Price + Book CTA -->
+        <div class="card border-0 bg-light p-3 rounded">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="h3 font-weight-bold text-success mb-0" *ngIf="campsite.pricePerNight">
+                {{ campsite.pricePerNight | currency:'TND':'symbol':'1.0-2' }}
+              </span>
+              <small class="text-muted" *ngIf="campsite.pricePerNight"> / night</small>
+              <span class="h3 font-weight-bold text-success mb-0" *ngIf="!campsite.pricePerNight" i18n>FREE</span>
+            </div>
+            <button class="btn btn-success btn-lg rounded-pill px-4" (click)="bookNow()"
+                    *ngIf="campsite.status === 'ACTIVE'" aria-label="Book this campsite" i18n>
+              <i class="fas fa-calendar-check mr-1"></i> Book Now
+            </button>
+            <span class="badge badge-secondary px-3 py-2" *ngIf="campsite.status !== 'ACTIVE'" i18n>
+              Not Available
+            </span>
+          </div>
+        </div>
+
+        <!-- Owner info -->
+        <p class="text-muted small mt-3" *ngIf="campsite.ownerName" i18n>
+          Managed by: <strong>{{ campsite.ownerName }}</strong>
+        </p>
+      </div>
+    </div>
+
+    <!-- Availability calendar (read-only) -->
+    <div class="mt-5" *ngIf="availabilities.length">
+      <h5 class="font-weight-bold mb-3" i18n>Availability Calendar</h5>
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered table-hover">
+          <thead class="thead-light">
+            <tr>
+              <th i18n>From</th>
+              <th i18n>To</th>
+              <th i18n>Places</th>
+              <th i18n>Weather</th>
+              <th i18n>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let av of availabilities">
+              <td>{{ av.startDate }}</td>
+              <td>{{ av.endDate }}</td>
+              <td>{{ av.numberOfPlaces }}</td>
+              <td>{{ av.weatherCondition || '-' }}</td>
+              <td>
+                <span class="badge" [class.badge-danger]="av.isBlocked" [class.badge-success]="!av.isBlocked">
+                  {{ av.isBlocked ? 'Blocked' : 'Available' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>

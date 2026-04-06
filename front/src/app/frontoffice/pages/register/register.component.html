@@ -1,0 +1,694 @@
+<div class="register-fullpage">
+  <div class="register-split-left d-none d-lg-flex">
+    <div class="image-overlay"></div>
+    <div class="brand-panel">
+      <i class="fas fa-campground fa-3x mb-3"></i>
+      <h2 class="fw-bold">CampWay</h2>
+      <p class="mt-2 opacity-75">Your gateway to unforgettable camping experiences</p>
+    </div>
+  </div>
+
+  <div class="register-split-right">
+    <div class="register-form-wrap">
+
+      <div class="text-center mb-4">
+        <a routerLink="/home" class="home-back-btn mb-3 d-inline-flex align-items-center gap-2">
+          <span class="brand-name">CampWay</span>
+        </a>
+        <p class="text-muted small">Create your account and start exploring</p>
+      </div>
+
+      <!-- Error Banner -->
+      <div class="alert alert-danger d-flex align-items-center" *ngIf="registerError">
+        <i class="fas fa-exclamation-circle mr-2"></i>
+        <span>{{ registerError }}</span>
+      </div>
+
+      <form #registerForm="ngForm" (ngSubmit)="onSubmit(registerForm)" novalidate>
+
+        <!-- First Name & Last Name -->
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">First Name</label>
+              <div class="input-group" [class.is-invalid-group]="firstName.invalid && firstName.touched">
+                <div class="input-group-prepend">
+                  <span class="input-group-text" [class.border-danger]="firstName.invalid && firstName.touched">
+                    <i class="fas fa-user"></i>
+                  </span>
+                </div>
+                <input type="text" class="form-control"
+                       [class.is-invalid]="firstName.invalid && firstName.touched"
+                       name="firstName" #firstName="ngModel"
+                       [(ngModel)]="userData.firstName"
+                       placeholder="John" required minlength="2" pattern="^[A-Za-zÀ-ÿ\s'-]+$">
+              </div>
+              <div class="invalid-feedback d-block" *ngIf="firstName.invalid && firstName.touched">
+                <i class="fas fa-exclamation-triangle mr-1"></i>
+                <span *ngIf="firstName.errors?.['required']">First name is required.</span>
+                <span *ngIf="firstName.errors?.['minlength']">Must be at least 2 characters.</span>
+                <span *ngIf="firstName.errors?.['pattern']">Only letters are allowed.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">Last Name</label>
+              <div class="input-group" [class.is-invalid-group]="lastName.invalid && lastName.touched">
+                <div class="input-group-prepend">
+                  <span class="input-group-text" [class.border-danger]="lastName.invalid && lastName.touched">
+                    <i class="fas fa-user"></i>
+                  </span>
+                </div>
+                <input type="text" class="form-control"
+                       [class.is-invalid]="lastName.invalid && lastName.touched"
+                       name="lastName" #lastName="ngModel"
+                       [(ngModel)]="userData.lastName"
+                       placeholder="Doe" required minlength="2" pattern="^[A-Za-zÀ-ÿ\s'-]+$">
+              </div>
+              <div class="invalid-feedback d-block" *ngIf="lastName.invalid && lastName.touched">
+                <i class="fas fa-exclamation-triangle mr-1"></i>
+                <span *ngIf="lastName.errors?.['required']">Last name is required.</span>
+                <span *ngIf="lastName.errors?.['minlength']">Must be at least 2 characters.</span>
+                <span *ngIf="lastName.errors?.['pattern']">Only letters are allowed.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-group" [class.is-invalid-group]="regEmail.invalid && regEmail.touched">
+            <div class="input-group-prepend">
+              <span class="input-group-text" [class.border-danger]="regEmail.invalid && regEmail.touched">
+                <i class="fas fa-envelope"></i>
+              </span>
+            </div>
+            <input type="email" class="form-control"
+                   [class.is-invalid]="regEmail.invalid && regEmail.touched"
+                   name="email" #regEmail="ngModel"
+                   [(ngModel)]="userData.email"
+                   placeholder="your.email@example.com" required email>
+          </div>
+          <div class="invalid-feedback d-block" *ngIf="regEmail.invalid && regEmail.touched">
+            <i class="fas fa-exclamation-triangle mr-1"></i>
+            <span *ngIf="regEmail.errors?.['required']">Email is required.</span>
+            <span *ngIf="regEmail.errors?.['email']">Please enter a valid email address.</span>
+          </div>
+        </div>
+
+        <!-- Phone -->
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <div class="input-group" [class.is-invalid-group]="phone.invalid && phone.touched">
+            <div class="input-group-prepend">
+              <span class="input-group-text" [class.border-danger]="phone.invalid && phone.touched">
+                <i class="fas fa-phone"></i>
+              </span>
+            </div>
+            <input type="tel" class="form-control"
+                   [class.is-invalid]="phone.invalid && phone.touched"
+                   name="phoneNumber" #phone="ngModel"
+                   [(ngModel)]="userData.phoneNumber"
+                   placeholder="+216 XX XXX XXX"
+                   pattern="^\+?[0-9\s\-\(\)]{7,20}$">
+          </div>
+          <div class="invalid-feedback d-block" *ngIf="phone.invalid && phone.touched">
+            <i class="fas fa-exclamation-triangle mr-1"></i>
+            Please enter a valid phone number.
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-group" [class.is-invalid-group]="regPassword.invalid && regPassword.touched">
+            <div class="input-group-prepend">
+              <span class="input-group-text" [class.border-danger]="regPassword.invalid && regPassword.touched">
+                <i class="fas fa-lock"></i>
+              </span>
+            </div>
+            <input [type]="showPassword ? 'text' : 'password'" class="form-control"
+                   [class.is-invalid]="regPassword.invalid && regPassword.touched"
+                   name="password" #regPassword="ngModel"
+                   [(ngModel)]="userData.password"
+                   placeholder="Create a strong password"
+                   required minlength="8"
+                   pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$"
+                   (ngModelChange)="updatePasswordStrength()">
+            <div class="input-group-append">
+              <button type="button" class="input-group-text toggle-btn" (click)="togglePassword()">
+                <i class="fas" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+              </button>
+            </div>
+          </div>
+          <!-- Password Strength Bar -->
+          <div class="password-strength mt-2" *ngIf="userData.password">
+            <div class="strength-bars">
+              <div class="bar" [class.active]="passwordStrength >= 1" [class.weak]="passwordStrength === 1" [class.medium]="passwordStrength === 2" [class.strong]="passwordStrength >= 3"></div>
+              <div class="bar" [class.active]="passwordStrength >= 2" [class.medium]="passwordStrength === 2" [class.strong]="passwordStrength >= 3"></div>
+              <div class="bar" [class.active]="passwordStrength >= 3" [class.strong]="passwordStrength >= 3"></div>
+              <div class="bar" [class.active]="passwordStrength >= 4" [class.strong]="passwordStrength >= 4"></div>
+            </div>
+            <span class="strength-label" [class.text-danger]="passwordStrength <= 1" [class.text-warning]="passwordStrength === 2" [class.text-success]="passwordStrength >= 3">
+              {{ passwordStrengthLabel }}
+            </span>
+          </div>
+          <div class="invalid-feedback d-block" *ngIf="regPassword.invalid && regPassword.touched">
+            <i class="fas fa-exclamation-triangle mr-1"></i>
+            <span *ngIf="regPassword.errors?.['required']">Password is required.</span>
+            <span *ngIf="regPassword.errors?.['minlength']">Password must be at least 8 characters.</span>
+            <span *ngIf="regPassword.errors?.['pattern'] && !regPassword.errors?.['minlength']">Must include uppercase, lowercase, and a number.</span>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <label class="form-label">Confirm Password</label>
+          <div class="input-group" [class.is-invalid-group]="(confirmPassword.invalid && confirmPassword.touched) || (passwordMismatch && confirmPassword.touched)">
+            <div class="input-group-prepend">
+              <span class="input-group-text" [class.border-danger]="(confirmPassword.invalid && confirmPassword.touched) || (passwordMismatch && confirmPassword.touched)">
+                <i class="fas fa-lock"></i>
+              </span>
+            </div>
+            <input [type]="showConfirmPassword ? 'text' : 'password'" class="form-control"
+                   [class.is-invalid]="(confirmPassword.invalid && confirmPassword.touched) || (passwordMismatch && confirmPassword.touched)"
+                   name="confirmPassword" #confirmPassword="ngModel"
+                   [(ngModel)]="userData.confirmPassword"
+                   placeholder="Confirm your password"
+                   required
+                   (ngModelChange)="checkPasswordMatch()">
+            <div class="input-group-append">
+              <button type="button" class="input-group-text toggle-btn" (click)="toggleConfirmPassword()">
+                <i class="fas" [ngClass]="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+              </button>
+            </div>
+          </div>
+          <div class="invalid-feedback d-block" *ngIf="confirmPassword.touched && (confirmPassword.errors?.['required'] || passwordMismatch)">
+            <i class="fas fa-exclamation-triangle mr-1"></i>
+            <span *ngIf="confirmPassword.errors?.['required']">Please confirm your password.</span>
+            <span *ngIf="passwordMismatch && !confirmPassword.errors?.['required']">Passwords do not match.</span>
+          </div>
+          <div class="valid-feedback d-block" *ngIf="confirmPassword.touched && !passwordMismatch && !confirmPassword.errors?.['required'] && userData.confirmPassword">
+            <i class="fas fa-check-circle mr-1"></i> Passwords match.
+          </div>
+        </div>
+
+        <!-- Role Selection -->
+        <div class="form-group">
+          <label class="form-label">I am a...</label>
+          <div class="role-grid">
+            <div
+              *ngFor="let role of roles"
+              class="role-card"
+              [class.selected]="userData.role === role.value"
+              (click)="userData.role = role.value"
+              [title]="role.description"
+              data-bs-toggle="tooltip"
+            >
+              <i class="fas mb-2" [ngClass]="role.icon"></i>
+              <span>{{ role.label }}</span>
+            </div>
+          </div>
+          <div class="invalid-feedback d-block" *ngIf="roleRequired">
+            <i class="fas fa-exclamation-triangle mr-1"></i>Please select your role.
+          </div>
+        </div>
+
+        <!-- CAMPER block -->
+        <div class="role-block" *ngIf="userData.role === UserRole.CAMPER">
+          <p class="role-block-title"><i class="fas fa-hiking mr-1"></i> Camper profile</p>
+          <div class="form-group">
+            <label class="form-label">Experience Level <span class="text-danger">*</span></label>
+            <select class="form-control" name="experienceLevel" #experienceLevel="ngModel"
+                    [(ngModel)]="userData.experienceLevel"
+                    [class.is-invalid]="experienceLevel.invalid && experienceLevel.touched"
+                    required>
+              <option value="">Select your experience level</option>
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="expert">Expert</option>
+            </select>
+            <div class="invalid-feedback d-block" *ngIf="experienceLevel.invalid && experienceLevel.touched">
+              Please select your experience level.
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preferred Terrain</label>
+            <select class="form-control" name="preferredTerrain" [(ngModel)]="userData.preferredTerrain">
+              <option value="">Select preferred terrain</option>
+              <option value="forest">Forest</option>
+              <option value="mountain">Mountain</option>
+              <option value="desert">Desert</option>
+              <option value="coastal">Coastal</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bio</label>
+            <textarea class="form-control" name="bio" #camperBio="ngModel"
+                      [(ngModel)]="userData.bio" rows="2"
+                      placeholder="Tell other campers about yourself..."
+                      maxlength="500"
+                      [class.is-invalid]="camperBio.invalid && camperBio.touched"></textarea>
+            <div class="invalid-feedback d-block" *ngIf="camperBio.invalid && camperBio.touched">
+              Bio cannot exceed 500 characters.
+            </div>
+          </div>
+        </div>
+
+        <!-- GEAR_PROVIDER block -->
+        <div class="role-block" *ngIf="userData.role === UserRole.GEAR_PROVIDER">
+          <p class="role-block-title"><i class="fas fa-tools mr-1"></i> Provider details</p>
+          <div class="form-group">
+            <label class="form-label">Company / Shop Name <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-building"></i></span>
+              </div>
+              <input type="text" class="form-control" name="companyName" #companyName="ngModel"
+                     [(ngModel)]="userData.companyName"
+                     placeholder="Company or shop name"
+                     required minlength="2" maxlength="100"
+                     [class.is-invalid]="companyName.invalid && companyName.touched">
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="companyName.invalid && companyName.touched">
+              <span *ngIf="companyName.errors?.['required']">Company name is required.</span>
+              <span *ngIf="companyName.errors?.['minlength']">At least 2 characters required.</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Shop Description</label>
+            <textarea class="form-control" name="shopDescription" #shopDesc="ngModel"
+                      [(ngModel)]="userData.shopDescription" rows="2"
+                      placeholder="What gear do you offer?"
+                      maxlength="500"
+                      [class.is-invalid]="shopDesc.invalid && shopDesc.touched"></textarea>
+            <div class="invalid-feedback d-block" *ngIf="shopDesc.invalid && shopDesc.touched">
+              Description cannot exceed 500 characters.
+            </div>
+          </div>
+        </div>
+
+        <!-- CAMPSITE_OWNER block -->
+        <div class="role-block" *ngIf="userData.role === UserRole.CAMPSITE_OWNER">
+          <p class="role-block-title"><i class="fas fa-campground mr-1"></i> Campsite details</p>
+          <div class="form-group">
+            <label class="form-label">Business Name <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-store"></i></span>
+              </div>
+              <input type="text" class="form-control" name="businessName" #businessName="ngModel"
+                     [(ngModel)]="userData.businessName"
+                     placeholder="Business name"
+                     required minlength="2" maxlength="100"
+                     [class.is-invalid]="businessName.invalid && businessName.touched">
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="businessName.invalid && businessName.touched">
+              <span *ngIf="businessName.errors?.['required']">Business name is required.</span>
+              <span *ngIf="businessName.errors?.['minlength']">At least 2 characters required.</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Region <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+              </div>
+              <input type="text" class="form-control" name="region" #region="ngModel"
+                     [(ngModel)]="userData.region"
+                     placeholder="e.g. Cap Bon, North Tunisia"
+                     required
+                     [class.is-invalid]="region.invalid && region.touched">
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="region.invalid && region.touched">
+              Region is required.
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Website URL</label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-globe"></i></span>
+              </div>
+              <input type="url" class="form-control" name="websiteUrl" #websiteUrlOwner="ngModel"
+                     [(ngModel)]="userData.websiteUrl"
+                     placeholder="https://..."
+                     pattern="https?://.+"
+                     [class.is-invalid]="websiteUrlOwner.invalid && websiteUrlOwner.touched">
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="websiteUrlOwner.invalid && websiteUrlOwner.touched">
+              Please enter a valid URL starting with http:// or https://
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Business Description</label>
+            <textarea class="form-control" name="businessDescription"
+                      [(ngModel)]="userData.businessDescription" rows="2"
+                      placeholder="Describe your campsite..."
+                      maxlength="500"></textarea>
+          </div>
+        </div>
+
+        <!-- GUIDE block -->
+        <div class="role-block" *ngIf="userData.role === UserRole.GUIDE">
+          <p class="role-block-title"><i class="fas fa-compass mr-1"></i> Guide details</p>
+          <div class="form-group">
+            <label class="form-label">Specialization <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-mountain"></i></span>
+              </div>
+              <input type="text" class="form-control" name="specialization" #specialization="ngModel"
+                     [(ngModel)]="userData.specialization"
+                     placeholder="e.g. Mountain trekking, Desert expeditions"
+                     required minlength="3"
+                     [class.is-invalid]="specialization.invalid && specialization.touched">
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="specialization.invalid && specialization.touched">
+              <span *ngIf="specialization.errors?.['required']">Specialization is required.</span>
+              <span *ngIf="specialization.errors?.['minlength']">At least 3 characters required.</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Years of Experience</label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+              </div>
+              <input type="number" class="form-control" name="yearsExperience" #yearsExp="ngModel"
+                     [(ngModel)]="userData.yearsExperience"
+                     placeholder="Years of experience"
+                     min="0" max="60"
+                     [class.is-invalid]="yearsExp.invalid && yearsExp.touched">
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="yearsExp.invalid && yearsExp.touched">
+              Must be between 0 and 60.
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Languages</label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-language"></i></span>
+              </div>
+              <input type="text" class="form-control" name="languages"
+                     [(ngModel)]="userData.languages"
+                     placeholder="e.g. Arabic, French, English">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Certification Number</label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+              </div>
+              <input type="text" class="form-control" name="certificationNumber"
+                     [(ngModel)]="userData.certificationNumber"
+                     placeholder="Certification number">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bio</label>
+            <textarea class="form-control" name="bio"
+                      [(ngModel)]="userData.bio" rows="2"
+                      placeholder="Tell clients about your experience..."
+                      maxlength="500"></textarea>
+          </div>
+        </div>
+
+        <!-- SPONSOR block -->
+        <div class="role-block" *ngIf="userData.role === UserRole.SPONSOR">
+          <p class="role-block-title"><i class="fas fa-handshake mr-1"></i> Sponsor details</p>
+          <div class="form-group">
+            <label class="form-label">Company / Brand Name <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-building"></i></span>
+              </div>
+              <input type="text" class="form-control" name="companyName" #sponsorCompany="ngModel"
+                     [(ngModel)]="userData.companyName"
+                     placeholder="Company / brand name"
+                     required minlength="2"
+                     [class.is-invalid]="sponsorCompany.invalid && sponsorCompany.touched">
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="sponsorCompany.invalid && sponsorCompany.touched">
+              <span *ngIf="sponsorCompany.errors?.['required']">Company name is required.</span>
+              <span *ngIf="sponsorCompany.errors?.['minlength']">At least 2 characters required.</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Industry</label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-industry"></i></span>
+              </div>
+              <input type="text" class="form-control" name="industry"
+                     [(ngModel)]="userData.industry"
+                     placeholder="e.g. Outdoor equipment, Tourism">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Website URL</label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-globe"></i></span>
+              </div>
+              <input type="url" class="form-control" name="websiteUrl" #websiteUrlSponsor="ngModel"
+                     [(ngModel)]="userData.websiteUrl"
+                     placeholder="https://..."
+                     pattern="https?://.+"
+                     [class.is-invalid]="websiteUrlSponsor.invalid && websiteUrlSponsor.touched">
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="websiteUrlSponsor.invalid && websiteUrlSponsor.touched">
+              Please enter a valid URL starting with http:// or https://
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sponsorship Description</label>
+            <textarea class="form-control" name="sponsorshipDescription"
+                      [(ngModel)]="userData.sponsorshipDescription" rows="2"
+                      placeholder="Describe your sponsorship offer..."
+                      maxlength="500"></textarea>
+          </div>
+        </div>
+
+        <!-- DELIVERY_PERSONNEL block -->
+        <div class="role-block" *ngIf="userData.role === UserRole.DELIVERY_PERSONNEL">
+          <p class="role-block-title"><i class="fas fa-truck mr-1"></i> Delivery agent details</p>
+          <div class="form-group">
+            <label class="form-label">Driver License Number <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+              </div>
+              <input type="text" class="form-control" name="licenseNumber" #licenseNumber="ngModel"
+                     [(ngModel)]="userData.licenseNumber"
+                     placeholder="Driver license number"
+                     required minlength="4"
+                     [class.is-invalid]="licenseNumber.invalid && licenseNumber.touched">
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="licenseNumber.invalid && licenseNumber.touched">
+              <span *ngIf="licenseNumber.errors?.['required']">License number is required.</span>
+              <span *ngIf="licenseNumber.errors?.['minlength']">At least 4 characters required.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CAMPSITE_MANAGER block -->
+        <div class="role-block" *ngIf="userData.role === UserRole.CAMPSITE_MANAGER">
+          <p class="role-block-title"><i class="fas fa-campground mr-1"></i> Campsite Manager details</p>
+          <div class="form-group">
+            <label class="form-label">Managed Region <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+              </div>
+              <input type="text" class="form-control" name="managedRegion" #managedRegion="ngModel"
+                     [(ngModel)]="userData.managedRegion"
+                     placeholder="Region you manage e.g. Cap Bon"
+                     required
+                     [class.is-invalid]="managedRegion.invalid && managedRegion.touched">
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="managedRegion.invalid && managedRegion.touched">
+              Managed region is required.
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Additional Notes</label>
+            <textarea class="form-control" name="managerNotes"
+                      [(ngModel)]="userData.managerNotes" rows="2"
+                      placeholder="Additional notes..."
+                      maxlength="500"></textarea>
+          </div>
+        </div>
+
+        <!-- PARTNER block -->
+        <div class="role-block" *ngIf="userData.role === UserRole.PARTNER">
+          <p class="role-block-title"><i class="fas fa-users mr-1"></i> Partner details</p>
+          <div class="form-group">
+            <label class="form-label">Organization Name <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-building"></i></span>
+              </div>
+              <input type="text" class="form-control" name="organizationName" #orgName="ngModel"
+                     [(ngModel)]="userData.organizationName"
+                     placeholder="Organization name"
+                     required minlength="2"
+                     [class.is-invalid]="orgName.invalid && orgName.touched">
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="orgName.invalid && orgName.touched">
+              <span *ngIf="orgName.errors?.['required']">Organization name is required.</span>
+              <span *ngIf="orgName.errors?.['minlength']">At least 2 characters required.</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Partner Type</label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-tag"></i></span>
+              </div>
+              <input type="text" class="form-control" name="partnerType"
+                     [(ngModel)]="userData.partnerType"
+                     placeholder="e.g. Event Group, Forum Community">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" name="partnershipDescription"
+                      [(ngModel)]="userData.partnershipDescription" rows="2"
+                      placeholder="Describe your organization..."
+                      maxlength="500"></textarea>
+          </div>
+        </div>
+
+        <!-- EVENT_ORGANIZER block -->
+        <div class="role-block" *ngIf="userData.role === UserRole.EVENT_ORGANIZER">
+          <p class="role-block-title"><i class="fas fa-calendar-alt mr-1"></i> Event Organizer details</p>
+          <div class="form-group">
+            <label class="form-label">Organization Name <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-building"></i></span>
+              </div>
+              <input type="text" class="form-control" name="organizationName" #eoOrgName="ngModel"
+                     [(ngModel)]="userData.organizationName"
+                     placeholder="Organization name (e.g. CampWay Events)"
+                     required minlength="2"
+                     [class.is-invalid]="eoOrgName.invalid && eoOrgName.touched">
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="eoOrgName.invalid && eoOrgName.touched">
+              <span *ngIf="eoOrgName.errors?.['required']">Organization name is required.</span>
+              <span *ngIf="eoOrgName.errors?.['minlength']">At least 2 characters required.</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Specialization</label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-tag"></i></span>
+              </div>
+              <input type="text" class="form-control" name="eventSpecialization"
+                     [(ngModel)]="userData.eventSpecialization"
+                     placeholder="e.g. Survival, Team building, Festival"
+                     maxlength="100">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Years of Experience</label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-calendar-check"></i></span>
+              </div>
+              <input type="number" class="form-control" name="eventYearsExperience" #eoYears="ngModel"
+                     [(ngModel)]="userData.eventYearsExperience"
+                     placeholder="Years of experience"
+                     min="0" max="60"
+                     [class.is-invalid]="eoYears.invalid && eoYears.touched">
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="eoYears.invalid && eoYears.touched">
+              Must be between 0 and 60.
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Website URL</label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-globe"></i></span>
+              </div>
+              <input type="url" class="form-control" name="websiteUrl" #eoWebsite="ngModel"
+                     [(ngModel)]="userData.websiteUrl"
+                     placeholder="https://..."
+                     pattern="https?://.+"
+                     [class.is-invalid]="eoWebsite.invalid && eoWebsite.touched">
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="eoWebsite.invalid && eoWebsite.touched">
+              Please enter a valid URL starting with http:// or https://
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bio</label>
+            <textarea class="form-control" name="eventBio"
+                      [(ngModel)]="userData.eventBio" rows="2"
+                      placeholder="Tell us about your events and experience..."
+                      maxlength="500"></textarea>
+          </div>
+        </div>
+
+        <!-- Terms -->
+        <div class="form-group mb-4">
+          <div class="custom-control custom-checkbox">
+            <input type="checkbox" class="custom-control-input" id="terms"
+                   name="terms" #termsRef="ngModel"
+                   [(ngModel)]="acceptedTerms" required>
+            <label class="custom-control-label" for="terms">
+              I agree to the <a href="javascript:void(0)" class="text-success hover-underline">Terms & Conditions</a>
+            </label>
+          </div>
+          <div class="invalid-feedback d-block" *ngIf="termsRef.invalid && termsRef.touched">
+            <i class="fas fa-exclamation-triangle mr-1"></i>You must accept the terms to continue.
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-success btn-block btn-lg mb-3" [disabled]="isLoading">
+          <span *ngIf="!isLoading">Create Account</span>
+          <span *ngIf="isLoading">
+            <span class="spinner-border spinner-border-sm mr-2" role="status"></span>
+            Creating Account...
+          </span>
+        </button>
+
+        <div class="divider">
+          <span>OR</span>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-6">
+            <button type="button" class="btn btn-outline-primary btn-block">
+              <i class="fab fa-google mr-2"></i>Google
+            </button>
+          </div>
+          <div class="col-6">
+            <button type="button" class="btn btn-outline-dark btn-block">
+              <i class="fab fa-facebook mr-2"></i>Facebook
+            </button>
+          </div>
+        </div>
+
+        <div class="text-center mt-4">
+          <p class="mb-0">
+            Already have an account?
+            <a routerLink="/login" class="text-success font-weight-bold">Login</a>
+          </p>
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+</div>

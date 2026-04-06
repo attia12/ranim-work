@@ -1,0 +1,274 @@
+<div class="forum-page py-5">
+  <div class="container">
+
+    <!-- Header -->
+    <div class="row mb-5">
+      <div class="col-12 text-center">
+        <h2 class="font-weight-bold mb-3">Community Forums</h2>
+        <p class="text-muted">Talk with other campers, share tips, and learn from the pros.</p>
+      </div>
+    </div>
+
+    <!-- ── CATEGORY VIEW ── -->
+    <div class="row" *ngIf="!selectedCategory">
+      <div class="col-lg-4 mb-4" *ngFor="let cat of categories">
+        <div class="card h-100 border-0 shadow-sm text-center p-4 hover-up cursor-pointer"
+             (click)="selectCategory(cat)">
+          <div class="cat-icon mb-3">
+            <i class="fas fa-comments fa-3x text-success"></i>
+          </div>
+          <h5 class="font-weight-bold">{{ cat.name }}</h5>
+          <p class="text-muted small mb-0">{{ cat.description }}</p>
+        </div>
+      </div>
+      <div class="col-12 text-center" *ngIf="categories.length === 0">
+        <p class="text-muted">No categories yet.</p>
+      </div>
+    </div>
+
+    <!-- ── POST VIEW ── -->
+    <div *ngIf="selectedCategory">
+
+      <!-- Top bar -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <button class="btn btn-link text-success p-0" (click)="backToCategories()">
+          <i class="fas fa-arrow-left mr-2"></i>Back to Categories
+        </button>
+        <button class="btn btn-success rounded-pill px-4"
+                (click)="showNewPostForm = !showNewPostForm">
+          <i class="fas fa-plus mr-2"></i>New Post
+        </button>
+      </div>
+
+      <!-- New Post Form -->
+      <div class="card border-0 shadow-sm mb-4 p-3" *ngIf="showNewPostForm">
+        <div class="d-flex align-items-center mb-3">
+          <div class="avatar-circle bg-success text-white mr-3">
+            {{ currentUserName.charAt(0).toUpperCase() }}
+          </div>
+          <span class="font-weight-bold">{{ currentUserName }}</span>
+        </div>
+
+        <!-- Title -->
+        <input type="text" class="form-control mb-1" placeholder="Post title..."
+               [(ngModel)]="newPostTitle"
+               [class.is-invalid]="postTitleError">
+        <div class="text-danger small mb-2" *ngIf="postTitleError">
+          <i class="fas fa-exclamation-circle mr-1"></i>{{ postTitleError }}
+        </div>
+
+        <!-- Content -->
+        <textarea class="form-control mb-1" rows="3" placeholder="What's on your mind?"
+                  [(ngModel)]="newPostContent"
+                  [class.is-invalid]="postContentError"></textarea>
+        <div class="text-danger small mb-2" *ngIf="postContentError">
+          <i class="fas fa-exclamation-circle mr-1"></i>{{ postContentError }}
+        </div>
+
+        <div class="d-flex justify-content-end mt-2">
+          <button class="btn btn-light mr-2" (click)="showNewPostForm = false">Cancel</button>
+          <button class="btn btn-success rounded-pill px-4" (click)="createPost()">
+            <i class="fas fa-paper-plane mr-2"></i>Publish
+          </button>
+        </div>
+      </div>
+
+      <h4 class="font-weight-bold mb-4">{{ selectedCategory.name }}</h4>
+
+      <!-- Posts List -->
+      <div class="post-card card border-0 shadow-sm mb-4 p-4" *ngFor="let post of posts">
+
+        <!-- ✅ Edit mode -->
+        <div *ngIf="editingPostId === post.postId">
+
+          <!-- Edit Title -->
+          <input type="text" class="form-control mb-1"
+                 [(ngModel)]="editingPostTitle"
+                 [class.is-invalid]="editTitleError">
+          <div class="text-danger small mb-2" *ngIf="editTitleError">
+            <i class="fas fa-exclamation-circle mr-1"></i>{{ editTitleError }}
+          </div>
+
+          <!-- Edit Content -->
+          <textarea class="form-control mb-1" rows="3"
+                    [(ngModel)]="editingPostContent"
+                    [class.is-invalid]="editContentError"></textarea>
+          <div class="text-danger small mb-2" *ngIf="editContentError">
+            <i class="fas fa-exclamation-circle mr-1"></i>{{ editContentError }}
+          </div>
+
+          <div class="d-flex justify-content-end mt-2">
+            <button class="btn btn-light mr-2" (click)="cancelEditPost()">
+              <i class="fas fa-times mr-1"></i>Cancel
+            </button>
+            <button class="btn btn-success" (click)="saveEditPost(post)">
+              <i class="fas fa-check mr-1"></i>Save
+            </button>
+          </div>
+        </div>
+
+        <!-- ✅ Normal mode -->
+        <div *ngIf="editingPostId !== post.postId">
+
+          <!-- Post Header -->
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="d-flex align-items-center">
+              <div class="avatar-circle bg-success text-white mr-3">
+                {{ (post.authorName || 'U').charAt(0).toUpperCase() }}
+              </div>
+              <div>
+                <div class="font-weight-bold">{{ post.authorName }}</div>
+                <small class="text-muted">{{ post.categoryName }}</small>
+              </div>
+            </div>
+            <div class="post-actions">
+              <button class="btn btn-sm btn-outline-secondary mr-2"
+                      (click)="startEditPost(post)" title="Edit post">
+                <i class="fas fa-pencil-alt mr-1"></i>Edit
+              </button>
+              <button class="btn btn-sm btn-outline-danger"
+                      (click)="deletePost(post.postId)" title="Delete post">
+                <i class="fas fa-trash mr-1"></i>Delete
+              </button>
+            </div>
+          </div>
+
+          <!-- Post Content -->
+          <h5 class="font-weight-bold mb-2">{{ post.title }}</h5>
+          <p class="text-muted mb-3">{{ post.content }}</p>
+
+          <!-- Stats -->
+          <div class="d-flex text-muted small mb-3 border-bottom pb-2">
+            <span class="mr-auto">
+              <i class="fas fa-heart text-danger mr-1"></i>
+              {{ post.totalLikes }} likes
+            </span>
+            <span class="cursor-pointer" (click)="toggleComments(post)">
+              {{ post.totalComments }} comments
+            </span>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="d-flex mb-3">
+            <button class="btn btn-light flex-grow-1 mr-2 rounded-pill"
+                    [class.liked]="isLiked(post.postId)"
+                    (click)="toggleLike(post)">
+              <i class="fas fa-heart mr-2"
+                 [class.text-danger]="isLiked(post.postId)"
+                 [class.text-muted]="!isLiked(post.postId)"></i>
+              {{ isLiked(post.postId) ? 'Liked' : 'Like' }}
+            </button>
+            <button class="btn btn-light flex-grow-1 rounded-pill"
+                    (click)="toggleComments(post)">
+              <i class="fas fa-comment mr-2 text-muted"></i>
+              Comment
+            </button>
+          </div>
+
+          <!-- ✅ Comments Section -->
+          <div *ngIf="isCommentsShown(post.postId)">
+
+            <!-- Comments List -->
+            <div class="comment-item d-flex mb-3"
+                 *ngFor="let comment of getComments(post.postId)">
+              <div class="avatar-circle avatar-sm bg-secondary text-white mr-2 flex-shrink-0">
+                {{ (comment.authorName || 'U').charAt(0).toUpperCase() }}
+              </div>
+              <div class="comment-bubble flex-grow-1">
+                <span class="font-weight-bold small">{{ comment.authorName }}</span>
+                <p class="mb-0 small">{{ comment.content }}</p>
+              </div>
+              <button class="btn btn-link btn-sm text-danger p-0 ml-2"
+                      title="Delete comment"
+                      (click)="deleteComment(post, comment.commentId)">
+                <i class="fas fa-times" style="font-size:11px;"></i>
+              </button>
+            </div>
+
+            <!-- No comments -->
+            <div class="text-center text-muted small py-2"
+                 *ngIf="getComments(post.postId).length === 0">
+              No comments yet. Be the first!
+            </div>
+
+            <!-- Add Comment -->
+            <div class="d-flex flex-wrap mt-2">
+              <div class="avatar-circle avatar-sm bg-success text-white mr-2 flex-shrink-0">
+                {{ currentUserName.charAt(0).toUpperCase() }}
+              </div>
+              <div class="flex-grow-1">
+                <div class="d-flex">
+                  <input type="text"
+                         class="form-control form-control-sm rounded-pill mr-2"
+                         placeholder="Write a comment..."
+                         [value]="getNewComment(post.postId)"
+                         (input)="setNewComment(post.postId, $any($event.target).value)"
+                         (keyup.enter)="addComment(post)"
+                         [class.is-invalid]="commentErrors.get(post.postId)">
+                  <button class="btn btn-success btn-sm rounded-pill px-3"
+                          (click)="addComment(post)">
+                    <i class="fas fa-paper-plane"></i>
+                  </button>
+                </div>
+                <!-- Comment error -->
+                <div class="text-danger small mt-1" *ngIf="commentErrors.get(post.postId)">
+                  <i class="fas fa-exclamation-circle mr-1"></i>{{ commentErrors.get(post.postId) }}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="text-center py-5" *ngIf="posts.length === 0">
+        <i class="far fa-newspaper fa-3x text-muted mb-3" style="opacity:0.3;"></i>
+        <p class="text-muted">No posts yet. Be the first to post!</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+  .forum-page { background: #f0f2f5; min-height: 100vh; }
+  .hover-up { transition: transform 0.3s ease; }
+  .hover-up:hover { transform: translateY(-5px); }
+  .cursor-pointer { cursor: pointer; }
+  .post-card { border-radius: 12px !important; }
+
+  .avatar-circle {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 16px;
+    flex-shrink: 0;
+  }
+  .avatar-sm { width: 32px; height: 32px; font-size: 13px; }
+
+  .comment-bubble {
+    background: #f0f2f5;
+    border-radius: 18px;
+    padding: 8px 14px;
+  }
+
+  .btn-light.liked {
+    color: #e0245e !important;
+    font-weight: 700;
+    background: #fce8ef;
+  }
+
+  .btn-light {
+    background: #f0f2f5;
+    border: none;
+    color: #65676b;
+    font-weight: 600;
+  }
+  .btn-light:hover { background: #e4e6ea; }
+
+  .post-actions .btn {
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+</style>

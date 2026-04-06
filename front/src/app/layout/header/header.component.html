@@ -1,0 +1,79 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+  <div class="container">
+    <!-- Logo -->
+    <a class="navbar-brand" routerLink="/home">
+      <i class="fas fa-campground text-success mr-2"></i>
+      <span class="font-weight-bold">CampWay</span>
+    </a>
+
+    <!-- Mobile Toggle Button -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Navigation Menu -->
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav mx-auto">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+            Home
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/campsites" routerLinkActive="active">
+            Campsites
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/outdoor-trips" routerLinkActive="active">
+            Outdoor Trips
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/shop" routerLinkActive="active">
+            Shop
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/events" routerLinkActive="active">
+            Events
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/forum" routerLinkActive="active">
+            Forum
+          </a>
+        </li>
+      </ul>
+
+      <!-- Right Side Menu -->
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="#">
+            <i class="fas fa-search"></i>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/messages" routerLinkActive="active">
+            <i class="fas fa-envelope"></i>
+            <span class="badge badge-danger badge-sm">3</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">
+            <i class="fas fa-heart"></i>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="badge badge-success badge-sm">2</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <button class="btn btn-success btn-sm ml-2 px-3">Login</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,351 @@
+<div class="content-header p-4" style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%); color: white;">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="font-weight-bold mb-0">{{title}}</h1>
+                <p class="mb-0 opacity-75">Platform Administration & Oversight</p>
+            </div>
+            <button *ngIf="type === 'categories' || type === 'forum-categories'" class="btn btn-light btn-sm px-4 rounded-pill"
+                (click)="openAddCategoryModal()">
+                <i class="fas fa-plus mr-2"></i>Add Category
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="p-4">
+    <div class="card shadow-sm border-0 rounded-lg overflow-hidden" *ngIf="type !== 'licenses'">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" aria-label="Admin Management Records">
+                    <thead class="bg-light text-muted small uppercase font-weight-bold">
+                        <tr>
+                            <th *ngFor="let col of columns" class="px-4 py-3 border-0">{{col}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let item of items" class="transition-all hover-bg-light">
+                            <!-- Dynamic Rows based on type -->
+                            <ng-container [ngSwitch]="type">
+                                <!-- Categories -->
+                                <ng-container *ngSwitchCase="'categories'">
+                                    <td class="px-4 py-3 align-middle font-weight-bold" style="color:var(--color-text-primary)">
+                                        <i class="fas fa-tag mr-2" style="color:var(--color-accent-earth)"></i>{{item.name}}
+                                    </td>
+                                    <td class="px-4 py-3 align-middle" style="color:var(--color-text-secondary)">
+                                        {{item.description || 'No description'}}
+                                    </td>
+                                    <td class="px-4 py-3 align-middle text-right">
+                                        <button class="btn btn-sm rounded-pill px-3 mr-2"
+                                            style="background:var(--color-primary);color:white;border:none"
+                                            (click)="openEditCategoryModal(item)" title="Edit category">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm rounded-pill px-3"
+                                            style="background:var(--color-accent-terra);color:white;border:none"
+                                            (click)="deleteItem(item.id)" title="Delete category">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </ng-container>
+
+                                <!-- Forum Categories -->
+                                <ng-container *ngSwitchCase="'forum-categories'">
+                                  <td class="px-4 py-3 align-middle font-weight-bold" style="color:var(--color-text-primary)">
+                                    <i class="fas fa-comments mr-2" style="color:var(--color-accent-earth)"></i>{{item.name}}
+                                  </td>
+                                  <td class="px-4 py-3 align-middle" style="color:var(--color-text-secondary)">
+                                    {{item.description || 'No description'}}
+                                  </td>
+                                  <td class="px-4 py-3 align-middle text-right">
+                                    <button class="btn btn-sm rounded-pill px-3 mr-2"
+                                      style="background:var(--color-primary);color:white;border:none"
+                                      (click)="openEditCategoryModal(item)" title="Edit category">
+                                      <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm rounded-pill px-3"
+                                      style="background:var(--color-accent-terra);color:white;border:none"
+                                      (click)="deleteItem(item.categoryId)" title="Delete category">
+                                      <i class="fas fa-trash"></i>
+                                    </button>
+                                  </td>
+                                </ng-container>
+
+                                <!-- Gear Reviews -->
+                                <ng-container *ngSwitchCase="'gear-reviews'">
+                                    <td class="px-4 py-3 align-middle">{{item.equipmentName || 'Gear ID: ' +
+                                        item.equipmentId}}</td>
+                                    <td class="px-4 py-3 align-middle">
+                                        <span class="badge badge-warning text-dark">
+                                            <i class="fas fa-star mr-1"></i>{{item.rating}}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 align-middle italic text-muted">"{{item.comment}}"</td>
+                                    <td class="px-4 py-3 align-middle">{{item.userName || 'User'}}</td>
+                                </ng-container>
+
+                                <!-- Payments -->
+                                <ng-container *ngSwitchCase="'payments'">
+                                    <td class="px-4 py-3 align-middle text-primary font-weight-bold">
+                                        {{item.paymentReference || item.reference || item.transactionId || ('#PAY-' + item.id)}}
+                                    </td>
+                                    <td class="px-4 py-3 align-middle font-weight-bold text-success text-center">
+                                        ${{item.amount}}
+                                    </td>
+                                    <td class="px-4 py-3 align-middle text-center">
+                                        <span class="badge"
+                                            [ngClass]="item.status === 'PAID' ? 'badge-success' : 'badge-secondary'">
+                                            {{item.status}}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 align-middle text-muted text-center">
+                                        {{(item.paymentDate || item.createdAt || item.date) | date:'shortDate'}}
+                                    </td>
+                                    <td class="px-4 py-3 align-middle text-right">
+                                        <button class="btn btn-sm btn-outline-danger border-0 rounded-circle"
+                                            (click)="deleteItem(item.id)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </ng-container>
+
+                                <!-- Delivery Reviews -->
+                                <ng-container *ngSwitchCase="'delivery-reviews'">
+                                    <td class="px-4 py-3 align-middle">#{{item.deliveryId}}</td>
+                                    <td class="px-4 py-3 align-middle text-warning font-weight-bold">{{item.rating}}/5
+                                    </td>
+                                    <td class="px-4 py-3 align-middle text-muted italic">"{{item.comment}}"</td>
+                                </ng-container>
+
+                                <!-- Orders -->
+                                <ng-container *ngSwitchCase="'orders'">
+                                    <td class="px-4 py-3 align-middle font-weight-bold text-primary">
+                                        #{{ item.orderNumber }}
+                                    </td>
+                                    <td class="px-4 py-3 align-middle">{{ item.camperFullName }}</td>
+                                    <td class="px-4 py-3 align-middle font-weight-bold text-success">
+                                        {{ item.totalAmount | currency:'TND ' }}
+                                    </td>
+                                    <td class="px-4 py-3 align-middle">
+                                        <span class="badge px-3 py-1"
+                                            [ngClass]="{
+                                                'badge-success': item.status === 'PAID' || item.status === 'COMPLETED',
+                                                'badge-warning': item.status === 'DRAFT' || item.status === 'PENDING_PAYMENT',
+                                                'badge-danger': item.status === 'CANCELLED',
+                                                'badge-info': item.status === 'PROCESSING'
+                                            }">
+                                            {{ item.status }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 align-middle text-muted small">
+                                        {{ item.createdAt | date:'MMM d, y' }}
+                                    </td>
+                                </ng-container>
+                            </ng-container>
+
+                            <td class="px-4 py-3 align-middle text-right" *ngIf="type !== 'categories'">
+                                <button class="btn btn-sm btn-outline-danger border-0 rounded-circle"
+                                    (click)="deleteItem(item.id)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Empty State -->
+                        <tr *ngIf="items.length === 0 && !loading">
+                            <td [attr.colspan]="columns.length" class="text-center py-5 text-muted">
+                                <i class="fas fa-inbox fa-3x mb-3 opacity-25 d-block"></i>
+                                No items found in this section.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- License Management -->
+    <div *ngIf="type === 'licenses'">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body py-2 px-3">
+                <div class="d-flex align-items-center flex-wrap gap-2">
+                    <span class="text-muted small mr-2">Filter:</span>
+                    <button class="btn btn-sm rounded-pill px-3 mr-2"
+                        [ngStyle]="{'background': licenseFilter === 'ALL' ? 'var(--color-primary)' : 'white', 'color': licenseFilter === 'ALL' ? 'white' : 'var(--color-text-secondary)', 'border': '1px solid var(--color-primary)'}"
+                        (click)="licenseFilter = 'ALL'">All ({{licenses.length}})</button>
+                    <button class="btn btn-sm rounded-pill px-3 mr-2"
+                        [ngStyle]="{'background': licenseFilter === 'PENDING' ? 'var(--color-accent-terra)' : 'white', 'color': licenseFilter === 'PENDING' ? 'white' : 'var(--color-text-secondary)', 'border': '1px solid var(--color-accent-terra)'}"
+                        (click)="licenseFilter = 'PENDING'">Pending ({{pendingLicensesCount}})</button>
+                    <button class="btn btn-sm rounded-pill px-3"
+                        [ngStyle]="{'background': licenseFilter === 'VERIFIED' ? 'var(--color-primary-light)' : 'white', 'color': licenseFilter === 'VERIFIED' ? 'white' : 'var(--color-text-secondary)', 'border': '1px solid var(--color-primary-light)'}"
+                        (click)="licenseFilter = 'VERIFIED'">Verified ({{verifiedLicensesCount}})</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" aria-label="License Management Records">
+                        <thead style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%); color: white;">
+                            <tr>
+                                <th class="px-4 py-3 border-0">Agent</th>
+                                <th class="py-3 border-0">License Number</th>
+                                <th class="py-3 border-0">Status</th>
+                                <th class="py-3 border-0">Since</th>
+                                <th class="py-3 border-0 text-right px-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let agent of filteredLicenses">
+                                <td class="px-4 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="mr-3"
+                                            style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--color-primary),var(--color-primary-light));color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">
+                                            {{ (agent.userFullName || 'A').charAt(0).toUpperCase() }}
+                                        </div>
+                                        <div>
+                                            <div class="font-weight-bold" style="color:var(--color-text-primary)">{{agent.userFullName || 'Unknown'}}</div>
+                                            <small style="color:var(--color-text-secondary)">User ID: {{agent.userId}}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-3">
+                                    <code style="background:var(--color-bg-light);color:var(--color-text-primary);padding:3px 8px;border-radius:4px;font-size:13px">{{agent.licenseNumber || '—'}}</code>
+                                </td>
+                                <td class="py-3">
+                                    <span *ngIf="agent.isVerified" class="badge px-3 py-2"
+                                        style="background:rgba(45,80,22,0.12);color:var(--color-primary);border:1px solid var(--color-primary-light)">
+                                        <i class="fas fa-check-circle mr-1"></i> Verified
+                                    </span>
+                                    <span *ngIf="!agent.isVerified" class="badge px-3 py-2"
+                                        style="background:rgba(193,68,14,0.1);color:var(--color-accent-terra);border:1px solid var(--color-accent-terra)">
+                                        <i class="fas fa-clock mr-1"></i> Pending
+                                    </span>
+                                </td>
+                                <td class="py-3">
+                                    <small style="color:var(--color-text-secondary)">{{agent.createdAt | date:'dd MMM yyyy'}}</small>
+                                </td>
+                                <td class="py-3 text-right px-4">
+                                    <button *ngIf="!agent.isVerified" class="btn btn-sm rounded-pill px-3"
+                                        style="background:var(--color-primary);color:white;border:none"
+                                        (click)="verifyLicense(agent.userId)" title="Approve this license">
+                                        <i class="fas fa-check mr-1"></i> Approve
+                                    </button>
+                                    <span *ngIf="agent.isVerified" class="text-muted small font-italic">Already verified</span>
+                                </td>
+                            </tr>
+                            <tr *ngIf="filteredLicenses.length === 0 && !loading">
+                                <td colspan="5" class="text-center py-5">
+                                    <i class="fas fa-id-card fa-3x mb-3 d-block" style="color:var(--color-accent-earth);opacity:0.4"></i>
+                                    <span style="color:var(--color-text-secondary)">No licenses found.</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Category Add/Edit Modal ── -->
+<div class="modal-backdrop fade show" *ngIf="showCategoryModal" (click)="closeCategoryModal()"></div>
+<div class="modal fade show d-block" *ngIf="showCategoryModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document" (click)="$event.stopPropagation()">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:16px;overflow:hidden">
+
+            <!-- Header -->
+            <div class="modal-header border-0 px-4 pt-4 pb-3"
+                style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);">
+                <div>
+                    <h5 class="modal-title font-weight-bold text-white mb-0">
+                        <i class="fas" [ngClass]="isEditingCategory ? 'fa-edit' : 'fa-plus-circle'" class="mr-2"></i>
+                        {{ isEditingCategory ? 'Edit Category' : 'Create New Category' }}
+                    </h5>
+                    <small class="text-white" style="opacity:0.75">
+                        {{ isEditingCategory ? 'Update the category details below' : 'Fill in the details to add a new equipment category' }}
+                    </small>
+                </div>
+                <button type="button" class="close text-white ml-auto" (click)="closeCategoryModal()"
+                    style="opacity:0.8;font-size:1.5rem">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body px-4 py-4" style="background:var(--color-bg-card)">
+
+                <!-- Name -->
+                <div class="form-group mb-4">
+                    <label class="font-weight-bold small mb-2" style="color:var(--color-text-primary)">
+                        Category Name <span style="color:var(--color-accent-terra)">*</span>
+                    </label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text border-right-0"
+                                style="background:var(--color-bg-light);border-color:#dee2e6">
+                                <i class="fas fa-tag" style="color:var(--color-accent-earth)"></i>
+                            </span>
+                        </div>
+                        <input type="text" class="form-control border-left-0"
+                            style="background:var(--color-bg-light)"
+                            [(ngModel)]="currentCategory.name"
+                            name="categoryName"
+                            placeholder="e.g. Tents, Sleeping Bags, Cooking Gear..."
+                            required>
+                    </div>
+                    <small class="text-muted">Choose a clear, concise name for this equipment category.</small>
+                </div>
+
+                <!-- Description -->
+                <div class="form-group mb-2">
+                    <label class="font-weight-bold small mb-2" style="color:var(--color-text-primary)">
+                        Description <span class="text-muted font-weight-normal">(optional)</span>
+                    </label>
+                    <textarea class="form-control" rows="3"
+                        style="background:var(--color-bg-light);resize:none"
+                        [(ngModel)]="currentCategory.description"
+                        name="categoryDescription"
+                        placeholder="Describe what types of equipment belong in this category..."></textarea>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer border-0 px-4 pb-4 pt-2" style="background:var(--color-bg-card)">
+                <button type="button" class="btn btn-light rounded-pill px-4" (click)="closeCategoryModal()">
+                    Cancel
+                </button>
+                <button type="button" class="btn rounded-pill px-4 font-weight-bold"
+                    style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%); color:white; border:none"
+                    (click)="saveCategory()"
+                    [disabled]="!currentCategory.name?.trim() || isSavingCategory">
+                    <span *ngIf="isSavingCategory">
+                        <span class="spinner-border spinner-border-sm mr-2"></span>Saving...
+                    </span>
+                    <span *ngIf="!isSavingCategory">
+                        <i class="fas" [ngClass]="isEditingCategory ? 'fa-save' : 'fa-plus'" class="mr-2"></i>
+                        {{ isEditingCategory ? 'Save Changes' : 'Create Category' }}
+                    </span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .uppercase {
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .transition-all {
+        transition: all 0.2s ease;
+    }
+
+    .hover-bg-light:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+</style>

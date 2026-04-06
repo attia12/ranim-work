@@ -1,0 +1,191 @@
+// Module: Official Campsite & Booking | Layer: Frontend Component (Smart - Owner Dashboard)
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { CampsiteService } from '../../services/campsite.service';
+import { CampsiteBookingService } from '../../services/campsite-booking.service';
+import { CampsiteApiResponse, CampsiteRequest } from '../../models/campsite.model';
+import { CampsiteBookingResponse } from '../../models/campsite-booking.model';
+import { AvailabilityResponse, AvailabilityRequest } from '../../models/availability.model';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
+
+@Component({
+  selector: 'app-campsite-owner',
+  templateUrl: './campsite-owner.component.html',
+  styleUrl: './campsite-owner.component.css'
+})
+export class CampsiteOwnerComponent implements OnInit {
+
+  campsites: CampsiteApiResponse[] = [];
+  bookings: CampsiteBookingResponse[] = [];
+  availabilities: AvailabilityResponse[] = [];
+  selectedCampsite: CampsiteApiResponse | null = null;
+
+  loading = false;
+  showCampsiteForm = false;
+  editingCampsite: CampsiteApiResponse | null = null;
+  campsiteForm!: FormGroup;
+
+  showAvailabilityForm = false;
+  availForm!: FormGroup;
+
+  error = '';
+  successMsg = '';
+
+  today = new Date().toISOString().split('T')[0];
+  types = ['OFFICIAL', 'OUTDOOR'];
+
+  constructor(
+    private fb: FormBuilder,
+    private campsiteService: CampsiteService,
+    private bookingService: CampsiteBookingService,
+    private http: HttpClient
+  ) {}
+
+  ngOnInit(): void {
+    this.initForms();
+    this.loadMyCampsites();
+  }
+
+  initForms(): void {
+    this.campsiteForm = this.fb.group({
+      name:          ['', [Validators.required]],
+      description:   [''],
+      country:       ['', Validators.required],
+      city:          ['', Validators.required],
+      address:       [''],
+      latitude:      [null],
+      longitude:     [null],
+      capacity:      [1, [Validators.required, Validators.min(1)]],
+      type:          ['OFFICIAL', Validators.required],
+      pricePerNight: [0, [Validators.required, Validators.min(0)]],
+      pictures:      [''],
+      amenities:     [''],
+      rules:         ['']
+    });
+
+    this.availForm = this.fb.group({
+      startDate:      ['', Validators.required],
+      endDate:        ['', Validators.required],
+      numberOfPlaces: [1, [Validators.required, Validators.min(0)]],
+      weatherCondition: [''],
+      isBlocked:      [false]
+    });
+  }
+
+  loadMyCampsites(): void {
+    this.loading = true;
+    this.campsiteService.getMyCampsites(0, 50).subscribe({
+      next: (data) => { this.campsites = data.content; this.loading = false; },
+      error: () => { this.loading = false; }
+    });
+  }
+
+  selectCampsite(campsite: CampsiteApiResponse): void {
+    this.selectedCampsite = campsite;
+    this.loadBookings(campsite.id);
+    this.loadAvailability(campsite.id);
+  }
+
+  loadBookings(campsiteId: number): void {
+    this.bookingService.getByCampsite(campsiteId, 0, 50).subscribe({
+      next: (data) => this.bookings = data.content,
+      error: () => {}
+    });
+  }
+
+  loadAvailability(campsiteId: number): void {
+    this.http.get<AvailabilityResponse[]>(
+      `${environment.apiUrl}/api/v1/availabilities/campsite/${campsiteId}`
+    ).subscribe({
+      next: (data) => this.availabilities = data,
+      error: () => {}
+    });
+  }
+
+  openCreateForm(): void {
+    this.editingCampsite = null;
+    this.campsiteForm.reset({ type: 'OFFICIAL', capacity: 1, pricePerNight: 0 });
+    this.showCampsiteForm = true;
+  }
+
+  openEditForm(campsite: CampsiteApiResponse): void {
+    this.editingCampsite = campsite;
+    this.campsiteForm.patchValue({
+      ...campsite,
+      pictures: campsite.pictures?.join(',') || '',
+      amenities: campsite.amenities?.join(',') || ''
+    });
+    this.showCampsiteForm = true;
+  }
+
+  saveCampsite(): void {
+    if (this.campsiteForm.invalid) { this.campsiteForm.markAllAsTouched(); return; }
+    const req: CampsiteRequest = this.campsiteForm.value;
+    const obs = this.editingCampsite
+      ? this.campsiteService.update(this.editingCampsite.id, req)
+      : this.campsiteService.create(req);
+
+    obs.subscribe({
+      next: () => {
+        this.showCampsiteForm = false;
+        this.successMsg = this.editingCampsite ? 'Campsite updated!' : 'Campsite created!';
+        this.loadMyCampsites();
+        setTimeout(() => this.successMsg = '', 3000);
+      },
+      error: (err) => { this.error = err.error?.error || 'Save failed.'; }
+    });
+  }
+
+  deleteCampsite(id: number): void {
+    if (!confirm('Are you sure you want to delete this campsite?')) return;
+    this.campsiteService.delete(id).subscribe({
+      next: () => { this.campsites = this.campsites.filter(c => c.id !== id); },
+      error: (err) => { this.error = err.error?.error || 'Delete failed.'; }
+    });
+  }
+
+  addAvailability(): void {
+    if (!this.selectedCampsite || this.availForm.invalid) {
+      this.availForm.markAllAsTouched(); return;
+    }
+    const req: AvailabilityRequest = {
+      campsiteId: this.selectedCampsite.id,
+      ...this.availForm.value
+    };
+    this.http.post<AvailabilityResponse>(
+      `${environment.apiUrl}/api/v1/availabilities`, req
+    ).subscribe({
+      next: (data) => {
+        this.availabilities.push(data);
+        this.availForm.reset({ isBlocked: false, numberOfPlaces: 1 });
+        this.showAvailabilityForm = false;
+      },
+      error: (err) => { this.error = err.error?.error || 'Failed to add availability.'; }
+    });
+  }
+
+  deleteAvailability(id: number): void {
+    this.http.delete(`${environment.apiUrl}/api/v1/availabilities/${id}`).subscribe({
+      next: () => { this.availabilities = this.availabilities.filter(a => a.id !== id); },
+      error: () => {}
+    });
+  }
+
+  confirmBooking(id: number): void {
+    this.bookingService.confirm(id).subscribe({
+      next: (updated) => {
+        const idx = this.bookings.findIndex(b => b.id === updated.id);
+        if (idx >= 0) this.bookings[idx] = updated;
+      }
+    });
+  }
+
+  badgeClass(status: string): string {
+    const map: Record<string, string> = {
+      PENDING: 'badge-warning', CONFIRMED: 'badge-success',
+      CANCELLED: 'badge-danger', COMPLETED: 'badge-secondary'
+    };
+    return map[status] || 'badge-light';
+  }
+}

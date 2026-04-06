@@ -1,0 +1,151 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top" (click)="closeNotifPanel()">
+  <div class="container">
+    <!-- Logo -->
+    <a class="navbar-brand" routerLink="/home">
+      <i class="fas fa-campground text-success mr-2"></i>
+      <span class="font-weight-bold">CampWay</span>
+    </a>
+
+    <!-- Mobile Toggle Button -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Navigation Menu -->
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav mx-auto" *ngIf="authService.currentUser$ | async as user; else guestNav">
+        <li class="nav-item">
+          <a class="nav-link px-3" routerLink="/home" routerLinkActive="active">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3" routerLink="/campsites" routerLinkActive="active">Campsites</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3" routerLink="/bookings" routerLinkActive="active">My Bookings</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3" routerLink="/shop" routerLinkActive="active">Shop</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3" routerLink="/events" routerLinkActive="active">Events</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3" routerLink="/forum" routerLinkActive="active">Forum</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3" routerLink="/messages" routerLinkActive="active">Messages</a>
+        </li>
+      </ul>
+
+      <ng-template #guestNav>
+        <ul class="navbar-nav mx-auto">
+          <li class="nav-item">
+            <a class="nav-link px-3" routerLink="/home" routerLinkActive="active">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link px-3" routerLink="/campsites" routerLinkActive="active">Campsites</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link px-3" routerLink="/shop" routerLinkActive="active">Shop</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link px-3" routerLink="/events" routerLinkActive="active">Events</a>
+          </li>
+        </ul>
+      </ng-template>
+
+        <!-- Right Side Menu -->
+      <ul class="navbar-nav ms-auto">
+        <ng-container *ngIf="authService.currentUser$ | async as user">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/shop" title="Search">
+              <i class="fas fa-search"></i>
+            </a>
+          </li>
+          <li class="nav-item notif-wrapper">
+            <a class="nav-link notif-bell" (click)="toggleNotifPanel($event)" href="javascript:void(0)">
+              <i class="fas fa-bell"></i>
+              <span class="notif-badge" *ngIf="unreadCount > 0">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+            </a>
+
+            <div class="notif-panel" *ngIf="showNotifPanel" (click)="$event.stopPropagation()">
+
+              <div class="notif-header">
+                <span class="notif-title">Notifications</span>
+                <div class="notif-actions">
+                  <button class="notif-action-btn" (click)="markAllRead()" *ngIf="unreadCount > 0">Mark all read</button>
+                  <button class="notif-action-btn notif-clear" (click)="clearAll()" *ngIf="notifications.length > 0">Clear all</button>
+                </div>
+              </div>
+
+              <div class="notif-empty" *ngIf="notifications.length === 0">
+                <i class="fas fa-bell-slash"></i>
+                <p>You're all caught up!</p>
+              </div>
+
+              <div class="notif-list" *ngIf="notifications.length > 0">
+                <div class="notif-item" *ngFor="let n of notifications"
+                     [class.unread]="!n.read"
+                     [style.cursor]="n.link ? 'pointer' : 'default'"
+                     (click)="openNotification(n)">
+                  <div class="notif-icon-wrap" [style.background]="n.iconColor + '20'">
+                    <i class="fas" [ngClass]="n.icon" [style.color]="n.iconColor"></i>
+                  </div>
+                  <div class="notif-body">
+                    <div class="notif-item-title">{{ n.title }}</div>
+                    <div class="notif-item-msg">{{ n.message }}</div>
+                    <div class="notif-time">
+                        {{ timeAgo(n.time) }}
+                        <span *ngIf="n.link" class="ms-2" style="color:var(--color-primary);font-size:11px;font-weight:600">
+                            View →
+                        </span>
+                    </div>
+                  </div>
+                  <div class="notif-unread-dot" *ngIf="!n.read"></div>
+                </div>
+              </div>
+
+            </div>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" (click)="addToWishlist()" title="Wishlist" href="javascript:void(0)">
+              <i class="fas fa-heart"></i>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/cart" title="Cart">
+              <i class="fas fa-shopping-cart text-dark"></i>
+              <span class="badge text-bg-success badge-sm" *ngIf="cartCount > 0">{{cartCount}}</span>
+            </a>
+          </li>
+        </ng-container>
+
+        <!-- User Menu -->
+        <li class="nav-item dropdown" *ngIf="authService.currentUser$ | async as user; else loginBtn">
+          <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button"
+            data-bs-toggle="dropdown">
+            <i class="fas fa-user-circle me-1"></i>
+            <span>{{user.firstName}}</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+            <li><a class="dropdown-item" routerLink="/admin/dashboard" *ngIf="user.role !== UserRole.CAMPER"><i
+                  class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+            <li><a class="dropdown-item" routerLink="/profile"><i class="fas fa-user me-2"></i>Profile</a></li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+            <li><a class="dropdown-item text-danger" (click)="logout()" href="javascript:void(0)"><i
+                  class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+          </ul>
+        </li>
+
+        <ng-template #loginBtn>
+          <li class="nav-item">
+            <button class="btn btn-success btn-sm ms-2 px-3" routerLink="/login">Login</button>
+          </li>
+        </ng-template>
+      </ul>
+    </div>
+  </div>
+</nav>

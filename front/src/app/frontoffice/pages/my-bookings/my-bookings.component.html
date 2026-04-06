@@ -1,0 +1,137 @@
+<!-- Module: Official Campsite & Booking | Layer: Frontend Component -->
+<div class="container py-5">
+  <h3 class="font-weight-bold mb-4" i18n>My Bookings</h3>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="activeTab === 'official'"
+              (click)="activeTab = 'official'" role="tab" i18n>
+        Official Campsites
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="activeTab === 'outdoor'"
+              (click)="activeTab = 'outdoor'" role="tab" i18n>
+        Outdoor (Free)
+      </button>
+    </li>
+  </ul>
+
+  <!-- Loading -->
+  <div class="text-center py-5" *ngIf="loading">
+    <div class="spinner-border text-success" role="status">
+      <span class="sr-only" i18n>Loading...</span>
+    </div>
+  </div>
+
+  <!-- Official bookings -->
+  <div *ngIf="activeTab === 'official' && !loading">
+    <div class="text-center text-muted py-4" *ngIf="officialBookings.length === 0" i18n>
+      No official campsite bookings yet.
+    </div>
+    <div class="card border-0 shadow-sm mb-3" *ngFor="let b of officialBookings">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h5 class="font-weight-bold mb-1">{{ b.campsiteName }}</h5>
+            <p class="text-muted small mb-1">
+              <i class="fas fa-map-marker-alt text-success mr-1"></i>
+              {{ b.campsiteCity }}, {{ b.campsiteCountry }}
+            </p>
+            <p class="text-muted small mb-1">
+              <i class="fas fa-calendar mr-1"></i>
+              {{ b.checkInDate }} → {{ b.checkOutDate }}
+            </p>
+            <p class="text-muted small mb-0">
+              <i class="fas fa-users mr-1"></i>
+              {{ b.numberOfGuests }} guest(s) &nbsp;|&nbsp;
+              <strong class="text-success">{{ b.totalPrice | currency:'TND':'symbol':'1.0-2' }}</strong>
+            </p>
+          </div>
+          <div class="text-right">
+            <span class="badge px-2 py-1 d-block mb-2" [ngClass]="badgeClass(b.status)">
+              {{ b.status }}
+            </span>
+            <button class="btn btn-sm btn-outline-danger"
+                    *ngIf="b.status === 'CONFIRMED' || b.status === 'PENDING'"
+                    [disabled]="cancellingId === b.id || !canCancel(b.checkInDate)"
+                    (click)="openCancelModal(b.id)"
+                    aria-label="Cancel booking" i18n>
+              <span *ngIf="cancellingId === b.id" class="spinner-border spinner-border-sm mr-1"></span>
+              Cancel
+            </button>
+            <small class="text-muted d-block mt-1" *ngIf="!canCancel(b.checkInDate) && (b.status === 'CONFIRMED' || b.status === 'PENDING')"
+                   i18n>Cannot cancel within 2 days</small>
+          </div>
+        </div>
+        <p class="text-danger small mt-2 mb-0" *ngIf="b.cancellationReason">
+          <i class="fas fa-info-circle mr-1"></i>{{ b.cancellationReason }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Outdoor bookings -->
+  <div *ngIf="activeTab === 'outdoor' && !loading">
+    <div class="text-center text-muted py-4" *ngIf="outdoorBookings.length === 0" i18n>
+      No outdoor campsite bookings yet.
+    </div>
+    <div class="card border-0 shadow-sm mb-3" *ngFor="let b of outdoorBookings">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h5 class="font-weight-bold mb-1">{{ b.outdoorCampsiteName }}</h5>
+            <p class="text-muted small mb-1">
+              <i class="fas fa-map-marker-alt text-success mr-1"></i>
+              {{ b.outdoorCampsiteCity }}, {{ b.outdoorCampsiteCountry }}
+            </p>
+            <p class="text-muted small mb-0">
+              <i class="fas fa-calendar mr-1"></i>
+              {{ b.checkInDate }} → {{ b.checkOutDate }}
+              &nbsp;|&nbsp;
+              <strong class="text-success" i18n>FREE</strong>
+            </p>
+          </div>
+          <div class="text-right">
+            <span class="badge px-2 py-1 d-block mb-2" [ngClass]="badgeClass(b.status)">
+              {{ b.status }}
+            </span>
+            <button class="btn btn-sm btn-outline-danger"
+                    *ngIf="b.status !== 'CANCELLED'"
+                    (click)="cancelOutdoor(b.id)"
+                    aria-label="Cancel outdoor booking" i18n>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel confirmation modal -->
+<div class="modal-overlay" *ngIf="showCancelModal" (click)="showCancelModal = false">
+  <div class="modal-content shadow-lg p-4" style="max-width:480px;" (click)="$event.stopPropagation()">
+    <h5 class="font-weight-bold mb-3" i18n>Cancel Booking</h5>
+    <p class="text-muted mb-3" i18n>Are you sure you want to cancel this booking?</p>
+    <div class="form-group">
+      <label i18n>Reason (optional)</label>
+      <input class="form-control" [(ngModel)]="cancelReason" placeholder="Enter cancellation reason"
+             aria-label="Cancellation reason" i18n-placeholder>
+    </div>
+    <div class="d-flex justify-content-end" style="gap:.5rem;">
+      <button class="btn btn-light" (click)="showCancelModal = false" i18n>Back</button>
+      <button class="btn btn-danger" (click)="confirmCancel()" i18n>Confirm Cancel</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal-overlay {
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,.6);display:flex;align-items:center;
+    justify-content:center;z-index:2000;padding:1rem;
+  }
+  .modal-content { background:#fff;border-radius:12px; }
+</style>

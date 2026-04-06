@@ -1,0 +1,340 @@
+<div class="tracking-page py-5 bg-light min-vh-100">
+    <div class="container">
+
+        <div *ngIf="isLoading" class="text-center py-5">
+            <div class="spinner-border text-success"></div>
+            <p class="mt-2 text-muted">Loading your order...</p>
+        </div>
+
+        <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+        <div *ngIf="!isLoading && order">
+
+            <!-- Success header -->
+            <div class="text-center mb-5">
+                <div class="success-icon mx-auto mb-3">
+                    <i class="fas fa-check-circle fa-4x text-success"></i>
+                </div>
+                <h2 class="font-weight-bold">Payment Successful!</h2>
+                <p class="text-muted">Order <strong>#{{ order.orderNumber }}</strong> has been placed.</p>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+
+                    <!-- Order status timeline -->
+                    <div class="card border-0 shadow-sm p-4 p-md-5 mb-4" style="border-radius:20px;">
+                        <h5 class="font-weight-bold mb-4">Order Status</h5>
+                        <div class="order-timeline">
+                            <div class="timeline-steps">
+                                <div class="t-step" [class.active]="getOrderStatusStep() >= 1">
+                                    <div class="t-icon"><i class="fas fa-file-alt"></i></div>
+                                    <div class="t-label">Ordered</div>
+                                </div>
+                                <div class="t-step" [class.active]="getOrderStatusStep() >= 2">
+                                    <div class="t-icon"><i class="fas fa-credit-card"></i></div>
+                                    <div class="t-label">Paid</div>
+                                </div>
+                                <div class="t-step" [class.active]="getOrderStatusStep() >= 3">
+                                    <div class="t-icon"><i class="fas fa-cogs"></i></div>
+                                    <div class="t-label">Processing</div>
+                                </div>
+                                <div class="t-step" [class.active]="getOrderStatusStep() >= 4">
+                                    <div class="t-icon"><i class="fas fa-check"></i></div>
+                                    <div class="t-label">Completed</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <span class="badge px-3 py-2 font-weight-bold" [ngClass]="order.status === 'PAID' || order.status === 'COMPLETED' ? 'badge-success' :
+                               order.status === 'CANCELLED' ? 'badge-danger' : 'badge-warning'">
+                                {{ order.status }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Delivery tracking -->
+                    <div class="card border-0 shadow-sm p-4 p-md-5 mb-4" style="border-radius:20px;">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="font-weight-bold mb-0">
+                                <i class="fas fa-truck text-success mr-2"></i>Delivery Tracking
+                            </h5>
+                            <button class="btn btn-sm btn-outline-success rounded-pill px-3" (click)="refresh()">
+                                <i class="fas fa-sync-alt mr-1"></i>Refresh
+                            </button>
+                        </div>
+                        <p class="small text-muted mb-4">
+                            Last updated: {{ lastRefreshed | date:'HH:mm:ss' }}
+                            <span class="ml-2 badge badge-success" style="font-size:10px">Auto-refreshes every 30s</span>
+                        </p>
+
+                        <div *ngIf="!delivery" class="text-center py-4">
+                            <i class="fas fa-clock fa-3x text-muted mb-3 d-block" style="opacity:0.3;"></i>
+                            <p class="text-muted">A delivery agent will be assigned to your order shortly.</p>
+                        </div>
+
+                        <div *ngIf="delivery">
+                            <div class="delivery-timeline mb-4">
+                                <div class="timeline-steps">
+                                    <div class="t-step" [class.active]="getDeliveryStatusStep() >= 1">
+                                        <div class="t-icon"><i class="fas fa-box"></i></div>
+                                        <div class="t-label">Assigned</div>
+                                    </div>
+                                    <div class="t-step" [class.active]="getDeliveryStatusStep() >= 3">
+                                        <div class="t-icon"><i class="fas fa-warehouse"></i></div>
+                                        <div class="t-label">Picked Up</div>
+                                    </div>
+                                    <div class="t-step" [class.active]="getDeliveryStatusStep() >= 4">
+                                        <div class="t-icon"><i class="fas fa-shipping-fast"></i></div>
+                                        <div class="t-label">In Transit</div>
+                                    </div>
+                                    <div class="t-step" [class.active]="getDeliveryStatusStep() >= 5">
+                                        <div class="t-icon"><i class="fas fa-home"></i></div>
+                                        <div class="t-label">Delivered</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-3 pt-3 border-top">
+                                <div class="col-md-6 mb-2">
+                                    <small class="text-muted d-block">Pickup</small>
+                                    <span class="font-weight-bold small">{{ delivery.pickupAddress }}</span>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <small class="text-muted d-block">Delivery Address</small>
+                                    <span class="font-weight-bold small">{{ delivery.deliveryAddress }}</span>
+                                </div>
+                                <div class="col-md-6" *ngIf="delivery.vehiclePlate">
+                                    <small class="text-muted d-block">Agent Vehicle</small>
+                                    <span class="font-weight-bold small">{{ delivery.vehiclePlate }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Delivery Review — appears only when DELIVERED ── -->
+                    <div *ngIf="delivery?.status === 'DELIVERED'" class="mb-4">
+
+                        <!-- Success flash -->
+                        <div *ngIf="reviewSuccess"
+                            class="alert d-flex align-items-center mb-3"
+                            style="background:rgba(16,185,129,0.12);border:1px solid #10b981;border-radius:12px;color:#065f46">
+                            <i class="fas fa-check-circle fa-lg mr-3"></i>
+                            <span>Thank you! Your review has been saved.</span>
+                        </div>
+
+                        <!-- Already rated: show existing review -->
+                        <div *ngIf="existingRating && !showReviewForm"
+                            class="card border-0 shadow-sm p-4 p-md-5 mb-0"
+                            style="border-radius:20px;background:var(--color-bg-card, #fdfaf5)">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="font-weight-bold mb-0">
+                                    <i class="fas fa-star mr-2" style="color:var(--color-accent-earth,#D4A96A)"></i>
+                                    Your Delivery Review
+                                </h5>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 mr-2"
+                                        (click)="openEditForm()">
+                                        <i class="fas fa-edit mr-1"></i>Edit
+                                    </button>
+                                    <button class="btn btn-sm rounded-pill px-3"
+                                        style="background:var(--color-accent-terra,#C1440E);color:white;border:none"
+                                        (click)="deleteReview()">
+                                        <i class="fas fa-trash mr-1"></i>Delete
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Stars display -->
+                            <div class="mb-2">
+                                <span *ngFor="let s of [1,2,3,4,5]">
+                                    <i class="fas fa-star"
+                                       [style.color]="s <= existingRating.rating ? '#f59e0b' : '#e5e7eb'"
+                                       style="font-size:22px"></i>
+                                </span>
+                                <span class="ml-2 font-weight-bold" style="color:var(--color-primary,#2d5016)">
+                                    {{ getRatingLabel(existingRating.rating) }}
+                                </span>
+                            </div>
+                            <p class="mb-1" style="color:var(--color-text-secondary,#6B5B4E)">{{ existingRating.comment }}</p>
+                            <small class="text-muted">{{ existingRating.createdAt | date:'dd MMM yyyy, HH:mm' }}</small>
+                        </div>
+
+                        <!-- Not yet rated: prompt -->
+                        <div *ngIf="!existingRating && !showReviewForm"
+                            class="card border-0 shadow-sm p-4 p-md-5 mb-0 text-center"
+                            style="border-radius:20px;background:var(--color-bg-card,#fdfaf5)">
+                            <i class="fas fa-star-half-alt fa-3x mb-3 d-block"
+                               style="color:var(--color-accent-earth,#D4A96A)"></i>
+                            <h5 class="font-weight-bold mb-1" style="color:var(--color-text-primary,#2C1810)">
+                                How was your delivery?
+                            </h5>
+                            <p class="text-muted mb-4">Your feedback helps us improve the service.</p>
+                            <button class="btn rounded-pill px-5 font-weight-bold"
+                                style="background:linear-gradient(135deg,var(--color-primary,#2d5016) 0%,var(--color-primary-light,#4a7c2c) 100%);color:white;border:none"
+                                (click)="openReviewForm()">
+                                <i class="fas fa-pen mr-2"></i>Write a Review
+                            </button>
+                        </div>
+
+                        <!-- Review form (add or edit) -->
+                        <div *ngIf="showReviewForm"
+                            class="card border-0 shadow-sm p-4 p-md-5 mb-0"
+                            style="border-radius:20px;background:var(--color-bg-card,#fdfaf5)">
+                            <h5 class="font-weight-bold mb-4" style="color:var(--color-text-primary,#2C1810)">
+                                <i class="fas fa-pen mr-2" style="color:var(--color-primary,#2d5016)"></i>
+                                {{ isEditingRating ? 'Edit Your Review' : 'Rate This Delivery' }}
+                            </h5>
+
+                            <!-- Star picker -->
+                            <div class="mb-4">
+                                <label class="small font-weight-bold d-block mb-2"
+                                       style="color:var(--color-text-secondary,#6B5B4E)">
+                                    Rating <span style="color:var(--color-accent-terra,#C1440E)">*</span>
+                                </label>
+                                <div class="d-flex align-items-center">
+                                    <span *ngFor="let s of [1,2,3,4,5]"
+                                        (mouseenter)="reviewHover = s"
+                                        (mouseleave)="reviewHover = 0"
+                                        (click)="setRating(s)"
+                                        style="cursor:pointer;margin-right:4px">
+                                        <i class="fas fa-star"
+                                           [style.color]="s <= (reviewHover || reviewRating) ? '#f59e0b' : '#e5e7eb'"
+                                           style="font-size:32px;transition:color 0.15s"></i>
+                                    </span>
+                                    <span *ngIf="reviewRating > 0" class="ml-3 font-weight-bold"
+                                        style="color:var(--color-primary,#2d5016)">
+                                        {{ getRatingLabel(reviewRating) }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Comment -->
+                            <div class="mb-4">
+                                <label class="small font-weight-bold d-block mb-2"
+                                       style="color:var(--color-text-secondary,#6B5B4E)">
+                                    Your Comment <span style="color:var(--color-accent-terra,#C1440E)">*</span>
+                                </label>
+                                <textarea class="form-control"
+                                    rows="4"
+                                    style="border-radius:12px;background:var(--color-bg-light,#F5F0E8);resize:none;border-color:#c8d8b8"
+                                    [(ngModel)]="reviewComment"
+                                    placeholder="Tell us about your delivery experience... (minimum 5 characters)"
+                                    maxlength="1000"></textarea>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <small *ngIf="reviewError" style="color:var(--color-accent-terra,#C1440E)">
+                                        <i class="fas fa-exclamation-circle mr-1"></i>{{ reviewError }}
+                                    </small>
+                                    <small class="text-muted ml-auto">{{ reviewComment.length }}/1000</small>
+                                </div>
+                            </div>
+
+                            <!-- Buttons -->
+                            <div class="d-flex justify-content-end">
+                                <button class="btn btn-light rounded-pill px-4 mr-2" (click)="cancelReview()">
+                                    Cancel
+                                </button>
+                                <button class="btn rounded-pill px-5 font-weight-bold"
+                                    style="background:linear-gradient(135deg,var(--color-primary,#2d5016) 0%,var(--color-primary-light,#4a7c2c) 100%);color:white;border:none"
+                                    (click)="submitReview()"
+                                    [disabled]="reviewSaving">
+                                    <span *ngIf="reviewSaving">
+                                        <span class="spinner-border spinner-border-sm mr-2"></span>Saving...
+                                    </span>
+                                    <span *ngIf="!reviewSaving">
+                                        <i class="fas fa-check mr-2"></i>
+                                        {{ isEditingRating ? 'Save Changes' : 'Submit Review' }}
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="text-center">
+                        <a routerLink="/shop" class="btn btn-success rounded-pill px-5 mr-2">
+                            Continue Shopping
+                        </a>
+                        <a routerLink="/messages" class="btn btn-outline-secondary rounded-pill px-4">
+                            Contact Support
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .success-icon {
+        animation: pop 0.4s ease;
+    }
+
+    @keyframes pop {
+        0% {
+            transform: scale(0)
+        }
+
+        80% {
+            transform: scale(1.15)
+        }
+
+        100% {
+            transform: scale(1)
+        }
+    }
+
+    .timeline-steps {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        padding: 0 10px;
+    }
+
+    .timeline-steps::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 10%;
+        right: 10%;
+        height: 3px;
+        background: #e9ecef;
+        z-index: 1;
+    }
+
+    .t-step {
+        text-align: center;
+        flex: 1;
+        position: relative;
+        z-index: 2;
+    }
+
+    .t-icon {
+        width: 42px;
+        height: 42px;
+        background: #e9ecef;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 8px;
+        color: #adb5bd;
+        transition: all 0.3s;
+    }
+
+    .t-label {
+        font-size: 12px;
+        color: #adb5bd;
+        font-weight: 600;
+    }
+
+    .t-step.active .t-icon {
+        background: #28a745;
+        color: #fff;
+        box-shadow: 0 0 0 5px rgba(40, 167, 69, 0.15);
+    }
+
+    .t-step.active .t-label {
+        color: #28a745;
+    }
+</style>

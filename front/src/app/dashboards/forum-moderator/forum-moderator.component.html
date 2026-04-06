@@ -1,0 +1,82 @@
+<div class="content-header bg-gradient-maroon text-white p-4">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="font-weight-bold mb-0">Forum Moderator</h1>
+            <p class="mb-0 opacity-75">Review reported content and manage community discussions</p>
+        </div>
+        <div class="stats-icon opacity-50"><i class="fas fa-gavel fa-3x"></i></div>
+    </div>
+</div>
+
+<div class="content mt-4">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 text-center py-4 bg-maroon">
+                    <div class="card-body">
+                        <i class="fas fa-flag fa-2x mb-2"></i>
+                        <h4 class="font-weight-bold">15</h4>
+                        <span class="small uppercase">Reported Items</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 text-center py-4 bg-info">
+                    <div class="card-body">
+                        <i class="fas fa-comments fa-2x mb-2"></i>
+                        <h4 class="font-weight-bold">248</h4>
+                        <span class="small uppercase">New Topics Today</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 text-center py-4 bg-success">
+                    <div class="card-body">
+                        <i class="fas fa-user-shield fa-2x mb-2"></i>
+                        <h4 class="font-weight-bold">0</h4>
+                        <span class="small uppercase">Pending Appeals</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 text-center py-4 bg-warning">
+                    <div class="card-body">
+                        <i class="fas fa-clock fa-2x mb-2"></i>
+                        <h4 class="font-weight-bold">2min</h4>
+                        <span class="small uppercase">Avg Response Time</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content px-4">
+    <div class="container-fluid">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title font-weight-bold mb-0">Reported Posts</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item p-4" *ngFor="let report of [1,2]">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="font-weight-bold mb-1">Offensive Content in "Best Hiking Gear"</h6>
+                                <p class="text-muted small mb-2">Reported by <strong>User123</strong> for "Inappropriate
+                                    Language"</p>
+                                <div class="bg-light p-3 rounded mb-3 small">
+                                    "You're an idiot if you think this tent is good. It's absolute trash..."
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <button class="btn btn-warning btn-sm mb-1 block">Warn User</button><br>
+                                <button class="btn btn-danger btn-sm">Delete Post</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

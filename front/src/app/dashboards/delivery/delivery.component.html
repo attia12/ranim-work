@@ -1,0 +1,549 @@
+<!-- ── Header ── -->
+<div class="content-header p-4"
+    style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%); color: white;">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h1 class="font-weight-bold mb-0">Delivery Management</h1>
+                <p class="mb-0 opacity-75">Track and manage your delivery assignments</p>
+            </div>
+            <!-- Vehicle status chip -->
+            <div *ngIf="vehicles.length > 0" class="d-flex align-items-center">
+                <span class="badge px-3 py-2 mr-2"
+                    [ngClass]="hasAvailableVehicle ? 'badge-success' : 'badge-warning'">
+                    <i class="fas fa-car mr-1"></i>
+                    {{ hasAvailableVehicle ? 'Vehicle Available' : 'No Available Vehicle' }}
+                </span>
+            </div>
+            <div *ngIf="vehicles.length === 0" class="d-flex align-items-center">
+                <span class="badge badge-danger px-3 py-2 mr-2">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>No Vehicle Registered
+                </span>
+                <button class="btn btn-light btn-sm rounded-pill px-3" (click)="activeTab='vehicles'">
+                    <i class="fas fa-plus mr-1"></i> Register Vehicle
+                </button>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <span class="mr-3 text-white-50 small">Sort by:</span>
+                <select class="form-control form-control-sm border-0 w-auto"
+                    (change)="onSortChange($any($event.target).value)">
+                    <option value="date">Date (Newest)</option>
+                    <option value="price">Highest Pay</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Main content ── -->
+<div class="content mt-4">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-primary card-outline card-tabs shadow-sm border-0">
+                    <div class="card-header p-0 pt-1 border-bottom-0">
+                        <ul class="nav nav-tabs" id="deliveryTabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link px-4" [class.active]="activeTab === 'available'"
+                                    (click)="activeTab = 'available'" href="javascript:void(0)">
+                                    Available Deliveries
+                                    <span class="badge badge-warning ml-2">{{availableDeliveries.length}}</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link px-4" [class.active]="activeTab === 'managed'"
+                                    (click)="activeTab = 'managed'" href="javascript:void(0)">
+                                    My Deliveries
+                                    <span class="badge badge-info ml-2">{{myDeliveries.length}}</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link px-4" [class.active]="activeTab === 'vehicles'"
+                                    (click)="activeTab = 'vehicles'" href="javascript:void(0)">
+                                    <i class="fas fa-car mr-2"></i>My Vehicles
+                                    <span class="badge ml-2"
+                                        [ngClass]="vehicles.length > 0 ? 'badge-success' : 'badge-danger'">
+                                        {{vehicles.length}}
+                                    </span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="card-body p-4">
+
+                        <!-- ── Available Deliveries tab ── -->
+                        <div *ngIf="activeTab === 'available'" class="table-responsive">
+                            <!-- No vehicle warning banner -->
+                            <div *ngIf="!hasAvailableVehicle" class="alert mb-4 d-flex align-items-center"
+                                style="background:rgba(193,68,14,0.1);border:1px solid var(--color-accent-terra);border-radius:10px;color:var(--color-accent-terra)">
+                                <i class="fas fa-exclamation-triangle mr-3 fa-lg" style="flex-shrink:0"></i>
+                                <div>
+                                    <strong>No available vehicle.</strong> You need to register a vehicle and set it as
+                                    Available before you can accept deliveries.
+                                    <a href="javascript:void(0)" (click)="activeTab='vehicles'"
+                                        class="ml-2 font-weight-bold"
+                                        style="color:var(--color-accent-terra);text-decoration:underline">
+                                        Go to My Vehicles →
+                                    </a>
+                                </div>
+                            </div>
+
+                            <table class="table table-hover mb-0" aria-label="Available Deliveries">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="border-0 px-4">Order ID</th>
+                                        <th class="border-0">Customer</th>
+                                        <th class="border-0">Destination</th>
+                                        <th class="border-0">Date</th>
+                                        <th class="border-0 text-right">Pay</th>
+                                        <th class="border-0 text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let delivery of availableDeliveries"
+                                        (click)="selectDelivery(delivery)" class="cursor-pointer">
+                                        <td class="px-4 font-weight-bold text-primary">#{{delivery.orderId}}</td>
+                                        <td>{{delivery.customerName}}</td>
+                                        <td>
+                                            <i class="fas fa-map-marker-alt text-danger mr-2"></i>{{delivery.address}}
+                                        </td>
+                                        <td>{{delivery.date | date:'shortDate'}}</td>
+                                        <td class="text-right font-weight-bold text-success">
+                                            {{delivery.price | currency}}
+                                        </td>
+                                        <td class="text-center" (click)="$event.stopPropagation()">
+                                            <button class="btn btn-primary btn-sm rounded-pill px-3 mr-2"
+                                                (click)="takeDelivery(delivery.id)"
+                                                [disabled]="!hasAvailableVehicle">Accept</button>
+                                            <button class="btn btn-outline-danger btn-sm rounded-pill px-3"
+                                                (click)="declineDelivery(delivery.id)">Decline</button>
+                                        </td>
+                                    </tr>
+                                    <tr *ngIf="availableDeliveries.length === 0">
+                                        <td colspan="6" class="text-center py-5 text-muted">
+                                            <i class="fas fa-box-open fa-3x mb-3 opacity-25"></i>
+                                            <p class="mb-0">No available deliveries at the moment.</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- ── My Deliveries tab ── -->
+                        <div *ngIf="activeTab === 'managed'" class="table-responsive">
+                            <table class="table table-hover mb-0" aria-label="My Managed Deliveries">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="border-0 px-4">Order ID</th>
+                                        <th class="border-0">Destination</th>
+                                        <th class="border-0">Earnings</th>
+                                        <th class="border-0">Status</th>
+                                        <th class="border-0 text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let delivery of myDeliveries"
+                                        (click)="selectDelivery(delivery)" class="cursor-pointer">
+                                        <td class="px-4 font-weight-bold">#{{delivery.orderId}}</td>
+                                        <td>{{delivery.address}}</td>
+                                        <td class="font-weight-bold text-success">{{delivery.price | currency}}</td>
+                                        <td>
+                                            <span class="badge badge-pill py-2 px-3"
+                                                [ngClass]="getStatusBadgeClass(delivery.status)">
+                                                {{delivery.status}}
+                                            </span>
+                                        </td>
+                                        <td class="text-center border-0" (click)="$event.stopPropagation()">
+                                            <button *ngIf="getNextStatus(delivery.status)"
+                                                class="btn btn-sm rounded-pill px-3"
+                                                [ngClass]="delivery.status === 'IN_TRANSIT' ? 'btn-success' : 'btn-primary'"
+                                                (click)="advanceStatus(delivery.id, delivery.status)">
+                                                {{getNextStatusLabel(delivery.status)}}
+                                            </button>
+                                            <span *ngIf="delivery.status === 'DELIVERED'"
+                                                class="text-success small font-weight-bold">
+                                                <i class="fas fa-check-circle mr-1"></i>Completed
+                                            </span>
+                                            <span *ngIf="delivery.status === 'FAILED' || delivery.status === 'RETURNED'"
+                                                class="text-muted small">{{delivery.status}}</span>
+                                        </td>
+                                    </tr>
+                                    <tr *ngIf="myDeliveries.length === 0">
+                                        <td colspan="5" class="text-center py-5 text-muted">
+                                            <i class="fas fa-truck fa-3x mb-3 opacity-25"></i>
+                                            <p class="mb-0">You haven't taken any deliveries yet.</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- ── My Vehicles tab ── -->
+                        <div *ngIf="activeTab === 'vehicles'">
+
+                            <!-- Header row -->
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <h5 class="font-weight-bold mb-1" style="color:var(--color-text-primary)">
+                                        <i class="fas fa-car mr-2" style="color:var(--color-primary)"></i>
+                                        My Registered Vehicles
+                                    </h5>
+                                    <p class="small mb-0" style="color:var(--color-text-secondary)">
+                                        You need at least one vehicle set to Available to accept deliveries.
+                                    </p>
+                                </div>
+                                <button class="btn rounded-pill px-4 font-weight-bold"
+                                    style="background:linear-gradient(135deg,var(--color-primary) 0%,var(--color-primary-light) 100%);color:white;border:none"
+                                    (click)="openAddVehicleModal()">
+                                    <i class="fas fa-plus mr-2"></i>Register Vehicle
+                                </button>
+                            </div>
+
+                            <!-- Empty state -->
+                            <div *ngIf="vehicles.length === 0"
+                                class="text-center py-5 rounded"
+                                style="background:var(--color-bg-light);border:2px dashed var(--color-accent-earth)">
+                                <i class="fas fa-truck fa-4x mb-3 d-block" style="color:var(--color-accent-earth);opacity:0.5"></i>
+                                <h5 class="font-weight-bold" style="color:var(--color-text-primary)">No vehicles yet</h5>
+                                <p style="color:var(--color-text-secondary)">
+                                    Register your vehicle to start accepting delivery assignments.
+                                </p>
+                                <button class="btn rounded-pill px-4"
+                                    style="background:var(--color-primary);color:white;border:none"
+                                    (click)="openAddVehicleModal()">
+                                    <i class="fas fa-plus mr-2"></i>Register First Vehicle
+                                </button>
+                            </div>
+
+                            <!-- Vehicle cards -->
+                            <div class="row" *ngIf="vehicles.length > 0">
+                                <div class="col-md-6 col-lg-4 mb-4" *ngFor="let v of vehicles">
+                                    <div class="card border-0 shadow-sm h-100" style="border-radius:14px;overflow:hidden">
+                                        <!-- Card header with type icon -->
+                                        <div class="card-header border-0 py-3 px-4"
+                                            style="background:linear-gradient(135deg,var(--color-primary) 0%,var(--color-primary-light) 100%)">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas {{getVehicleIcon(v.type)}} fa-2x text-white mr-3"></i>
+                                                    <div>
+                                                        <div class="text-white font-weight-bold">
+                                                            {{v.brand}} {{v.model}}
+                                                        </div>
+                                                        <small class="text-white opacity-75">{{v.type}} · {{v.year}}</small>
+                                                    </div>
+                                                </div>
+                                                <span class="badge px-2 py-1"
+                                                    [ngClass]="v.isVerified ? 'badge-success' : 'badge-warning'"
+                                                    style="font-size:10px">
+                                                    <i class="fas" [ngClass]="v.isVerified ? 'fa-check-circle' : 'fa-clock'" class="mr-1"></i>
+                                                    {{v.isVerified ? 'Verified' : 'Pending'}}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="card-body px-4 py-3">
+                                            <!-- Plate -->
+                                            <div class="d-flex align-items-center mb-3">
+                                                <div class="px-3 py-1 rounded font-weight-bold mr-3"
+                                                    style="background:var(--color-text-primary);color:white;font-family:monospace;font-size:15px;letter-spacing:2px">
+                                                    {{v.plate}}
+                                                </div>
+                                                <span *ngIf="v.color" class="small" style="color:var(--color-text-secondary)">
+                                                    {{v.color}}
+                                                </span>
+                                            </div>
+
+                                            <!-- Stats row -->
+                                            <div class="row text-center mb-3">
+                                                <div class="col-4 border-right">
+                                                    <div class="font-weight-bold" style="color:var(--color-primary)">
+                                                        {{v.maxWeight}} kg
+                                                    </div>
+                                                    <div class="small" style="color:var(--color-text-secondary)">Max Weight</div>
+                                                </div>
+                                                <div class="col-4 border-right">
+                                                    <div class="font-weight-bold" style="color:var(--color-primary)">
+                                                        {{v.maxConcurrentDeliveries}}
+                                                    </div>
+                                                    <div class="small" style="color:var(--color-text-secondary)">Max Jobs</div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="font-weight-bold" style="color:var(--color-primary)">
+                                                        {{v.currentDeliveriesCount || 0}}
+                                                    </div>
+                                                    <div class="small" style="color:var(--color-text-secondary)">Active</div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Availability -->
+                                            <div class="mb-3">
+                                                <label class="small font-weight-bold mb-1"
+                                                    style="color:var(--color-text-secondary)">Availability</label>
+                                                <div class="d-flex flex-wrap">
+                                                    <button *ngFor="let s of availabilityStatuses"
+                                                        class="btn btn-sm rounded-pill mr-2 mb-1 px-3"
+                                                        [ngStyle]="{
+                                                            'background': v.availabilityStatus === s ? (s === 'AVAILABLE' ? 'var(--color-primary)' : s === 'BUSY' ? '#e6a817' : '#6c757d') : 'white',
+                                                            'color': v.availabilityStatus === s ? 'white' : 'var(--color-text-secondary)',
+                                                            'border': '1px solid ' + (s === 'AVAILABLE' ? 'var(--color-primary)' : s === 'BUSY' ? '#e6a817' : '#6c757d')
+                                                        }"
+                                                        (click)="setAvailability(v.id!, s)">
+                                                        {{s}}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <!-- Insurance expiry -->
+                                            <div *ngIf="v.insuranceExpiryDate" class="small mb-2"
+                                                style="color:var(--color-text-secondary)">
+                                                <i class="fas fa-shield-alt mr-1"></i>
+                                                Insurance expires: {{v.insuranceExpiryDate | date:'dd MMM yyyy'}}
+                                            </div>
+                                        </div>
+
+                                        <!-- Card footer actions -->
+                                        <div class="card-footer border-0 bg-white px-4 py-2 d-flex justify-content-end">
+                                            <button class="btn btn-sm rounded-pill px-3 mr-2"
+                                                style="background:var(--color-primary);color:white;border:none"
+                                                (click)="openEditVehicleModal(v)" title="Edit">
+                                                <i class="fas fa-edit mr-1"></i>Edit
+                                            </button>
+                                            <button class="btn btn-sm rounded-pill px-3"
+                                                style="background:var(--color-accent-terra);color:white;border:none"
+                                                (click)="deleteVehicle(v.id!)" title="Delete">
+                                                <i class="fas fa-trash mr-1"></i>Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end vehicles tab -->
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Delivery Details Modal ── -->
+<div *ngIf="selectedDelivery" class="modal-backdrop fade show" (click)="closeDetails()"></div>
+<div *ngIf="selectedDelivery" class="modal fade show d-block" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 py-3 px-4"
+                style="background:linear-gradient(135deg,var(--color-primary) 0%,var(--color-primary-light) 100%)">
+                <h5 class="modal-title font-weight-bold text-white">
+                    <i class="fas fa-shipping-fast mr-2"></i>Delivery #{{selectedDelivery.orderId}}
+                </h5>
+                <button type="button" class="close text-white" (click)="closeDetails()"><span>&times;</span></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row mb-4">
+                    <div class="col-md-6 border-right">
+                        <h6 class="text-uppercase small font-weight-bold text-muted mb-3">Customer</h6>
+                        <p class="mb-1"><strong>Name:</strong> {{selectedDelivery.customerName}}</p>
+                        <p class="mb-1"><strong>Address:</strong> {{selectedDelivery.address}}</p>
+                        <p class="mb-0"><strong>Status:</strong>
+                            <span class="badge badge-pill ml-2 px-3 py-2"
+                                [ngClass]="getStatusBadgeClass(selectedDelivery.status)">
+                                {{selectedDelivery.status}}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-uppercase small font-weight-bold text-muted mb-3">Logistics</h6>
+                        <p class="mb-1"><strong>Pay:</strong>
+                            <span class="text-success font-weight-bold ml-1">{{selectedDelivery.price | currency}}</span>
+                        </p>
+                        <p class="mb-1"><strong>Weight:</strong> {{selectedDelivery.weight}} kg</p>
+                        <p class="mb-0"><strong>Date:</strong> {{selectedDelivery.date | date:'medium'}}</p>
+                    </div>
+                </div>
+                <div *ngIf="selectedDelivery.instructions" class="alert alert-info border-0 shadow-sm">
+                    <h6 class="font-weight-bold small mb-2"><i class="fas fa-info-circle mr-2"></i>Instructions</h6>
+                    <p class="mb-0 small">{{selectedDelivery.instructions}}</p>
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-4">
+                <button class="btn btn-light rounded-pill px-4" (click)="closeDetails()">Close</button>
+                <button *ngIf="selectedDelivery.status === 'PENDING_ASSIGNMENT'"
+                    class="btn rounded-pill px-4"
+                    style="background:var(--color-primary);color:white;border:none"
+                    (click)="takeDelivery(selectedDelivery.id); closeDetails()">
+                    Accept Delivery
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Vehicle Register/Edit Modal ── -->
+<div *ngIf="showVehicleModal" class="modal-backdrop fade show" (click)="closeVehicleModal()"></div>
+<div *ngIf="showVehicleModal" class="modal fade show d-block" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document"
+        (click)="$event.stopPropagation()">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:16px;overflow:hidden">
+
+            <!-- Header -->
+            <div class="modal-header border-0 px-4 pt-4 pb-3"
+                style="background:linear-gradient(135deg,var(--color-primary) 0%,var(--color-primary-light) 100%)">
+                <div>
+                    <h5 class="modal-title font-weight-bold text-white mb-0">
+                        <i class="fas" [ngClass]="isEditingVehicle ? 'fa-edit' : 'fa-car'" class="mr-2"></i>
+                        {{isEditingVehicle ? 'Edit Vehicle' : 'Register New Vehicle'}}
+                    </h5>
+                    <small class="text-white" style="opacity:0.75">
+                        Your vehicle needs admin verification before you can claim deliveries.
+                    </small>
+                </div>
+                <button type="button" class="close text-white ml-auto" (click)="closeVehicleModal()"
+                    style="opacity:0.8;font-size:1.5rem"><span>&times;</span></button>
+            </div>
+
+            <div class="modal-body px-4 py-4" style="background:var(--color-bg-card)">
+
+                <!-- Inline error -->
+                <div *ngIf="vehicleSaveError" class="alert mb-4 py-2 px-3 d-flex align-items-center"
+                    style="background:rgba(193,68,14,0.1);color:var(--color-accent-terra);border:1px solid var(--color-accent-terra);border-radius:8px;font-size:13px">
+                    <i class="fas fa-exclamation-circle mr-2" style="flex-shrink:0"></i>
+                    <span>{{vehicleSaveError}}</span>
+                </div>
+
+                <div class="row">
+                    <!-- Type -->
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold small mb-2" style="color:var(--color-text-primary)">
+                            Vehicle Type <span style="color:var(--color-accent-terra)">*</span>
+                        </label>
+                        <div class="d-flex flex-wrap">
+                            <button *ngFor="let t of vehicleTypes"
+                                type="button"
+                                class="btn btn-sm rounded-pill mr-2 mb-2 px-3"
+                                [ngStyle]="{
+                                    'background': currentVehicle.type === t ? 'var(--color-primary)' : 'white',
+                                    'color': currentVehicle.type === t ? 'white' : 'var(--color-text-secondary)',
+                                    'border': '1px solid var(--color-primary)'
+                                }"
+                                (click)="currentVehicle.type = t">
+                                <i class="fas {{getVehicleIcon(t)}} mr-1"></i>{{t}}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Color -->
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold small mb-2" style="color:var(--color-text-primary)">Color</label>
+                        <input type="text" class="form-control" style="background:var(--color-bg-light)"
+                            [(ngModel)]="currentVehicle.color" name="color" placeholder="e.g. White, Red...">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Brand -->
+                    <div class="col-md-4 mb-3">
+                        <label class="font-weight-bold small mb-2" style="color:var(--color-text-primary)">
+                            Brand <span style="color:var(--color-accent-terra)">*</span>
+                        </label>
+                        <input type="text" class="form-control" style="background:var(--color-bg-light)"
+                            [(ngModel)]="currentVehicle.brand" name="brand" placeholder="e.g. Toyota">
+                    </div>
+                    <!-- Model -->
+                    <div class="col-md-4 mb-3">
+                        <label class="font-weight-bold small mb-2" style="color:var(--color-text-primary)">
+                            Model <span style="color:var(--color-accent-terra)">*</span>
+                        </label>
+                        <input type="text" class="form-control" style="background:var(--color-bg-light)"
+                            [(ngModel)]="currentVehicle.model" name="model" placeholder="e.g. Corolla">
+                    </div>
+                    <!-- Year -->
+                    <div class="col-md-4 mb-3">
+                        <label class="font-weight-bold small mb-2" style="color:var(--color-text-primary)">
+                            Year <span style="color:var(--color-accent-terra)">*</span>
+                        </label>
+                        <input type="number" class="form-control" style="background:var(--color-bg-light)"
+                            [(ngModel)]="currentVehicle.year" name="year" min="1900"
+                            [max]="2030" placeholder="e.g. 2022">
+                    </div>
+                </div>
+
+                <!-- Plate -->
+                <div class="mb-3">
+                    <label class="font-weight-bold small mb-2" style="color:var(--color-text-primary)">
+                        Plate Number <span style="color:var(--color-accent-terra)">*</span>
+                    </label>
+                    <input type="text" class="form-control font-weight-bold"
+                        style="background:var(--color-bg-light);font-family:monospace;font-size:16px;letter-spacing:2px;text-transform:uppercase"
+                        [(ngModel)]="currentVehicle.plate" name="plate"
+                        placeholder="e.g. TN 123 TUN"
+                        (input)="currentVehicle.plate = $any($event.target).value.toUpperCase()">
+                    <small class="text-muted">Uppercase letters, digits, spaces, hyphens only.</small>
+                </div>
+
+                <div class="row">
+                    <!-- Max Weight -->
+                    <div class="col-md-4 mb-3">
+                        <label class="font-weight-bold small mb-2" style="color:var(--color-text-primary)">
+                            Max Weight (kg) <span style="color:var(--color-accent-terra)">*</span>
+                        </label>
+                        <input type="number" class="form-control" style="background:var(--color-bg-light)"
+                            [(ngModel)]="currentVehicle.maxWeight" name="maxWeight" min="0.1" step="0.1"
+                            placeholder="e.g. 500">
+                    </div>
+                    <!-- Max Concurrent Deliveries -->
+                    <div class="col-md-4 mb-3">
+                        <label class="font-weight-bold small mb-2" style="color:var(--color-text-primary)">
+                            Max Concurrent Jobs <span style="color:var(--color-accent-terra)">*</span>
+                        </label>
+                        <input type="number" class="form-control" style="background:var(--color-bg-light)"
+                            [(ngModel)]="currentVehicle.maxConcurrentDeliveries"
+                            name="maxConcurrentDeliveries" min="1" max="20" placeholder="e.g. 3">
+                    </div>
+                    <!-- Service Radius -->
+                    <div class="col-md-4 mb-3">
+                        <label class="font-weight-bold small mb-2" style="color:var(--color-text-primary)">
+                            Service Radius (km)
+                        </label>
+                        <input type="number" class="form-control" style="background:var(--color-bg-light)"
+                            [(ngModel)]="currentVehicle.serviceRadius" name="serviceRadius"
+                            min="0.1" step="0.1" placeholder="e.g. 50">
+                    </div>
+                </div>
+
+                <!-- Insurance Expiry -->
+                <div class="mb-1">
+                    <label class="font-weight-bold small mb-2" style="color:var(--color-text-primary)">
+                        Insurance Expiry Date <span class="text-muted font-weight-normal">(optional)</span>
+                    </label>
+                    <input type="datetime-local" class="form-control" style="background:var(--color-bg-light)"
+                        [(ngModel)]="currentVehicle.insuranceExpiryDate" name="insuranceExpiryDate">
+                    <small class="text-muted">Must be a future date.</small>
+                </div>
+
+            </div>
+
+            <div class="modal-footer border-0 px-4 pb-4 pt-2 flex-column align-items-stretch"
+                style="background:var(--color-bg-card)">
+                <div class="d-flex justify-content-end">
+                    <button type="button" class="btn btn-light rounded-pill px-4 mr-2"
+                        (click)="closeVehicleModal()">Cancel</button>
+                    <button type="button" class="btn rounded-pill px-4 font-weight-bold"
+                        style="background:linear-gradient(135deg,var(--color-primary) 0%,var(--color-primary-light) 100%);color:white;border:none"
+                        (click)="saveVehicle()" [disabled]="vehicleSaving">
+                        <span *ngIf="vehicleSaving">
+                            <span class="spinner-border spinner-border-sm mr-2"></span>Saving...
+                        </span>
+                        <span *ngIf="!vehicleSaving">
+                            <i class="fas" [ngClass]="isEditingVehicle ? 'fa-save' : 'fa-plus'" class="mr-2"></i>
+                            {{isEditingVehicle ? 'Save Changes' : 'Register Vehicle'}}
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

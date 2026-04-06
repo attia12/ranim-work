@@ -1,0 +1,118 @@
+<div class="p-4">
+
+  <!-- Management Tabs -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white p-0">
+          <ul class="nav nav-pills p-2 flex-wrap">
+            <li class="nav-item"><a class="nav-link" routerLink="/admin/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">Overview</a></li>
+            <li class="nav-item"><a class="nav-link" routerLink="/admin/users" routerLinkActive="active">Users</a></li>
+            <li class="nav-item"><a class="nav-link" routerLink="/admin/gear-provider" routerLinkActive="active">Equipment</a></li>
+            <li class="nav-item"><a class="nav-link" routerLink="/admin/categories" routerLinkActive="active">Categories</a></li>
+            <li class="nav-item"><a class="nav-link" routerLink="/admin/payments" routerLinkActive="active">Payments</a></li>
+            <li class="nav-item"><a class="nav-link" routerLink="/admin/orders" routerLinkActive="active">Orders</a></li>
+            <li class="nav-item"><a class="nav-link" routerLink="/admin/deliveries" routerLinkActive="active">Deliveries</a></li>
+            <li class="nav-item"><a class="nav-link" routerLink="/admin/campsites" routerLinkActive="active">Campsites</a></li>
+            <li class="nav-item"><a class="nav-link" routerLink="/admin/sponsor" routerLinkActive="active">Sponsorships</a></li>
+            <li class="nav-item"><a class="nav-link" routerLink="/admin/forum-mod" routerLinkActive="active">Forum</a></li>
+            <li class="nav-item"><a class="nav-link" routerLink="/admin/events" routerLinkActive="active">Events</a></li>
+          </ul>
+        </div>
+        <div class="card-body">
+          <!-- Tab Content -->
+          <div class="tab-content border p-3 rounded bg-light mb-4">
+            <!-- Overview Tab -->
+            <div class="tab-pane fade show active" id="overview">
+              <div class="row mb-4">
+                <div class="col-lg-3 col-sm-6 mb-3">
+                  <div class="card shadow-none border h-100">
+                    <div class="card-body">
+                      <h6 class="text-muted small uppercase">Total Revenue</h6>
+                      <h3 class="font-weight-bold mb-0">$124,500</h3>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-3 col-sm-6 mb-3">
+                  <div class="card shadow-none border h-100">
+                    <div class="card-body">
+                      <h6 class="text-muted small uppercase">Total Users</h6>
+                      <h3 class="font-weight-bold mb-0">1,284</h3>
+                    </div>
+                  </div>
+                </div>
+                <!-- ... other stats ... -->
+              </div>
+            </div>
+
+            <!-- Management Sections (Mock Content) -->
+            <div class="management-section py-4">
+              <h5 class="font-weight-bold border-bottom pb-2 mb-4">Platform Oversight</h5>
+              <div class="row">
+                <div class="col-md-4 mb-4">
+                  <div class="card border-0 shadow-sm border-left-primary">
+                    <div class="card-body">
+                      <div class="d-flex align-items-center">
+                        <div class="icon-circle bg-primary text-white mr-3"><i class="fas fa-users"></i></div>
+                        <div>
+                          <h6 class="mb-0 font-weight-bold">Users</h6>
+                          <small class="text-muted">1,284 Total</small>
+                        </div>
+                      </div>
+                      <button class="btn btn-outline-primary btn-sm btn-block mt-3">Manage Users</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                  <div class="card border-0 shadow-sm border-left-success">
+                    <div class="card-body">
+                      <div class="d-flex align-items-center">
+                        <div class="icon-circle bg-success text-white mr-3"><i class="fas fa-box"></i></div>
+                        <div>
+                          <h6 class="mb-0 font-weight-bold">Equipment</h6>
+                          <small class="text-muted">562 Listings</small>
+                        </div>
+                      </div>
+                      <button class="btn btn-outline-success btn-sm btn-block mt-3">Manage Equipment</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                  <div class="card border-0 shadow-sm border-left-info">
+                    <div class="card-body">
+                      <div class="d-flex align-items-center">
+                        <div class="icon-circle bg-info text-white mr-3"><i class="fas fa-truck"></i></div>
+                        <div>
+                          <h6 class="mb-0 font-weight-bold">Deliveries</h6>
+                          <small class="text-muted">15 Active</small>
+                        </div>
+                      </div>
+                      <button class="btn btn-outline-info btn-sm btn-block mt-3" routerLink="/admin/deliveries">Track
+                        Deliveries</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions Removed/Moved ... -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .tiny {
+      font-size: 0.75rem;
+    }
+
+    .uppercase {
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .gap-2 {
+      gap: 0.5rem;
+    }
+  </style>

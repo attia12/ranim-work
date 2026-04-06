@@ -1,0 +1,210 @@
+<div class="events-page">
+
+  <!-- Hero -->
+  <div class="events-hero py-5">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-7">
+          <h1 class="hero-title">Discover Outdoor Events</h1>
+          <p class="hero-subtitle">Join camping trips, survival workshops, and outdoor expeditions.</p>
+        </div>
+        <div class="col-md-5 text-md-right" *ngIf="isAdmin() && !showForm">
+          <button class="btn btn-success btn-lg px-4" (click)="openForm()">
+            <i class="fas fa-plus mr-2"></i>Add New Event
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container pb-5">
+
+    <!-- Admin Form -->
+    <div class="row mb-5" *ngIf="showForm && isAdmin()">
+      <div class="col-md-8 mx-auto">
+        <div class="card shadow border-0 rounded-lg">
+          <div class="card-body p-4">
+            <h5 class="font-weight-bold mb-4">{{ isEditing ? 'Edit Event' : 'Create New Event' }}</h5>
+            <div class="form-group mb-3">
+              <label class="font-weight-bold">Event Title</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.title" placeholder="Enter event title">
+            </div>
+            <div class="form-group mb-3">
+              <label class="font-weight-bold">Location</label>
+              <input type="text" class="form-control" [(ngModel)]="formData.location" placeholder="Enter location">
+            </div>
+            <div class="form-group mb-3">
+              <label class="font-weight-bold">Date</label>
+              <input type="date" class="form-control" [(ngModel)]="formData.date">
+            </div>
+            <div class="form-group mb-3">
+              <label class="font-weight-bold">Max Participants</label>
+              <input type="number" class="form-control" [(ngModel)]="formData.maxParticipants" min="1">
+            </div>
+            <div class="form-group mb-4">
+              <label class="font-weight-bold">Status</label>
+              <select class="form-control" [(ngModel)]="formData.status">
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-success flex-fill" (click)="saveEvent()">
+                <i class="fas fa-save mr-2"></i>{{ isEditing ? 'Update' : 'Create' }}
+              </button>
+              <button class="btn btn-outline-secondary flex-fill" (click)="closeForm()">
+                <i class="fas fa-times mr-2"></i>Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="d-flex align-items-center mb-4 flex-wrap gap-2">
+      <div class="filter-bar">
+        <button *ngFor="let s of statuses" (click)="selectStatus(s)"
+                [class.active]="selectedStatus === s" class="filter-btn">
+          {{ s === 'All' ? 'All Events' : s | titlecase }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Events Grid -->
+    <div class="row">
+      <div class="col-lg-4 col-md-6 mb-4" *ngFor="let event of filteredEvents">
+        <div class="event-card card border-0 shadow-sm overflow-hidden" (click)="openDetails(event)">
+
+          <div class="position-relative">
+            <img [src]="event.image" class="event-img" alt="{{ event.title }}">
+            <span class="badge-left" [ngClass]="{
+              'badge-active': event.status === 'ACTIVE',
+              'badge-inactive': event.status === 'INACTIVE',
+              'badge-cancelled': event.status === 'CANCELLED'
+            }">{{ event.status | titlecase }}</span>
+            <span class="badge-right">
+              <i class="fas fa-users mr-1"></i>{{ event.maxParticipants }}
+            </span>
+          </div>
+
+          <div class="card-body p-4">
+            <h5 class="card-title font-weight-bold mb-1">{{ event.title }}</h5>
+            <p class="text-muted small mb-1">
+              <i class="fas fa-map-marker-alt text-success mr-1"></i>{{ event.location }}
+            </p>
+            <p class="text-muted small mb-3">
+              <i class="fas fa-calendar-alt text-success mr-1"></i>{{ event.date | date:'MMM d, yyyy' }}
+            </p>
+
+            <!-- Public -->
+            <div class="d-flex justify-content-between align-items-center" *ngIf="!isAdmin()">
+              <span class="text-success font-weight-bold">
+                <i class="fas fa-user-friends mr-1"></i>{{ event.maxParticipants }} spots
+              </span>
+              <button class="btn btn-outline-success btn-sm px-3 rounded-pill">View Details</button>
+            </div>
+
+            <!-- Admin -->
+            <div class="d-flex gap-2" *ngIf="isAdmin()">
+              <button class="btn btn-sm btn-success flex-fill" (click)="editEvent(event, $event)">
+                <i class="fas fa-edit mr-1"></i>Edit
+              </button>
+              <button class="btn btn-sm btn-outline-danger flex-fill" (click)="deleteEvent(event.eventId, $event)">
+                <i class="fas fa-trash-alt mr-1"></i>Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="text-center py-5" *ngIf="filteredEvents.length === 0 && !showForm">
+      <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+      <h5 class="text-muted">No events found.</h5>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal — same style as campsites booking modal -->
+<div class="modal-overlay" *ngIf="selectedEvent" (click)="closeDetails()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <button class="close-btn" (click)="closeDetails()">&times;</button>
+
+    <div class="row no-gutters">
+      <!-- Left: image -->
+      <div class="col-md-5">
+        <img [src]="selectedEvent.image" class="modal-img" alt="{{ selectedEvent.title }}">
+      </div>
+
+      <!-- Right: details -->
+      <div class="col-md-7 p-4">
+
+        <!-- Status + title -->
+        <div class="d-flex align-items-center mb-2">
+          <span class="site-type-badge mr-3" [ngClass]="{
+            'badge-active': selectedEvent.status === 'ACTIVE',
+            'badge-inactive': selectedEvent.status === 'INACTIVE',
+            'badge-cancelled': selectedEvent.status === 'CANCELLED'
+          }">{{ selectedEvent.status | titlecase }}</span>
+        </div>
+        <h2 class="modal-title">{{ selectedEvent.title }}</h2>
+        <p class="text-muted mb-4">{{ selectedEvent.description }}</p>
+
+        <!-- Location + Capacity -->
+        <div class="row mb-4">
+          <div class="col-6">
+            <p class="detail-label">LOCATION</p>
+            <p class="detail-value">
+              <i class="fas fa-map-marker-alt text-success mr-1"></i>{{ selectedEvent.location }}
+            </p>
+          </div>
+          <div class="col-6">
+            <p class="detail-label">DATE</p>
+            <p class="detail-value">
+              <i class="fas fa-calendar-alt text-success mr-1"></i>{{ selectedEvent.date | date:'MMM d, yyyy' }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Highlights -->
+        <div class="mb-4" *ngIf="selectedEvent.highlights?.length">
+          <p class="detail-label">HIGHLIGHTS</p>
+          <div class="d-flex flex-wrap gap-2">
+            <span class="highlight-tag" *ngFor="let h of selectedEvent.highlights">
+              <i class="fas fa-check text-success mr-1"></i>{{ h }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Assigned Guides -->
+        <div class="mb-4" *ngIf="selectedEvent.guides?.length">
+          <p class="detail-label">ASSIGNED GUIDES</p>
+          <div class="guide-item" *ngFor="let guide of selectedEvent.guides">
+            <div class="guide-avatar">
+              <i class="fas fa-user"></i>
+            </div>
+            <div>
+              <p class="guide-name">{{ guide.name }}</p>
+              <p class="guide-role">{{ guide.role }} · {{ guide.experience }} yrs exp</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <span class="spots-text">
+            <i class="fas fa-users text-success mr-1"></i>
+            <strong>{{ selectedEvent.maxParticipants }}</strong> spots available
+          </span>
+          <button class="btn btn-success btn-lg rounded-pill px-4">
+            Join Now
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

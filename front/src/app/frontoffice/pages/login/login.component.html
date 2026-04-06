@@ -1,0 +1,138 @@
+<div class="login-page">
+  <div class="container">
+    <div class="row justify-content-center align-items-center min-vh-100">
+      <div class="col-lg-5 col-md-7">
+
+        <!-- Login Card -->
+        <div class="login-card">
+
+          <!-- Logo Section -->
+          <div class="text-center mb-4">
+            <div class="login-logo mb-3">
+              <i class="fas fa-campground"></i>
+            </div>
+            <h2 class="font-weight-bold mb-2">Welcome Back!</h2>
+            <p class="text-muted">Login to continue your adventure</p>
+          </div>
+
+          <!-- Error Banner -->
+          <div class="alert alert-danger d-flex align-items-center gap-2" *ngIf="loginError">
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            <span>{{ loginError }}</span>
+          </div>
+
+          <!-- Login Form -->
+          <form #loginForm="ngForm" (ngSubmit)="onSubmit(loginForm)" novalidate>
+
+            <!-- Email Input -->
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <div class="input-group" [class.is-invalid-group]="email.invalid && email.touched">
+                <div class="input-group-prepend">
+                  <span class="input-group-text" [class.border-danger]="email.invalid && email.touched">
+                    <i class="fas fa-envelope"></i>
+                  </span>
+                </div>
+                <input
+                  type="email"
+                  class="form-control"
+                  [class.is-invalid]="email.invalid && email.touched"
+                  name="email"
+                  #email="ngModel"
+                  [(ngModel)]="credentials.email"
+                  placeholder="Enter your email"
+                  required
+                  email>
+              </div>
+              <div class="invalid-feedback d-block" *ngIf="email.invalid && email.touched">
+                <i class="fas fa-exclamation-triangle mr-1"></i>
+                <span *ngIf="email.errors?.['required']">Email is required.</span>
+                <span *ngIf="email.errors?.['email']">Please enter a valid email address.</span>
+              </div>
+            </div>
+
+            <!-- Password Input -->
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <div class="input-group" [class.is-invalid-group]="password.invalid && password.touched">
+                <div class="input-group-prepend">
+                  <span class="input-group-text" [class.border-danger]="password.invalid && password.touched">
+                    <i class="fas fa-lock"></i>
+                  </span>
+                </div>
+                <input
+                  [type]="showPassword ? 'text' : 'password'"
+                  class="form-control"
+                  [class.is-invalid]="password.invalid && password.touched"
+                  name="password"
+                  #password="ngModel"
+                  [(ngModel)]="credentials.password"
+                  placeholder="Enter your password"
+                  required
+                  minlength="6">
+                <div class="input-group-append">
+                  <button type="button" class="input-group-text toggle-btn" (click)="togglePassword()">
+                    <i class="fas" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="invalid-feedback d-block" *ngIf="password.invalid && password.touched">
+                <i class="fas fa-exclamation-triangle mr-1"></i>
+                <span *ngIf="password.errors?.['required']">Password is required.</span>
+                <span *ngIf="password.errors?.['minlength']">Password must be at least 6 characters.</span>
+              </div>
+            </div>
+
+            <!-- Remember Me & Forgot Password -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" id="rememberMe" name="rememberMe" [(ngModel)]="rememberMe">
+                <label class="custom-control-label" for="rememberMe">Remember me</label>
+              </div>
+              <a routerLink="/forgot-password" class="text-success small">Forgot Password?</a>
+            </div>
+
+            <!-- Login Button -->
+            <button type="submit" class="btn btn-success btn-block btn-lg mb-3" [disabled]="isLoading">
+              <span *ngIf="!isLoading">Login</span>
+              <span *ngIf="isLoading">
+                <span class="spinner-border spinner-border-sm mr-2" role="status"></span>
+                Logging in...
+              </span>
+            </button>
+
+            <!-- Divider -->
+            <div class="divider">
+              <span>OR</span>
+            </div>
+
+            <!-- Social Login Buttons -->
+            <div class="row mb-3">
+              <div class="col-6">
+                <button type="button" class="btn btn-outline-primary btn-block">
+                  <i class="fab fa-google mr-2"></i>Google
+                </button>
+              </div>
+              <div class="col-6">
+                <button type="button" class="btn btn-outline-dark btn-block">
+                  <i class="fab fa-facebook mr-2"></i>Facebook
+                </button>
+              </div>
+            </div>
+
+            <!-- Sign Up Link -->
+            <div class="text-center mt-4">
+              <p class="mb-0">
+                Don't have an account?
+                <a routerLink="/register" class="text-success font-weight-bold">Sign Up</a>
+              </p>
+            </div>
+
+          </form>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

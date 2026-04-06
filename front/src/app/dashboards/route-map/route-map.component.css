@@ -1,0 +1,141 @@
+/* Map Container */
+.map-container {
+  height: 450px;
+  background: #e9ecef;
+  border-radius: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.map-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #6c757d;
+}
+
+.map-placeholder i {
+  font-size: 64px;
+  opacity: 0.3;
+}
+
+/* Cards */
+.card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.card-header {
+  padding: 1.25rem 1.5rem;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.card-footer {
+  padding: 1rem 1.5rem;
+}
+
+/* Route Stats */
+.route-stats {
+  background: rgba(255,255,255,0.15);
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.route-stats span {
+  opacity: 0.9;
+}
+
+/* Route Items */
+.route-item {
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.route-item:hover {
+  background: var(--color-bg-light);
+}
+
+.route-item.active {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  color: white;
+}
+
+.route-item.active .text-muted {
+  color: rgba(255,255,255,0.8) !important;
+}
+
+.route-number {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #2d5016 0%, #4a7c2c 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* Route Badge */
+.route-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+}
+
+/* Badges */
+.badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+/* Content Header */
+.content-header {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Buttons */
+.btn-outline-primary {
+  border-width: 2px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-outline-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .map-container {
+    height: 300px;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .route-badge {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+}

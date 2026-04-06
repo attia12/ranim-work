@@ -1,0 +1,463 @@
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+
+            <!-- Alerts -->
+            <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show mb-4">
+                <i class="fas fa-check-circle mr-2"></i>{{ successMessage }}
+                <button type="button" class="close" (click)="successMessage=''"><span>&times;</span></button>
+            </div>
+            <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show mb-4">
+                <i class="fas fa-exclamation-circle mr-2"></i>{{ errorMessage }}
+                <button type="button" class="close" (click)="errorMessage=''"><span>&times;</span></button>
+            </div>
+
+            <!-- Header -->
+            <div class="card shadow-sm border-0 mb-4" style="border-radius:16px;overflow:hidden;">
+                <div class="card-header bg-success text-white py-4 text-center">
+                    <div class="mb-3">
+                        <img *ngIf="user?.avatar" [src]="user!.avatar" class="rounded-circle border border-white shadow" alt="User avatar"
+                             style="width:80px;height:80px;object-fit:cover;">
+                        <div *ngIf="!user?.avatar"
+                             class="rounded-circle bg-white text-success d-inline-flex align-items-center justify-content-center shadow"
+                             style="width:80px;height:80px;font-size:2rem;font-weight:500;">
+                            {{ (user?.firstName||'U').charAt(0).toUpperCase() }}
+                        </div>
+                    </div>
+                    <h3 class="mb-0 font-weight-bold">{{ user?.firstName }} {{ user?.lastName }}</h3>
+                    <span class="badge badge-light text-success mt-2 px-3 py-2" style="font-size:12px;">
+                        {{ getRoleLabel(user?.role!) }}
+                    </span>
+                </div>
+
+                <!-- Personal info -->
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="font-weight-bold mb-0">Personal Information</h5>
+                        <button class="btn btn-outline-success btn-sm rounded-pill px-3" (click)="toggleEdit()">
+                            <i class="fas" [ngClass]="editMode?'fa-times':'fa-edit'"></i>
+                            {{ editMode ? 'Cancel' : 'Edit' }}
+                        </button>
+                    </div>
+                    <form (ngSubmit)="saveProfile()">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="small text-muted">First Name</label>
+                                <input class="form-control" [(ngModel)]="editedUser.firstName" name="firstName" [disabled]="!editMode">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="small text-muted">Last Name</label>
+                                <input class="form-control" [(ngModel)]="editedUser.lastName" name="lastName" [disabled]="!editMode">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small text-muted">Email</label>
+                            <input type="email" class="form-control" [value]="user?.email" disabled>
+                            <small class="text-muted">Email cannot be changed.</small>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="small text-muted">Phone</label>
+                                <input class="form-control" [(ngModel)]="editedUser.phoneNumber" name="phoneNumber" [disabled]="!editMode" placeholder="Add phone number">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="small text-muted">Avatar URL</label>
+                                <input class="form-control" [(ngModel)]="editedUser.avatar" name="avatar" [disabled]="!editMode" placeholder="https://...">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="small text-muted">Address</label>
+                                <input class="form-control" [(ngModel)]="editedUser.address" name="address" [disabled]="!editMode" placeholder="Your address">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="small text-muted">City</label>
+                                <input class="form-control" [(ngModel)]="editedUser.city" name="city" [disabled]="!editMode" placeholder="City">
+                            </div>
+                        </div>
+                        <div *ngIf="editMode" class="mt-3">
+                            <button type="submit" class="btn btn-success rounded-pill px-4" [disabled]="isSaving">
+                                <span *ngIf="isSaving" class="spinner-border spinner-border-sm mr-2"></span>
+                                {{ isSaving ? 'Saving...' : 'Save Changes' }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ── CAMPER ─────────────────────────────────────────────── -->
+            <div class="card shadow-sm border-0 mb-4" style="border-radius:16px;" *ngIf="(user?.role+'') === 'COMPERS'">
+                <div class="card-body p-4">
+                    <h5 class="font-weight-bold mb-4"><i class="fas fa-hiking text-success mr-2"></i>Camper Profile</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="small text-muted">Experience Level</label>
+                            <select class="form-control" [(ngModel)]="camperProfile.experienceLevel">
+                                <option value="">— Select —</option>
+                                <option value="BEGINNER">Beginner</option>
+                                <option value="INTERMEDIATE">Intermediate</option>
+                                <option value="EXPERT">Expert</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small text-muted">Preferred Terrain</label>
+                            <input class="form-control" [(ngModel)]="camperProfile.preferredTerrain" placeholder="e.g. Mountains, Forest">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small text-muted">Bio</label>
+                        <textarea class="form-control" [(ngModel)]="camperProfile.bio" rows="3" placeholder="Tell us about yourself..."></textarea>
+                    </div>
+                    <div *ngIf="!camperProfile.experienceLevel" class="alert alert-warning py-1 px-2 small mb-2">
+                      Please select your experience level before saving.
+                    </div>
+                    <button class="btn btn-success rounded-pill px-4" (click)="saveRoleProfile()"
+                            [disabled]="isSavingProfile || !camperProfile.experienceLevel">
+                        <span *ngIf="isSavingProfile" class="spinner-border spinner-border-sm mr-2"></span>
+                        {{ isSavingProfile ? 'Saving...' : 'Save Camper Profile' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── EQUIPMENT PROVIDER ────────────────────────────────── -->
+            <div class="card shadow-sm border-0 mb-4" style="border-radius:16px;" *ngIf="(user?.role+'') === 'EQUIPEMENTPROVIEDERS'">
+                <div class="card-body p-4">
+                    <h5 class="font-weight-bold mb-4"><i class="fas fa-store text-warning mr-2"></i>Shop Profile</h5>
+                    <div class="mb-3">
+                        <label class="small text-muted">Company / Shop Name</label>
+                        <input class="form-control" [(ngModel)]="providerProfile.companyName" placeholder="e.g. CampGear Tunisia">
+                    </div>
+                    <div class="mb-4">
+                        <label class="small text-muted">Shop Description</label>
+                        <textarea class="form-control" [(ngModel)]="providerProfile.shopDescription" rows="3" placeholder="Describe your shop..."></textarea>
+                    </div>
+                    <div *ngIf="!providerProfile.companyName" class="alert alert-warning py-1 px-2 small mb-2">
+                      Company name is required before saving.
+                    </div>
+                    <button class="btn btn-warning rounded-pill px-4" (click)="saveRoleProfile()"
+                            [disabled]="isSavingProfile || !providerProfile.companyName">
+                        <span *ngIf="isSavingProfile" class="spinner-border spinner-border-sm mr-2"></span>
+                        {{ isSavingProfile ? 'Saving...' : 'Save Shop Profile' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── DELIVERY AGENT ────────────────────────────────────── -->
+            <div class="card shadow-sm border-0 mb-4" style="border-radius:16px;" *ngIf="(user?.role+'') === 'DELIVERYAGENT'">
+                <div class="card-body p-4">
+                    <h5 class="font-weight-bold mb-2"><i class="fas fa-id-card text-primary mr-2"></i>Delivery Agent Profile</h5>
+                    <div class="mb-3">
+                        <span *ngIf="agentProfile.isVerified" class="badge badge-success px-3 py-2">
+                            <i class="fas fa-check-circle mr-1"></i> Verified Agent
+                        </span>
+                        <span *ngIf="!agentProfile.isVerified" class="badge badge-warning px-3 py-2">
+                            <i class="fas fa-clock mr-1"></i> Pending Verification
+                        </span>
+                        <p *ngIf="!agentProfile.isVerified" class="small text-muted mt-2 mb-0">
+                            Submit your license number. An admin will verify your account before you can claim deliveries.
+                        </p>
+                    </div>
+                    <div class="mb-4">
+                        <label class="small text-muted">Driver's License Number</label>
+                        <input class="form-control" [(ngModel)]="agentProfile.licenseNumber"
+                               placeholder="e.g. TUN-2024-001234" [disabled]="agentProfile.isVerified">
+                    </div>
+                    <button *ngIf="!agentProfile.isVerified" class="btn btn-primary rounded-pill px-4"
+                            (click)="saveRoleProfile()" [disabled]="isSavingProfile">
+                        <span *ngIf="isSavingProfile" class="spinner-border spinner-border-sm mr-2"></span>
+                        {{ isSavingProfile ? 'Saving...' : 'Submit for Verification' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── CAMPSITE OWNER ────────────────────────────────────── -->
+            <div class="card shadow-sm border-0 mb-4" style="border-radius:16px;" *ngIf="(user?.role+'') === 'COMPSITEOWNERS'">
+                <div class="card-body p-4">
+                    <h5 class="font-weight-bold mb-4"><i class="fas fa-campground text-success mr-2"></i>Campsite Business Profile</h5>
+                    <div class="d-flex align-items-center mb-3">
+                        <span *ngIf="campsiteOwnerProfile.isVerified" class="badge badge-success px-3 py-2">
+                            <i class="fas fa-check-circle mr-1"></i> Verified
+                        </span>
+                        <span *ngIf="!campsiteOwnerProfile.isVerified" class="badge badge-warning px-3 py-2">
+                            <i class="fas fa-clock mr-1"></i> Pending Verification
+                        </span>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="small text-muted">Business Name</label>
+                            <input class="form-control" [(ngModel)]="campsiteOwnerProfile.businessName" placeholder="e.g. Jebel Camping">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small text-muted">Region</label>
+                            <input class="form-control" [(ngModel)]="campsiteOwnerProfile.region" placeholder="e.g. Cap Bon">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small text-muted">Business Description</label>
+                        <textarea class="form-control" [(ngModel)]="campsiteOwnerProfile.businessDescription" rows="3"></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="small text-muted">Website</label>
+                        <input class="form-control" [(ngModel)]="campsiteOwnerProfile.websiteUrl" placeholder="https://...">
+                    </div>
+                    <div *ngIf="!campsiteOwnerProfile.businessName || !campsiteOwnerProfile.region" class="alert alert-warning py-1 px-2 small mb-2">
+                      Business name and region are required before saving.
+                    </div>
+                    <button class="btn btn-success rounded-pill px-4" (click)="saveRoleProfile()"
+                            [disabled]="isSavingProfile || !campsiteOwnerProfile.businessName || !campsiteOwnerProfile.region">
+                        <span *ngIf="isSavingProfile" class="spinner-border spinner-border-sm mr-2"></span>
+                        {{ isSavingProfile ? 'Saving...' : 'Save Business Profile' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── GUIDE ─────────────────────────────────────────────── -->
+            <div class="card shadow-sm border-0 mb-4" style="border-radius:16px;" *ngIf="(user?.role+'') === 'GUIDE'">
+                <div class="card-body p-4">
+                    <h5 class="font-weight-bold mb-4"><i class="fas fa-compass text-info mr-2"></i>Guide Profile</h5>
+                    <div class="d-flex align-items-center mb-3">
+                        <span *ngIf="guideProfile.isVerified" class="badge badge-success px-3 py-2">
+                            <i class="fas fa-check-circle mr-1"></i> Verified Guide
+                        </span>
+                        <span *ngIf="!guideProfile.isVerified" class="badge badge-warning px-3 py-2">
+                            <i class="fas fa-clock mr-1"></i> Pending Verification
+                        </span>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="small text-muted">Specialization</label>
+                            <input class="form-control" [(ngModel)]="guideProfile.specialization" placeholder="e.g. Desert treks">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small text-muted">Years of Experience</label>
+                            <input type="number" class="form-control" [(ngModel)]="guideProfile.yearsExperience" min="0">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small text-muted">Languages</label>
+                        <input class="form-control" [(ngModel)]="guideProfile.languages" placeholder="e.g. Arabic, French, English">
+                    </div>
+                    <div class="mb-3">
+                        <label class="small text-muted">Certification Number</label>
+                        <input class="form-control" [(ngModel)]="guideProfile.certificationNumber"
+                               placeholder="e.g. GUIDE-2024-001" [disabled]="guideProfile.isVerified">
+                    </div>
+                    <div class="mb-4">
+                        <label class="small text-muted">Bio</label>
+                        <textarea class="form-control" [(ngModel)]="guideProfile.bio" rows="3"></textarea>
+                    </div>
+                    <div *ngIf="!guideProfile.specialization" class="alert alert-warning py-1 px-2 small mb-2">
+                      Specialization is required before saving.
+                    </div>
+                    <button class="btn btn-info rounded-pill px-4 text-white" (click)="saveRoleProfile()"
+                            [disabled]="isSavingProfile || !guideProfile.specialization">
+                        <span *ngIf="isSavingProfile" class="spinner-border spinner-border-sm mr-2"></span>
+                        {{ isSavingProfile ? 'Saving...' : 'Save Guide Profile' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── COACH ─────────────────────────────────────────────── -->
+            <div class="card shadow-sm border-0 mb-4" style="border-radius:16px;" *ngIf="(user?.role+'') === 'COACH'">
+                <div class="card-body p-4">
+                    <h5 class="font-weight-bold mb-4"><i class="fas fa-dumbbell text-danger mr-2"></i>Coach Profile</h5>
+                    <div class="d-flex align-items-center mb-3">
+                        <span *ngIf="coachProfile.isVerified" class="badge badge-success px-3 py-2">
+                            <i class="fas fa-check-circle mr-1"></i> Verified Coach
+                        </span>
+                        <span *ngIf="!coachProfile.isVerified" class="badge badge-warning px-3 py-2">
+                            <i class="fas fa-clock mr-1"></i> Pending Verification
+                        </span>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="small text-muted">Coaching Type</label>
+                            <input class="form-control" [(ngModel)]="coachProfile.coachingType" placeholder="e.g. Survival skills">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small text-muted">Years of Experience</label>
+                            <input type="number" class="form-control" [(ngModel)]="coachProfile.yearsExperience" min="0">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small text-muted">Certifications</label>
+                        <input class="form-control" [(ngModel)]="coachProfile.certifications" placeholder="List your certifications">
+                    </div>
+                    <div class="mb-4">
+                        <label class="small text-muted">Bio</label>
+                        <textarea class="form-control" [(ngModel)]="coachProfile.bio" rows="3"></textarea>
+                    </div>
+                    <div *ngIf="!coachProfile.coachingType" class="alert alert-warning py-1 px-2 small mb-2">
+                      Coaching type is required before saving.
+                    </div>
+                    <button class="btn btn-danger rounded-pill px-4" (click)="saveRoleProfile()"
+                            [disabled]="isSavingProfile || !coachProfile.coachingType">
+                        <span *ngIf="isSavingProfile" class="spinner-border spinner-border-sm mr-2"></span>
+                        {{ isSavingProfile ? 'Saving...' : 'Save Coach Profile' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── SPONSOR ────────────────────────────────────────────── -->
+            <div class="card shadow-sm border-0 mb-4" style="border-radius:16px;" *ngIf="(user?.role+'') === 'SPONSORS'">
+                <div class="card-body p-4">
+                    <h5 class="font-weight-bold mb-4"><i class="fas fa-handshake text-dark mr-2"></i>Sponsor Profile</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="small text-muted">Company Name</label>
+                            <input class="form-control" [(ngModel)]="sponsorProfile.companyName" placeholder="e.g. OutdoorBrand SA">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small text-muted">Industry</label>
+                            <input class="form-control" [(ngModel)]="sponsorProfile.industry" placeholder="e.g. Outdoor gear">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small text-muted">Sponsorship Description</label>
+                        <textarea class="form-control" [(ngModel)]="sponsorProfile.sponsorshipDescription" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="small text-muted">Website</label>
+                            <input class="form-control" [(ngModel)]="sponsorProfile.websiteUrl" placeholder="https://...">
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label class="small text-muted">Logo URL</label>
+                            <input class="form-control" [(ngModel)]="sponsorProfile.logoUrl" placeholder="https://...">
+                        </div>
+                    </div>
+                    <div *ngIf="!sponsorProfile.companyName" class="alert alert-warning py-1 px-2 small mb-2">
+                      Company name is required before saving.
+                    </div>
+                    <button class="btn btn-dark rounded-pill px-4" (click)="saveRoleProfile()"
+                            [disabled]="isSavingProfile || !sponsorProfile.companyName">
+                        <span *ngIf="isSavingProfile" class="spinner-border spinner-border-sm mr-2"></span>
+                        {{ isSavingProfile ? 'Saving...' : 'Save Sponsor Profile' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── PARTNER (Event Organizer / Forum Mod) ── -->
+            <div class="card shadow-sm border-0 mb-4" style="border-radius:16px;" *ngIf="(user?.role+'') === 'PARTENERS' && (partnerProfile.partnerType === 'Forum Moderator' || partnerProfile.partnerType === 'Event Organizer')">
+                <div class="card-body p-4">
+                    <h5 class="font-weight-bold mb-4"><i class="fas fa-building text-secondary mr-2"></i>Partner Profile</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="small text-muted">Organization Name</label>
+                            <input class="form-control" [(ngModel)]="partnerProfile.organizationName" placeholder="e.g. Sahara Events SARL">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small text-muted">Partner Type</label>
+                            <select class="form-control" [(ngModel)]="partnerProfile.partnerType">
+                                <option value="">— Select type —</option>
+                                <option value="Event Organizer">Event Organizer</option>
+                                <option value="Forum Moderator">Forum Moderator</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small text-muted">Partnership Description</label>
+                        <textarea class="form-control" [(ngModel)]="partnerProfile.partnershipDescription" rows="3"></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="small text-muted">Website</label>
+                        <input class="form-control" [(ngModel)]="partnerProfile.websiteUrl" placeholder="https://...">
+                    </div>
+                    <div *ngIf="!partnerProfile.organizationName" class="alert alert-warning py-1 px-2 small mb-2">
+                      Organization name is required before saving.
+                    </div>
+                    <button class="btn btn-secondary rounded-pill px-4" (click)="saveRoleProfile()"
+                            [disabled]="isSavingProfile || !partnerProfile.organizationName">
+                        <span *ngIf="isSavingProfile" class="spinner-border spinner-border-sm mr-2"></span>
+                        {{ isSavingProfile ? 'Saving...' : 'Save Partner Profile' }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-4" style="border-radius:16px;" *ngIf="(user?.role+'') === 'CAMPSITEMANAGER'">
+                <div class="card-body">
+                    <h5 class="font-weight-bold mb-4">
+                        <i class="fas fa-campground text-success mr-2"></i>
+                        Campsite Manager Profile
+                    </h5>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span *ngIf="campsiteManagerProfile.isVerified" class="badge badge-success px-3 py-2">
+                            <i class="fas fa-check-circle mr-1"></i> Verified
+                        </span>
+                        <span *ngIf="!campsiteManagerProfile.isVerified" class="badge badge-warning px-3 py-2">
+                            <i class="fas fa-clock mr-1"></i> Pending Verification
+                        </span>
+                    </div>
+                    <div class="form-group">
+                        <label class="small text-muted">Managed Region</label>
+                        <input class="form-control" [(ngModel)]="campsiteManagerProfile.managedRegion" placeholder="e.g. Cap Bon, North Tunisia">
+                    </div>
+                    <div class="form-group">
+                        <label class="small text-muted">Notes</label>
+                        <textarea class="form-control" [(ngModel)]="campsiteManagerProfile.managerNotes" rows="3" placeholder="Additional information..."></textarea>
+                    </div>
+                    <div *ngIf="!campsiteManagerProfile.managedRegion" class="alert alert-warning py-1 px-2 small mb-2">
+                      Managed region is required before saving.
+                    </div>
+                    <button class="btn btn-success" (click)="saveRoleProfile()"
+                            [disabled]="isSavingProfile || !campsiteManagerProfile.managedRegion">
+                        <i class="fas fa-save mr-1"></i>
+                        {{ isSavingProfile ? 'Saving...' : 'Save Profile' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── EVENT ORGANIZER ────────────────────────────────────── -->
+            <div class="card shadow-sm border-0 mb-4" style="border-radius:16px;" *ngIf="(user?.role+'') === 'EVENT_ORGANIZER'">
+                <div class="card-body p-4">
+                    <h5 class="font-weight-bold mb-4"><i class="fas fa-calendar-alt text-success mr-2"></i>Event Organizer Profile</h5>
+                    <div class="d-flex align-items-center mb-3">
+                        <span *ngIf="eventOrganizerProfile.isVerified" class="badge badge-success px-3 py-2">
+                            <i class="fas fa-check-circle mr-1"></i> Verified Organizer
+                        </span>
+                        <span *ngIf="!eventOrganizerProfile.isVerified" class="badge badge-warning px-3 py-2">
+                            <i class="fas fa-clock mr-1"></i> Pending Verification
+                        </span>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="small text-muted">Organization Name</label>
+                            <input class="form-control" [(ngModel)]="eventOrganizerProfile.organizationName" placeholder="e.g. CampWay Events">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small text-muted">Specialization</label>
+                            <input class="form-control" [(ngModel)]="eventOrganizerProfile.specialization" placeholder="e.g. Survival, Team building">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="small text-muted">Years of Experience</label>
+                            <input type="number" class="form-control" [(ngModel)]="eventOrganizerProfile.yearsExperience" min="0">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small text-muted">Phone Contact</label>
+                            <input class="form-control" [(ngModel)]="eventOrganizerProfile.phoneContact" placeholder="+216 XX XXX XXX">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small text-muted">Website URL</label>
+                        <input class="form-control" [(ngModel)]="eventOrganizerProfile.websiteUrl" placeholder="https://...">
+                    </div>
+                    <div class="mb-4">
+                        <label class="small text-muted">Bio</label>
+                        <textarea class="form-control" [(ngModel)]="eventOrganizerProfile.bio" rows="3" placeholder="Describe your events and experience..."></textarea>
+                    </div>
+                    <div *ngIf="!eventOrganizerProfile.organizationName" class="alert alert-warning py-1 px-2 small mb-2">
+                      Organization name is required before saving.
+                    </div>
+                    <button class="btn btn-success rounded-pill px-4" (click)="saveRoleProfile()"
+                            [disabled]="isSavingProfile || !eventOrganizerProfile.organizationName">
+                        <span *ngIf="isSavingProfile" class="spinner-border spinner-border-sm mr-2"></span>
+                        {{ isSavingProfile ? 'Saving...' : 'Save Organizer Profile' }}
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

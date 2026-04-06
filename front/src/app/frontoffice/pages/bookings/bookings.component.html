@@ -1,0 +1,92 @@
+<div class="bookings-page py-5 bg-light min-vh-100">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="font-weight-bold mb-2">My Bookings</h2>
+                <p class="text-muted">Manage your upcoming camping trips and events.</p>
+            </div>
+        </div>
+
+        <div *ngIf="loading" class="text-center py-5">
+            <div class="spinner-border text-success" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+
+        <div *ngIf="!loading && bookings.length > 0; else noBookings">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-lg overflow-hidden mb-4"
+                        *ngFor="let booking of bookings">
+                        <div class="row no-gutters">
+                            <div class="col-md-3">
+                                <img [src]="booking.event?.imageUrl" class="card-img h-100" alt="Booking event image"
+                                    style="object-fit: cover; min-height: 150px;">
+                            </div>
+                            <div class="col-md-9">
+                                <div class="card-body p-4 d-flex flex-column h-100">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <small
+                                                class="text-success font-weight-bold text-uppercase">{{booking.event?.category}}</small>
+                                            <h5 class="card-title font-weight-bold mb-1">{{booking.event?.title}}</h5>
+                                        </div>
+                                        <span class="badge px-3 py-2 rounded-pill"
+                                            [ngClass]="getStatusClass(booking.status)">
+                                            {{booking.status}}
+                                        </span>
+                                    </div>
+
+                                    <div class="row mb-3 text-muted small">
+                                        <div class="col-md-4">
+                                            <i class="far fa-calendar-alt text-success mr-2"></i>
+                                            {{booking.event?.date | date:'MMM d, yyyy'}}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <i class="fas fa-map-marker-alt text-success mr-2"></i>
+                                            {{booking.event?.location}}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <i class="fas fa-receipt text-success mr-2"></i>
+                                            Booking ID: #{{booking.id}}
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-auto d-flex justify-content-between align-items-center">
+                                        <span
+                                            class="h5 font-weight-bold text-dark mb-0">${{booking.event?.price}}</span>
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-outline-dark btn-sm rounded-pill px-4">View
+                                                Ticket</button>
+                                            <button class="btn btn-link text-danger btn-sm p-0 ml-3">Cancel
+                                                Booking</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <ng-template #noBookings>
+            <div class="text-center py-5 bg-white rounded-lg shadow-sm" *ngIf="!loading">
+                <i class="fas fa-ticket-alt fa-5x text-light mb-4"></i>
+                <h3 class="font-weight-bold">No bookings yet</h3>
+                <p class="text-muted mb-4">You haven't booked any events or trips. Time to plan your next adventure!</p>
+                <button class="btn btn-success rounded-pill px-5" routerLink="/events">Explore Events</button>
+            </div>
+        </ng-template>
+    </div>
+</div>
+
+<style>
+    .rounded-lg {
+        border-radius: 20px;
+    }
+
+    .gap-2 {
+        gap: 0.5rem;
+    }
+</style>

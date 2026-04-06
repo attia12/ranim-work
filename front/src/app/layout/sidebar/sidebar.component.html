@@ -1,0 +1,69 @@
+<aside class="main-sidebar sidebar-dark-primary elevation-2"
+  style="background: linear-gradient(180deg, #2d5016 0%, #1a3d0a 100%);">
+  <!-- Brand Logo -->
+  <a routerLink="/admin/dashboard" class="brand-link border-bottom" style="background-color: rgba(0,0,0,0.2);">
+    <span class="brand-text font-weight-bold ml-2" style="color: #fff; font-size: 18px;">
+      CampWay
+    </span>
+    <p class="text-white-50 small mb-0 ml-2" style="font-size: 11px;">{{ panelLabel }}</p>
+  </a>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+
+    <!-- Sidebar Menu -->
+    <nav class="mt-3">
+      <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+
+        <li class="nav-header text-white-50">MENU</li>
+
+        <li class="nav-item has-treeview" *ngFor="let item of filteredMenuItems"
+          [ngClass]="{'menu-open': item.expanded}">
+          <ng-container *ngIf="item.title !== 'Logout'; else logoutItem">
+            <a *ngIf="!item.children" [routerLink]="item.link" [queryParams]="item.queryParams"
+              class="nav-link text-white d-flex align-items-center py-3 px-4 mb-2 rounded transition-all"
+              routerLinkActive="active-link shadow-lg">
+              <i class="fas {{item.icon}} mr-3 opacity-75"></i>
+              <span class="font-weight-medium">{{item.title}}</span>
+            </a>
+            <a *ngIf="item.children" href="javascript:void(0)" (click)="toggleMenu(item, $event)"
+              class="nav-link text-white d-flex align-items-center justify-content-between py-3 px-4 mb-2 rounded transition-all">
+              <div>
+                <i class="fas {{item.icon}} mr-3 opacity-75"></i>
+                <span class="font-weight-medium">{{item.title}}</span>
+              </div>
+              <i class="fas" [ngClass]="item.expanded ? 'fa-angle-down' : 'fa-angle-left'"></i>
+            </a>
+
+            <ul class="nav nav-treeview" *ngIf="item.children"
+              [ngStyle]="{'display': item.expanded ? 'block' : 'none', 'padding-left': '1rem', 'max-height': '250px', 'overflow-y': 'auto'}">
+              <li class="nav-item" *ngFor="let child of item.children">
+                <a [routerLink]="child.link"
+                  class="nav-link text-white-50 d-flex align-items-center py-2 px-4 mb-1 rounded transition-all"
+                  routerLinkActive="active-link text-white shadow-sm" style="font-size: 0.9em;">
+                  <i class="fas {{child.icon}} mr-3 opacity-50"></i>
+                  <span>{{child.title}}</span>
+                </a>
+              </li>
+            </ul>
+          </ng-container>
+          <ng-template #logoutItem>
+            <a href="javascript:void(0)" (click)="onLogout($event)"
+              class="nav-link text-white d-flex align-items-center py-3 px-4 mb-2 rounded transition-all">
+              <i class="fas {{item.icon}} mr-3 text-danger opacity-75"></i>
+              <span class="font-weight-medium text-danger">{{item.title}}</span>
+            </a>
+          </ng-template>
+        </li>
+
+        <li class="nav-header text-white-50 mt-3">SYSTEM</li>
+        <li class="nav-item">
+          <a href="#" class="nav-link nav-link-custom">
+            <i class="nav-icon fas fa-cog"></i>
+            <p>Settings</p>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Settings -->

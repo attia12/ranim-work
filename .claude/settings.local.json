@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(grep -r \"flyway\\\\|mapstruct\\\\|caffeine\\\\|@Cacheable\\\\|@Cache\" /c/Users/ops/Documents/ranim/back/pom.xml /c/Users/ops/Documents/ranim/back/src --include=*.xml --include=*.java)",
+      "Bash(find . -type d -name \"services\\\\|guards\\\\|interceptors\\\\|modules\" -o -type d -path \"*/dashboards/*\")",
+      "Bash(docker ps:*)",
+      "Bash(docker rm:*)",
+      "Bash(docker rmi:*)",
+      "Bash(node -e \"const p=require\\(''./package.json''\\); console.log\\(p.dependencies[''@angular/localize''] || p.devDependencies[''@angular/localize''] || ''NOT FOUND''\\)\")",
+      "Bash(npm install:*)",
+      "Bash(docker exec:*)",
+      "Bash(python3 -c \"import bcrypt; h = bcrypt.hashpw\\(b''Test@1234!'', bcrypt.gensalt\\(rounds=10\\)\\); print\\(h.decode\\(\\)\\)\")",
+      "Bash(pip install:*)",
+      "Bash(node:*)",
+      "Bash(curl:*)",
+      "Bash(/dev/null:*)"
+    ]
+  }
+}

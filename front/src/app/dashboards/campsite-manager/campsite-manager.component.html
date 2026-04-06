@@ -1,0 +1,61 @@
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0 text-dark">Campsite Manager Dashboard</h1>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-4">
+        <!-- Profile Info Card -->
+        <div class="card card-outline card-success" style="border-top-color: #4a7c2c;">
+          <div class="card-body box-profile">
+            <h3 class="profile-username text-center">
+              {{ currentUser?.firstName }} {{ currentUser?.lastName }}
+            </h3>
+            <p class="text-muted text-center">{{ currentUser?.email }}</p>
+
+            <ul class="list-group list-group-unbordered mb-3">
+              <li class="list-group-item">
+                <b>Managed Region</b> <a class="float-right">{{ currentUser?.managedRegion || 'N/A' }}</a>
+              </li>
+              <li class="list-group-item">
+                <b>Status</b> 
+                <a class="float-right">
+                  <span class="badge" 
+                        [class.bg-success]="currentUser?.isVerified" 
+                        [class.bg-warning]="!currentUser?.isVerified">
+                    {{ currentUser?.isVerified ? 'Verified' : 'Pending' }}
+                  </span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-8">
+        <!-- Info Box -->
+        <div class="card bg-success" style="background-color: #2d5016 !important;">
+          <div class="card-header border-0">
+            <h3 class="card-title">
+              <i class="fas fa-info-circle mr-1"></i>
+              Module Integration Pending
+            </h3>
+          </div>
+          <div class="card-body">
+            <p>
+              Campsite management features (ownerless campsites, bookings) are handled by your 
+              colleague's module and will appear here once integrated.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

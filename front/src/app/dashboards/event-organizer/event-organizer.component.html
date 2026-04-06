@@ -1,0 +1,130 @@
+<div class="content-header p-4" style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%); color: white;">
+  <div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h1 class="font-weight-bold mb-0">Event Management</h1>
+        <p class="mb-0 opacity-75">Organize and track upcoming adventures</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a routerLink="/home" class="btn btn-outline-dark rounded-pill px-4 mr-2">
+          <i class="fas fa-home mr-2"></i> Home
+        </a>
+        <a routerLink="/login" class="btn btn-danger rounded-pill px-4">
+          <i class="fas fa-sign-out-alt mr-2"></i> Logout
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content px-4">
+  <div class="container-fluid">
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title font-weight-bold mb-0">My Organized Events</h5>
+            <button class="btn btn-success btn-sm" (click)="openAddModal()">
+              <i class="fas fa-plus mr-1"></i> Create New Event
+            </button>
+          </div>
+          <div class="card-body table-responsive p-0">
+            <div *ngIf="loading" class="text-center py-4">
+              <div class="spinner-border text-success" role="status"></div>
+            </div>
+            <table *ngIf="!loading" class="table table-hover text-nowrap" aria-label="My Organized Events">
+              <thead class="bg-light">
+              <tr>
+                <th>Event Name</th>
+                <th>Date</th>
+                <th>Location</th>
+                <th>Max Participants</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr *ngIf="events.length === 0">
+                <td colspan="6" class="text-center text-muted py-4">No events found. Create your first one!</td>
+              </tr>
+              <tr *ngFor="let event of events">
+                <td>{{ event.title }}</td>
+                <td>{{ event.date | date:'MMM d, yyyy' }}</td>
+                <td>{{ event.location }}</td>
+                <td>{{ event.maxParticipants }}</td>
+                <td>
+                                        <span class="badge"
+                                              [ngClass]="{
+                                                'badge-success': event.status === 'UPCOMING',
+                                                'badge-warning': event.status === 'ONGOING',
+                                                'badge-secondary': event.status === 'COMPLETED',
+                                                'badge-danger': event.status === 'CANCELLED'
+                                            }">
+                                            {{ event.status }}
+                                        </span>
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary mr-1" (click)="openEditModal(event)">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="deleteEvent(event.eventId)">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Add / Edit Modal -->
+<div class="modal-backdrop fade show" *ngIf="showModal" (click)="closeModal()"></div>
+<div class="modal fade show d-block" *ngIf="showModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title font-weight-bold">{{ isEditing ? 'Edit Event' : 'Create New Event' }}</h5>
+        <button type="button" class="close" (click)="closeModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Event Title <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" [(ngModel)]="formData.title" placeholder="e.g. Mountain Hike">
+        </div>
+        <div class="form-group">
+          <label>Date <span class="text-danger">*</span></label>
+          <input type="date" class="form-control" [(ngModel)]="formData.date">
+        </div>
+        <div class="form-group">
+          <label>Location <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" [(ngModel)]="formData.location" placeholder="e.g. Alps">
+        </div>
+        <div class="form-group">
+          <label>Max Participants</label>
+          <input type="number" class="form-control" [(ngModel)]="formData.maxParticipants" min="1">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select class="form-control" [(ngModel)]="formData.status">
+            <option value="UPCOMING">Upcoming</option>
+            <option value="ONGOING">Ongoing</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+        <button class="btn btn-success" (click)="saveEvent()">
+          {{ isEditing ? 'Save Changes' : 'Create Event' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

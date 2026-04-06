@@ -1,0 +1,231 @@
+<div class="cart-page py-5 bg-light min-vh-100">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="font-weight-bold mb-0">Shopping Cart</h2>
+                <p class="text-muted">{{ items.length }} item{{ items.length !== 1 ? 's' : '' }} in your cart</p>
+            </div>
+        </div>
+
+        <div class="row" *ngIf="items.length > 0; else emptyCart">
+            <!-- Item list -->
+            <div class="col-lg-8 mb-4">
+                <div class="card border-0 shadow-sm rounded-lg overflow-hidden">
+                    <div class="table-responsive">
+                        <table class="table table-borderless mb-0" aria-label="Shopping Cart Items">
+                            <thead class="bg-light">
+                                <tr class="text-muted small text-uppercase">
+                                    <th class="px-4 py-3">Product</th>
+                                    <th class="py-3">Price</th>
+                                    <th class="py-3">Qty</th>
+                                    <th class="py-3">Subtotal</th>
+                                    <th class="py-3"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let item of items" class="border-bottom">
+                                    <td class="px-4 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <img [src]="item.imageUrl" class="rounded mr-3" alt="Product thumbnail"
+                                                style="width:55px;height:55px;object-fit:cover;">
+                                            <div>
+                                                <h6 class="mb-0 font-weight-bold small">{{ item.name }}</h6>
+                                                <small class="text-muted">{{ item.category }}</small>
+                                                <span *ngIf="item.transactionType === 'RENT'"
+                                                    class="badge badge-info badge-pill ml-1" style="font-size:10px;">
+                                                    RENT {{ item.rentalDays }}d
+                                                </span>
+                                                <small *ngIf="item.transactionType === 'RENT' && item.rentalStartDate"
+                                                       class="text-muted d-block mt-1">
+                                                  <i class="fas fa-calendar-alt mr-1"></i>
+                                                  {{ item.rentalStartDate }} → {{ item.rentalEndDate }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 align-middle small">
+                                        <span *ngIf="item.transactionType === 'BUY'">
+                                            {{ (item.purchasePrice || item.price) | currency:'TND ' }}
+                                        </span>
+                                        <span *ngIf="item.transactionType === 'RENT'" class="text-info">
+                                            {{ item.pricePerDay | currency:'TND ' }}/d × {{ item.rentalDays }}d
+                                        </span>
+                                    </td>
+                                    <td class="py-3 align-middle">
+                                        <div class="input-group input-group-sm" style="width:90px;">
+                                            <div class="input-group-prepend">
+                                                <button class="btn btn-outline-secondary border-0 bg-light"
+                                                    (click)="updateQuantity(item, item.quantity - 1)">-</button>
+                                            </div>
+                                            <input type="text" class="form-control text-center border-0 bg-light"
+                                                [value]="item.quantity" readonly>
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary border-0 bg-light"
+                                                    (click)="updateQuantity(item, item.quantity + 1)">+</button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 align-middle font-weight-bold text-success small">
+                                        {{ getItemPrice(item) * item.quantity | currency:'TND ' }}
+                                    </td>
+                                    <td class="py-3 align-middle text-right pr-4">
+                                        <button class="btn btn-link text-danger p-0" (click)="removeItem(item)">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer bg-white border-0 p-3 d-flex justify-content-between">
+                        <button class="btn btn-outline-dark btn-sm rounded-pill px-4" routerLink="/shop">
+                            <i class="fas fa-arrow-left mr-2"></i> Continue Shopping
+                        </button>
+                        <button class="btn btn-link text-muted btn-sm" (click)="clearCart()">Clear Cart</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-lg p-4">
+                    <h5 class="font-weight-bold mb-4">Order Summary</h5>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal</span>
+                        <span class="font-weight-bold">{{ total | currency:'TND ' }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Shipping</span>
+                        <span class="text-muted small">Calculated at checkout</span>
+                    </div>
+                    <small class="text-muted d-block mb-4 pb-4 border-bottom">
+                      <i class="fas fa-info-circle"></i> Shipping cost depends on distance, terrain accessibility, and weather conditions.
+                    </small>
+
+                    <!-- Coupon Code -->
+                    <div class="mb-3">
+                      <label class="font-weight-bold small">Have a coupon?</label>
+                      <div class="input-group mt-1">
+                        <input type="text" class="form-control" [(ngModel)]="couponCode" placeholder="Enter coupon code" [disabled]="couponApplied">
+                        <div class="input-group-append">
+                          <button class="btn btn-outline-success" type="button" (click)="applyCoupon()" [disabled]="couponApplied || isApplyingCoupon">
+                            {{ couponApplied ? 'Applied ✓' : 'Apply' }}
+                          </button>
+                        </div>
+                      </div>
+                      <small class="text-danger" *ngIf="couponError">{{ couponError }}</small>
+                      <small class="text-success" *ngIf="couponApplied">Coupon applied! -{{ couponDiscount | currency:'TND ' }}</small>
+                    </div>
+                    <!-- Coupon discount line -->
+                    <div class="d-flex justify-content-between mb-1" *ngIf="couponApplied">
+                      <span class="text-success">Discount</span>
+                      <span class="text-success">-{{ couponDiscount | currency:'TND ' }}</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-4 h5">
+                        <span class="font-weight-bold">Total</span>
+                        <span class="font-weight-bold text-success">{{ (total - couponDiscount) | currency:'TND ' }}</span>
+                    </div>
+
+                    <!-- Opens modal, does NOT submit yet -->
+                    <button class="btn btn-success btn-block btn-lg rounded-pill shadow-sm py-3"
+                        (click)="openCheckoutModal()">
+                        Review & Checkout <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+
+                    <div class="text-center mt-3">
+                        <i class="fab fa-cc-visa fa-2x mx-1 text-muted"></i>
+                        <i class="fab fa-cc-mastercard fa-2x mx-1 text-muted"></i>
+                        <i class="fab fa-cc-paypal fa-2x mx-1 text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <ng-template #emptyCart>
+            <div class="text-center py-5 bg-white rounded-lg shadow-sm">
+                <i class="fas fa-shopping-basket fa-5x text-light mb-4"></i>
+                <h3 class="font-weight-bold">Your cart is empty</h3>
+                <p class="text-muted mb-4">Add some equipment to get started.</p>
+                <button class="btn btn-success rounded-pill px-5" routerLink="/shop">Start Shopping</button>
+            </div>
+        </ng-template>
+    </div>
+</div>
+
+<!-- ── Order Confirmation Modal ── -->
+<div class="modal-backdrop-custom" *ngIf="showConfirmModal" (click)="closeModal()"></div>
+
+<div class="confirm-modal" *ngIf="showConfirmModal">
+    <div class="confirm-modal-dialog" (click)="$event.stopPropagation()">
+
+        <div class="confirm-modal-header">
+            <h5 class="font-weight-bold mb-0">
+                <i class="fas fa-clipboard-list text-success mr-2"></i>
+                Confirm Your Order
+            </h5>
+            <button class="btn btn-link text-muted p-0" (click)="closeModal()" [disabled]="isCheckingOut">
+                <i class="fas fa-times fa-lg"></i>
+            </button>
+        </div>
+
+        <div class="confirm-modal-body">
+            <!-- Item list in modal -->
+            <div class="order-item-row d-flex justify-content-between align-items-center py-2 border-bottom"
+                *ngFor="let item of items">
+                <div class="d-flex align-items-center">
+                    <img [src]="item.imageUrl" class="rounded mr-3" alt="Order item thumbnail" style="width:44px;height:44px;object-fit:cover;">
+                    <div>
+                        <div class="font-weight-bold small">{{ item.name }}</div>
+                        <div class="text-muted" style="font-size:11px;">
+                            <span *ngIf="item.transactionType === 'BUY'">Buy × {{ item.quantity }}</span>
+                            <span *ngIf="item.transactionType === 'RENT'" class="text-info d-block">
+                                Rent {{ item.rentalDays }} day{{ item.rentalDays !== 1 ? 's' : '' }} × {{ item.quantity
+                                }}
+                            </span>
+                            <small *ngIf="item.transactionType === 'RENT' && item.rentalStartDate"
+                                   class="text-muted d-block mt-1">
+                              <i class="fas fa-calendar-alt mr-1"></i>
+                              {{ item.rentalStartDate }} → {{ item.rentalEndDate }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <span class="font-weight-bold text-success small">
+                    {{ getItemPrice(item) * item.quantity | currency:'TND ' }}
+                </span>
+            </div>
+
+            <!-- Total -->
+            <div class="d-flex justify-content-between align-items-center pt-3">
+                <span class="text-muted">Shipping</span>
+                <span class="text-muted small">Calculated at checkout</span>
+            </div>
+            <small class="text-muted d-block pb-1">
+                <i class="fas fa-info-circle"></i> Shipping cost depends on distance, terrain accessibility, and weather conditions.
+            </small>
+            <div class="d-flex justify-content-between align-items-center py-2 border-top mt-1">
+                <span class="h5 font-weight-bold mb-0">Total</span>
+                <span class="h5 font-weight-bold text-success mb-0">{{ (total - couponDiscount) | currency:'TND ' }}</span>
+            </div>
+
+            <div *ngIf="checkoutError" class="alert alert-danger mt-3 small py-2">
+                <i class="fas fa-exclamation-circle mr-1"></i>{{ checkoutError }}
+            </div>
+        </div>
+
+        <div class="confirm-modal-footer">
+            <button class="btn btn-light rounded-pill px-4 mr-2" (click)="closeModal()" [disabled]="isCheckingOut">
+                Back to Cart
+            </button>
+            <button class="btn btn-success rounded-pill px-5 font-weight-bold" (click)="confirmOrder()"
+                [disabled]="isCheckingOut">
+                <span *ngIf="isCheckingOut" class="spinner-border spinner-border-sm mr-2"></span>
+                {{ isCheckingOut ? 'Placing Order...' : 'Confirm & Place Order' }}
+                <i *ngIf="!isCheckingOut" class="fas fa-lock ml-2"></i>
+            </button>
+        </div>
+
+    </div>
+</div>
+

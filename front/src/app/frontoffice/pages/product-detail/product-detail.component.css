@@ -1,0 +1,22 @@
+.letter-spacing {
+  letter-spacing: 1px;
+}
+
+.rental-picker {
+  border-left: 4px solid #17a2b8;
+}
+
+.product-image-container {
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f8f9fa;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-image-container img {
+  object-fit: cover;
+  max-height: 400px;
+}

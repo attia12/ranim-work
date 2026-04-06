@@ -1,0 +1,263 @@
+<div class="messages-page py-5 bg-light min-vh-100">
+  <div class="container">
+    <div class="card border-0 shadow-sm overflow-hidden">
+      <div class="row no-gutters" style="height: 700px;">
+
+        <!-- Sidebar -->
+        <div class="col-md-4 border-right bg-white d-flex flex-column">
+          <div class="p-3 border-bottom bg-light flex-shrink-0">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="font-weight-bold mb-0">Messages</h5>
+              <button class="btn btn-sm rounded-pill px-3" style="background:#1B4332; color:#fff;"
+                      (click)="showSearch = !showSearch">
+                <i class="fas fa-edit mr-1"></i> New
+              </button>
+            </div>
+
+            <div *ngIf="showSearch">
+              <div class="input-group input-group-sm mt-1">
+                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-white border-right-0">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
+                </div>
+                <input type="text" class="form-control border-left-0"
+                       placeholder="Search by name..." [(ngModel)]="userSearchQuery"
+                       (input)="onSearchInput()" autofocus>
+              </div>
+
+              <div *ngIf="userSearchQuery.length >= 2" class="mt-1 bg-white border rounded shadow-sm"
+                   style="max-height:220px; overflow-y:auto; position:relative; z-index:200;">
+                <div *ngIf="isSearching" class="text-center py-2">
+                  <div class="spinner-border spinner-border-sm text-success"></div>
+                </div>
+                <div *ngFor="let u of userSearchResults"
+                     class="d-flex align-items-center p-2 search-result-row" style="cursor:pointer;"
+                     (click)="startConversation(u)">
+                  <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center mr-2 flex-shrink-0"
+                       style="width:32px;height:32px;font-size:13px;font-weight:700;">
+                    {{ (u.fullname || u.email || 'U').charAt(0).toUpperCase() }}
+                  </div>
+                  <div>
+                    <div class="font-weight-bold small">{{ u.fullname }}</div>
+                    <div class="text-muted" style="font-size:11px;">{{ u.email }}</div>
+                  </div>
+                </div>
+                <div *ngIf="!isSearching && userSearchResults.length === 0"
+                     class="text-center py-3 text-muted small">
+                  No users found for "{{ userSearchQuery }}"
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conversation list -->
+          <div class="list-group list-group-flush flex-grow-1 scrollable-area">
+            <button *ngFor="let session of filteredSessions" (click)="selectSession(session)"
+                    [class.active]="selectedSession?.id === session.id"
+                    class="list-group-item list-group-item-action border-0 p-3 d-flex align-items-center">
+              <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center mr-3 flex-shrink-0"
+                   style="width:44px;height:44px;">
+                <i class="fas fa-user"></i>
+              </div>
+              <div class="flex-grow-1 overflow-hidden">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <h6 class="font-weight-bold mb-0 small">{{ session.participantName }}</h6>
+                  <small class="text-muted">{{ session.lastMessageDate | date:'shortTime' }}</small>
+                </div>
+                <p class="text-muted small text-truncate mb-0">{{ session.lastMessage }}</p>
+              </div>
+              <span class="badge badge-success badge-pill ml-2" *ngIf="session.unreadCount > 0">{{
+                  session.unreadCount }}</span>
+            </button>
+
+            <div *ngIf="sessions.length === 0"
+                 class="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-center py-5 text-muted">
+              <i class="far fa-comment-dots fa-3x mb-3" style="opacity:0.3;"></i>
+              <p class="small">No conversations yet.<br>Click <strong>New</strong> to start one.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat area -->
+        <div class="col-md-8 bg-white d-flex flex-column">
+          <ng-container *ngIf="selectedSession; else emptyState">
+
+            <div class="p-3 border-bottom bg-light d-flex align-items-center flex-shrink-0">
+              <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center mr-3"
+                   style="width:40px;height:40px;">
+                <i class="fas fa-user"></i>
+              </div>
+              <h6 class="font-weight-bold mb-0">{{ selectedSession.participantName }}</h6>
+            </div>
+
+            <div class="flex-grow-1 p-4 scrollable-area" #scrollMe>
+              <div class="message-wrapper mb-3" *ngFor="let msg of messages"
+                   [class.sent]="isMine(msg)">
+
+                <!-- Mode édition -->
+                <div *ngIf="editingMessageId === msg.messageId"
+                     class="edit-bubble"
+                     [class.ml-auto]="isMine(msg)">
+                  <input class="form-control form-control-sm mb-1"
+                         [(ngModel)]="editingContent"
+                         [class.is-invalid]="editMessageError"
+                         (keyup.enter)="saveEdit(msg)"
+                         (keyup.escape)="cancelEdit()">
+                  <!-- ✅ Erreur édition -->
+                  <div class="text-danger small mb-1" *ngIf="editMessageError">
+                    <i class="fas fa-exclamation-circle mr-1"></i>{{ editMessageError }}
+                  </div>
+                  <div class="d-flex justify-content-end">
+                    <button class="btn btn-sm btn-success mr-1" (click)="saveEdit(msg)">
+                      <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-secondary" (click)="cancelEdit()">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Mode affichage normal -->
+                <div *ngIf="editingMessageId !== msg.messageId"
+                     class="message-bubble-wrapper"
+                     [class.ml-auto]="isMine(msg)">
+
+                  <div class="msg-actions" *ngIf="isMine(msg)">
+                    <button class="btn-action" title="Modifier" (click)="startEdit(msg)">
+                      <i class="fas fa-pencil-alt"></i>
+                    </button>
+                    <button class="btn-action text-danger" title="Supprimer"
+                            (click)="deleteMessage(msg.messageId)">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </div>
+
+                  <div class="message-bubble p-3 shadow-sm" style="border-radius:16px;"
+                       [class.bg-success]="isMine(msg)"
+                       [class.text-white]="isMine(msg)"
+                       [class.bg-light]="!isMine(msg)">
+                    {{ msg.content }}
+                    <div class="small mt-1 text-right"
+                         [class.text-white-50]="isMine(msg)"
+                         [class.text-muted]="!isMine(msg)">
+                      {{ msg.sentAt | date:'shortTime' }}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+              <div class="text-center py-5" *ngIf="messages.length === 0">
+                <p class="text-muted">No messages yet. Say hello!</p>
+              </div>
+            </div>
+
+            <!-- ✅ Zone de saisie avec validation -->
+            <div class="p-3 border-top flex-shrink-0">
+              <div class="text-danger small mb-1" *ngIf="newMessageError">
+                <i class="fas fa-exclamation-circle mr-1"></i>{{ newMessageError }}
+              </div>
+              <form (ngSubmit)="sendMessage()" class="d-flex">
+                <input type="text" class="form-control mr-2"
+                       placeholder="Type a message..."
+                       name="newMessage"
+                       [(ngModel)]="newMessage"
+                       [class.is-invalid]="newMessageError"
+                       (input)="newMessageError = ''"
+                       style="border-radius:20px;">
+                <button type="submit" class="btn btn-success px-4 rounded-pill">
+                  <i class="fas fa-paper-plane"></i>
+                </button>
+              </form>
+              <!-- ✅ Compteur de caractères -->
+              <div class="text-right mt-1" *ngIf="newMessage.length > 400">
+                <small [class.text-danger]="newMessage.length > 500"
+                       [class.text-muted]="newMessage.length <= 500">
+                  {{ newMessage.length }}/500
+                </small>
+              </div>
+            </div>
+
+          </ng-container>
+
+          <ng-template #emptyState>
+            <div class="h-100 d-flex flex-column align-items-center justify-content-center text-center p-5">
+              <i class="far fa-comments fa-4x text-muted mb-4" style="opacity:0.3;"></i>
+              <h5 class="font-weight-bold">Your Messages</h5>
+              <p class="text-muted">Select a conversation or click <strong>New</strong> to start chatting.</p>
+            </div>
+          </ng-template>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .scrollable-area { overflow-y: auto; }
+  .message-wrapper { display: flex; align-items: flex-end; }
+  .message-wrapper.sent { justify-content: flex-end; }
+  .message-bubble { max-width: 70%; }
+
+  .message-bubble-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 70%;
+  }
+  .message-bubble-wrapper.ml-auto {
+    flex-direction: row-reverse;
+  }
+
+  .msg-actions {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .message-bubble-wrapper:hover .msg-actions {
+    display: flex;
+  }
+
+  .btn-action {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 11px;
+    color: #555;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    transition: all 0.2s;
+  }
+  .btn-action:hover {
+    background: #f0f0f0;
+    transform: scale(1.1);
+  }
+
+  .edit-bubble {
+    max-width: 70%;
+    padding: 8px;
+    background: #fff3cd;
+    border-radius: 12px;
+    border: 1px solid #ffc107;
+  }
+  .edit-bubble.ml-auto {
+    margin-left: auto;
+  }
+
+  .list-group-item.active {
+    background-color: #f0f4f2 !important;
+    border-left: 4px solid #1B4332 !important;
+    color: inherit !important;
+  }
+  .search-result-row:hover {
+    background-color: #f0f4f2;
+    border-radius: 6px;
+  }
+</style>

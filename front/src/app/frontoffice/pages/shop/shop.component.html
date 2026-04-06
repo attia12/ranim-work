@@ -1,0 +1,92 @@
+<div class="shop-page py-5">
+    <div class="container">
+        <!-- Loading spinner -->
+        <div *ngIf="isLoading" class="text-center py-5">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Loading products...</p>
+        </div>
+
+        <!-- Error message -->
+        <div *ngIf="loadError && !isLoading" class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ loadError }}
+        </div>
+
+        <!-- Main content -->
+        <div *ngIf="!isLoading && !loadError" class="row mb-5">
+            <div class="col-lg-3">
+                <h4 class="fw-bold mb-4">Categories</h4>
+                <div class="list-group list-group-flush shadow-sm rounded">
+                    <button *ngFor="let cat of categories" (click)="selectCategory(cat)"
+                        [class.active]="selectedCategory === cat"
+                        class="list-group-item list-group-item-action border-0">
+                        {{cat}}
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-lg-9">
+                <!-- Search and Filter Bar -->
+                <div class="search-bar mb-4">
+                    <div class="input-group input-group-lg shadow-sm">
+                        <div class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search text-muted"></i>
+                        </div>
+                        <input type="text" class="form-control border-start-0" [(ngModel)]="searchQuery"
+                            (input)="filterProducts()" placeholder="Search for gear, equipment...">
+                    </div>
+                </div>
+
+                <!-- Products Grid -->
+                <div class="row">
+                    <div class="col-md-6 col-lg-4 mb-4" *ngFor="let product of filteredProducts">
+                        <div class="card h-100 border-0 shadow-sm hover-up cursor-pointer"
+                            (click)="openDetails(product)">
+                            <div class="product-img-wrapper position-relative">
+                                <img [src]="product.imageUrl" class="card-img-top p-3" alt="{{product.name}}">
+                                <span class="badge text-bg-success position-absolute"
+                                    style="top: 15px; right: 15px;"
+                                    *ngIf="isNewProduct(product)">New</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <small class="text-muted">{{product.category}}</small>
+                                    <div class="rating small">
+                                        <i class="fas fa-star text-warning"></i>
+                                        <span class="ms-1 fw-bold">{{product.rating | number:'1.1-1'}}</span>
+                                    </div>
+                                </div>
+                                <h5 class="card-title fw-bold mb-2">{{product.name}}</h5>
+                                <p class="card-text text-muted small mb-4">{{product.description | slice:0:80}}...</p>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <div class="d-flex flex-column">
+                                        <span *ngIf="product.availableForSale"
+                                            class="h6 fw-bold text-info mb-1">Buy: ${{product.purchasePrice |
+                                            number:'1.2-2'}}</span>
+                                        <span *ngIf="product.availableForRent"
+                                            class="h6 fw-bold text-success mb-0">Rent: ${{product.pricePerDay |
+                                            number:'1.2-2'}}/day</span>
+                                        <span *ngIf="!product.availableForSale && !product.availableForRent"
+                                            class="h6 fw-bold text-success mb-0">${{product.price |
+                                            number:'1.2-2'}}</span>
+                                    </div>
+                                    <button class="btn btn-outline-success btn-sm px-3 ms-2"
+                                        (click)="$event.stopPropagation(); addToCart(product)">
+                                        <i class="fas fa-cart-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div class="text-center py-5" *ngIf="filteredProducts.length === 0">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h5>No products found. Try adjusting your filters.</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

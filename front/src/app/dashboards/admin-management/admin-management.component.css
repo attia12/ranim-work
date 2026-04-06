@@ -1,0 +1,17 @@
+.card {
+    border-radius: 12px;
+}
+
+.table thead th {
+    font-size: 0.75rem;
+    border-top: none;
+}
+
+.badge {
+    padding: 0.5em 0.8em;
+    font-weight: 500;
+}
+
+.italic {
+    font-style: italic;
+}

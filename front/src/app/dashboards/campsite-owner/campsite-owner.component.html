@@ -1,0 +1,210 @@
+<!-- Module: Official Campsite & Booking | Layer: Frontend Component (Owner Dashboard) -->
+<div class="content-header px-4 pt-4">
+  <div class="container-fluid">
+    <h1 class="m-0 font-weight-bold" i18n>Campsite Management</h1>
+  </div>
+</div>
+
+<section class="content px-4">
+  <div class="container-fluid">
+
+    <div class="alert alert-success" *ngIf="successMsg" role="alert">{{ successMsg }}</div>
+    <div class="alert alert-danger" *ngIf="error" role="alert">
+      {{ error }} <button class="close" (click)="error=''" aria-label="Close">&times;</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mb-3">
+      <div class="col-lg-3 col-6">
+        <div class="small-box bg-info shadow-sm">
+          <div class="inner p-3">
+            <h3>{{ campsites.length }}</h3>
+            <p i18n>My Campsites</p>
+          </div>
+          <div class="icon"><i class="fas fa-campground"></i></div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-6">
+        <div class="small-box bg-success shadow-sm">
+          <div class="inner p-3">
+            <h3>{{ bookings.length }}</h3>
+            <p i18n>Reservations</p>
+          </div>
+          <div class="icon"><i class="fas fa-calendar-check"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- My Campsites Table -->
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title font-weight-bold mb-0" i18n>My Campsites</h5>
+        <button class="btn btn-sm btn-success" (click)="openCreateForm()" aria-label="Add new campsite" i18n>
+          <i class="fas fa-plus mr-1"></i> Add New Site
+        </button>
+      </div>
+      <div class="card-body table-responsive p-0">
+        <div class="text-center py-4" *ngIf="loading">
+          <div class="spinner-border text-success" role="status"><span class="sr-only" i18n>Loading...</span></div>
+        </div>
+        <table class="table table-hover text-nowrap mb-0" *ngIf="!loading" aria-label="My Campsites">
+          <thead class="bg-light">
+            <tr>
+              <th i18n>Name</th><th i18n>Location</th><th i18n>Type</th>
+              <th i18n>Price/Night</th><th i18n>Status</th><th i18n>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of campsites" [class.table-active]="selectedCampsite?.id === c.id">
+              <td>{{ c.name }}</td>
+              <td>{{ c.city }}, {{ c.country }}</td>
+              <td><span class="badge" [class.badge-primary]="c.type==='OFFICIAL'" [class.badge-success]="c.type==='OUTDOOR'">{{ c.type }}</span></td>
+              <td>{{ c.pricePerNight | currency:'TND':'symbol':'1.0-2' }}</td>
+              <td><span class="badge" [class.badge-success]="c.status==='ACTIVE'" [class.badge-warning]="c.status==='SUSPENDED'" [class.badge-danger]="c.status==='DELETED'">{{ c.status }}</span></td>
+              <td>
+                <button class="btn btn-info btn-sm mr-1" (click)="selectCampsite(c)" aria-label="Manage bookings" i18n>Manage</button>
+                <button class="btn btn-primary btn-sm mr-1" (click)="openEditForm(c)" aria-label="Edit campsite"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-danger btn-sm" (click)="deleteCampsite(c.id)" aria-label="Delete campsite"><i class="fas fa-trash"></i></button>
+              </td>
+            </tr>
+            <tr *ngIf="campsites.length === 0">
+              <td colspan="6" class="text-center text-muted py-3" i18n>No campsites yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Selected Campsite Management -->
+    <div *ngIf="selectedCampsite" class="row mt-3">
+
+      <!-- Reservations -->
+      <div class="col-md-7">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title font-weight-bold mb-0" i18n>Reservations — {{ selectedCampsite.name }}</h5>
+          </div>
+          <div class="card-body table-responsive p-0">
+            <table class="table table-sm mb-0" aria-label="Reservations">
+              <thead class="bg-light">
+                <tr><th i18n>Camper</th><th i18n>Check-in</th><th i18n>Check-out</th><th i18n>Guests</th><th i18n>Total</th><th i18n>Status</th><th i18n>Action</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let b of bookings">
+                  <td>{{ b.camperFullName }}</td>
+                  <td>{{ b.checkInDate }}</td>
+                  <td>{{ b.checkOutDate }}</td>
+                  <td>{{ b.numberOfGuests }}</td>
+                  <td>{{ b.totalPrice | currency:'TND':'symbol':'1.0-2' }}</td>
+                  <td><span class="badge" [ngClass]="badgeClass(b.status)">{{ b.status }}</span></td>
+                  <td>
+                    <button class="btn btn-xs btn-success" *ngIf="b.status==='PENDING'" (click)="confirmBooking(b.id)" aria-label="Confirm booking" i18n>Confirm</button>
+                  </td>
+                </tr>
+                <tr *ngIf="bookings.length === 0">
+                  <td colspan="7" class="text-center text-muted" i18n>No reservations.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Availability Windows -->
+      <div class="col-md-5">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title font-weight-bold mb-0" i18n>Availability</h5>
+            <button class="btn btn-xs btn-success" (click)="showAvailabilityForm = !showAvailabilityForm" i18n>
+              {{ showAvailabilityForm ? 'Cancel' : '+ Add Window' }}
+            </button>
+          </div>
+          <div class="card-body">
+            <form [formGroup]="availForm" (ngSubmit)="addAvailability()" *ngIf="showAvailabilityForm" class="mb-3 border-bottom pb-3">
+              <div class="form-row">
+                <div class="col-6 form-group mb-2">
+                  <label class="small" i18n>Start *</label>
+                  <input type="date" class="form-control form-control-sm" formControlName="startDate" [min]="today">
+                </div>
+                <div class="col-6 form-group mb-2">
+                  <label class="small" i18n>End *</label>
+                  <input type="date" class="form-control form-control-sm" formControlName="endDate" [min]="today">
+                </div>
+                <div class="col-6 form-group mb-2">
+                  <label class="small" i18n>Places *</label>
+                  <input type="number" class="form-control form-control-sm" formControlName="numberOfPlaces" min="0">
+                </div>
+                <div class="col-6 form-group mb-2">
+                  <label class="small" i18n>Weather</label>
+                  <input class="form-control form-control-sm" formControlName="weatherCondition" placeholder="Sunny">
+                </div>
+                <div class="col-12 mb-2">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="isBlocked" formControlName="isBlocked">
+                    <label class="custom-control-label small" for="isBlocked" i18n>Block this period</label>
+                  </div>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-sm btn-success btn-block" i18n>Save Window</button>
+            </form>
+
+            <div *ngFor="let a of availabilities" class="d-flex justify-content-between align-items-center border-bottom py-2">
+              <div>
+                <small class="font-weight-bold">{{ a.startDate }} → {{ a.endDate }}</small><br>
+                <small class="text-muted">{{ a.numberOfPlaces }} places<span *ngIf="a.weatherCondition"> · {{ a.weatherCondition }}</span></small>
+              </div>
+              <div class="d-flex align-items-center" style="gap:.3rem;">
+                <span class="badge" [class.badge-danger]="a.isBlocked" [class.badge-success]="!a.isBlocked">
+                  {{ a.isBlocked ? 'Blocked' : 'Open' }}
+                </span>
+                <button class="btn btn-xs btn-outline-danger" (click)="deleteAvailability(a.id)" aria-label="Delete window">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+            <p class="text-muted small text-center mt-2" *ngIf="availabilities.length === 0" i18n>No windows set.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Campsite form modal -->
+<div class="modal-overlay" *ngIf="showCampsiteForm" (click)="showCampsiteForm = false">
+  <div class="modal-content shadow-lg p-4" style="max-width:640px;" (click)="$event.stopPropagation()">
+    <h5 class="font-weight-bold mb-3">{{ editingCampsite ? 'Edit Campsite' : 'New Campsite' }}</h5>
+    <form [formGroup]="campsiteForm" (ngSubmit)="saveCampsite()" novalidate>
+      <div class="form-row">
+        <div class="col-12 form-group">
+          <label i18n>Name *</label>
+          <input class="form-control" formControlName="name" [class.is-invalid]="campsiteForm.get('name')?.invalid && campsiteForm.get('name')?.touched">
+          <div class="invalid-feedback" i18n>Name is required.</div>
+        </div>
+        <div class="col-6 form-group"><label i18n>Country *</label><input class="form-control" formControlName="country"></div>
+        <div class="col-6 form-group"><label i18n>City *</label><input class="form-control" formControlName="city"></div>
+        <div class="col-12 form-group"><label i18n>Description</label><textarea class="form-control" formControlName="description" rows="2"></textarea></div>
+        <div class="col-6 form-group">
+          <label i18n>Type *</label>
+          <select class="form-control" formControlName="type"><option *ngFor="let t of types" [value]="t">{{ t }}</option></select>
+        </div>
+        <div class="col-6 form-group"><label i18n>Capacity *</label><input type="number" class="form-control" formControlName="capacity" min="1"></div>
+        <div class="col-6 form-group"><label i18n>Price/Night *</label><input type="number" class="form-control" formControlName="pricePerNight" min="0" step="0.01"></div>
+        <div class="col-6 form-group"><label i18n>Address</label><input class="form-control" formControlName="address"></div>
+        <div class="col-12 form-group"><label i18n>Amenities (comma-separated)</label><input class="form-control" formControlName="amenities" placeholder="WiFi, Pool"></div>
+        <div class="col-12 form-group"><label i18n>Picture URLs (comma-separated)</label><input class="form-control" formControlName="pictures"></div>
+        <div class="col-12 form-group"><label i18n>Rules</label><textarea class="form-control" formControlName="rules" rows="2"></textarea></div>
+      </div>
+      <div class="d-flex justify-content-end" style="gap:.5rem;">
+        <button type="button" class="btn btn-light" (click)="showCampsiteForm = false" i18n>Cancel</button>
+        <button type="submit" class="btn btn-success" i18n>Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .modal-overlay { position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:2000;padding:1rem; }
+  .modal-content { background:#fff;border-radius:12px;max-height:90vh;overflow-y:auto; }
+</style>

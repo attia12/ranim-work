@@ -1,0 +1,162 @@
+<!-- Module: Official Campsite & Booking | Layer: Frontend Component -->
+<div class="campsites-page py-5">
+  <div class="container">
+
+    <!-- Header -->
+    <div class="row mb-4">
+      <div class="col-lg-8">
+        <h2 class="font-weight-bold mb-2" i18n>Find Your Perfect Campsite</h2>
+        <p class="text-muted lead" i18n>Discover official campsites and wild outdoor spots.</p>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label class="small font-weight-bold text-muted" i18n>Country</label>
+            <input class="form-control" [(ngModel)]="searchCountry" placeholder="e.g. Tunisia"
+                   aria-label="Filter by country" i18n-placeholder>
+          </div>
+          <div class="col-md-3">
+            <label class="small font-weight-bold text-muted" i18n>City</label>
+            <input class="form-control" [(ngModel)]="searchCity" placeholder="e.g. Tunis"
+                   aria-label="Filter by city" i18n-placeholder>
+          </div>
+          <div class="col-md-2">
+            <label class="small font-weight-bold text-muted" i18n>Type</label>
+            <select class="form-control" [(ngModel)]="filterType" aria-label="Filter by type">
+              <option value="" i18n>All Types</option>
+              <option value="OFFICIAL" i18n>Official</option>
+              <option value="OUTDOOR" i18n>Outdoor</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="small font-weight-bold text-muted" i18n>Min Price</label>
+            <input type="number" class="form-control" [(ngModel)]="minPrice" placeholder="0"
+                   aria-label="Minimum price per night">
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-success btn-block" (click)="applyFilters()" aria-label="Apply filters" i18n>
+              <i class="fas fa-search mr-1"></i> Search
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results count -->
+    <p class="text-muted small mb-3" *ngIf="!loading">
+      <span i18n>{{ totalElements }} campsites found</span>
+    </p>
+
+    <!-- Loading skeleton -->
+    <div class="row" *ngIf="loading">
+      <div class="col-lg-4 col-md-6 mb-4" *ngFor="let _ of [1,2,3,4,5,6]">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="bg-secondary" style="height:220px;border-radius:8px 8px 0 0;opacity:.15;"></div>
+          <div class="card-body">
+            <div class="bg-secondary mb-2" style="height:16px;border-radius:4px;opacity:.15;"></div>
+            <div class="bg-secondary mb-2" style="height:12px;width:60%;border-radius:4px;opacity:.1;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error state -->
+    <div class="alert alert-danger" *ngIf="error" role="alert">
+      <i class="fas fa-exclamation-circle mr-2"></i>{{ error }}
+    </div>
+
+    <!-- Campsite grid -->
+    <div class="row" *ngIf="!loading && !error">
+      <div class="col-lg-4 col-md-6 mb-4" *ngFor="let site of campsites">
+        <div class="card h-100 border-0 shadow-sm campsite-card overflow-hidden"
+             (click)="viewDetail(site.id)" role="button"
+             [attr.aria-label]="'View details for ' + site.name" tabindex="0"
+             (keyup.enter)="viewDetail(site.id)">
+          <div class="position-relative">
+            <img [src]="getFirstImage(site)" class="card-img-top"
+                 [alt]="site.name" style="height:220px;object-fit:cover;">
+            <span class="badge position-absolute shadow-sm"
+                  [class.badge-primary]="site.type === 'OFFICIAL'"
+                  [class.badge-success]="site.type === 'OUTDOOR'"
+                  style="top:12px;left:12px;padding:5px 12px;border-radius:20px;">
+              {{ site.type === 'OFFICIAL' ? 'Official' : 'Outdoor' }}
+            </span>
+            <span class="badge badge-light position-absolute"
+                  style="top:12px;right:12px;padding:5px 12px;border-radius:20px;">
+              <i class="fas fa-users text-muted mr-1"></i>{{ site.capacity }}
+            </span>
+          </div>
+          <div class="card-body p-4 d-flex flex-column">
+            <h5 class="font-weight-bold mb-1">{{ site.name }}</h5>
+            <p class="text-muted small mb-2">
+              <i class="fas fa-map-marker-alt text-success mr-1"></i>
+              {{ site.city }}, {{ site.country }}
+            </p>
+            <p class="text-muted small mb-3 flex-grow-1" style="
+              display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+              {{ site.description }}
+            </p>
+
+            <!-- Amenities chips -->
+            <div class="d-flex flex-wrap mb-3" style="gap:.3rem;" *ngIf="site.amenities?.length">
+              <span class="badge badge-light border small" *ngFor="let am of site.amenities | slice:0:3">
+                {{ am }}
+              </span>
+              <span class="badge badge-light border small" *ngIf="site.amenities.length > 3">
+                +{{ site.amenities.length - 3 }}
+              </span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-auto">
+              <div>
+                <span class="h5 font-weight-bold text-success mb-0" *ngIf="site.pricePerNight > 0">
+                  {{ site.pricePerNight | currency:'TND':'symbol':'1.0-2' }}
+                </span>
+                <small class="text-muted" *ngIf="site.pricePerNight > 0"> / night</small>
+                <span class="h5 font-weight-bold text-success mb-0" *ngIf="!site.pricePerNight" i18n>FREE</span>
+              </div>
+              <button class="btn btn-outline-success btn-sm rounded-pill px-3" aria-label="View details" i18n>
+                Details
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div class="text-center py-5" *ngIf="!loading && !error && campsites.length === 0">
+      <i class="fas fa-campground fa-3x text-muted mb-3"></i>
+      <h5 i18n>No campsites found. Try adjusting your filters.</h5>
+    </div>
+
+    <!-- Pagination -->
+    <nav *ngIf="totalPages > 1" aria-label="Campsite pages">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" [class.disabled]="currentPage === 0">
+          <button class="page-link" (click)="goToPage(currentPage - 1)" aria-label="Previous page">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+        </li>
+        <li class="page-item" *ngFor="let p of pages" [class.active]="p === currentPage">
+          <button class="page-link" (click)="goToPage(p)">{{ p + 1 }}</button>
+        </li>
+        <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
+          <button class="page-link" (click)="goToPage(currentPage + 1)" aria-label="Next page">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </li>
+      </ul>
+    </nav>
+
+  </div>
+</div>
+
+<style>
+  .campsite-card { transition: transform .2s,box-shadow .2s; cursor:pointer; border-radius:12px; }
+  .campsite-card:hover { transform:translateY(-4px); box-shadow:0 12px 24px rgba(0,0,0,.1) !important; }
+</style>

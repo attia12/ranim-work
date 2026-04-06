@@ -1,0 +1,111 @@
+<!-- Module: Outdoor Campsite & Booking | Layer: Frontend Component -->
+<div class="container py-5" style="max-width:640px;">
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-success" role="status">
+      <span class="sr-only" i18n>Loading...</span>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="alert alert-danger" *ngIf="error && !loading" role="alert">{{ error }}</div>
+
+  <div *ngIf="!loading && site">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+      <ol class="breadcrumb bg-transparent px-0">
+        <li class="breadcrumb-item"><a routerLink="/outdoor-campsites" i18n>Outdoor Trips</a></li>
+        <li class="breadcrumb-item">
+          <a [routerLink]="['/outdoor-campsites', site.id]">{{ site.name }}</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page" i18n>Book</li>
+      </ol>
+    </nav>
+
+    <!-- Site summary card -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body d-flex align-items-center">
+        <img [src]="site.pictures.length ? site.pictures[0] : 'assets/images/outdoor-placeholder.jpg'"
+             [alt]="site.name" class="rounded mr-3"
+             style="width:80px;height:60px;object-fit:cover;flex-shrink:0;">
+        <div>
+          <h5 class="font-weight-bold mb-0">{{ site.name }}</h5>
+          <p class="text-muted small mb-0">
+            <i class="fas fa-map-marker-alt text-success mr-1"></i>
+            {{ site.city }}, {{ site.country }}
+          </p>
+          <span class="badge badge-success mt-1" i18n>FREE</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Booking form -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-bottom">
+        <h5 class="font-weight-bold mb-0" i18n>Your Booking</h5>
+      </div>
+      <div class="card-body">
+        <form [formGroup]="bookingForm" (ngSubmit)="submit()" novalidate>
+
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label for="checkIn" i18n>Check-in Date <span class="text-danger">*</span></label>
+              <input id="checkIn" type="date" class="form-control"
+                     formControlName="checkInDate" [min]="today"
+                     [class.is-invalid]="bookingForm.get('checkInDate')?.invalid && bookingForm.get('checkInDate')?.touched">
+              <div class="invalid-feedback" i18n>Check-in date is required.</div>
+            </div>
+            <div class="form-group col-md-6">
+              <label for="checkOut" i18n>Check-out Date <span class="text-danger">*</span></label>
+              <input id="checkOut" type="date" class="form-control"
+                     formControlName="checkOutDate" [min]="bookingForm.get('checkInDate')?.value || today"
+                     [class.is-invalid]="bookingForm.get('checkOutDate')?.invalid && bookingForm.get('checkOutDate')?.touched">
+              <div class="invalid-feedback" i18n>Check-out date is required.</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="guests" i18n>Number of Guests <span class="text-danger">*</span></label>
+            <input id="guests" type="number" class="form-control"
+                   formControlName="numberOfGuests" min="1" max="50"
+                   [class.is-invalid]="bookingForm.get('numberOfGuests')?.invalid && bookingForm.get('numberOfGuests')?.touched">
+            <div class="invalid-feedback" i18n>Please enter a valid number of guests (1–50).</div>
+          </div>
+
+          <!-- Stay summary -->
+          <div class="card bg-light border-0 p-3 mb-4" *ngIf="nights > 0">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="text-muted small">
+                <i class="fas fa-moon mr-1"></i>
+                {{ nights }} night<span *ngIf="nights !== 1">s</span>
+                &nbsp;&middot;&nbsp;
+                <i class="fas fa-users mr-1"></i>
+                {{ bookingForm.get('numberOfGuests')?.value }} guest(s)
+              </div>
+              <div class="font-weight-bold text-success h5 mb-0" i18n>FREE</div>
+            </div>
+          </div>
+
+          <!-- Alert -->
+          <div class="alert alert-danger small" *ngIf="error" role="alert">{{ error }}</div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <a [routerLink]="['/outdoor-campsites', site.id]" class="btn btn-light" i18n>
+              <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+            <button type="submit" class="btn btn-success btn-lg rounded-pill px-5"
+                    [disabled]="bookingForm.invalid || submitting" aria-label="Confirm booking" i18n>
+              <span *ngIf="submitting" class="spinner-border spinner-border-sm mr-2"></span>
+              <i class="fas fa-check mr-1" *ngIf="!submitting"></i>
+              {{ submitting ? 'Booking...' : 'Confirm Booking' }}
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>

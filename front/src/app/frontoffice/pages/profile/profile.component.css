@@ -1,0 +1,22 @@
+.card {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #2d5016 0%, #4a7c2c 100%);
+}
+
+.opacity-75 {
+    opacity: 0.75;
+}
+
+.form-control:disabled {
+    background-color: #F5F0E8;
+    border-color: #e9ecef;
+}
+
+.form-control:focus {
+    border-color: #2d5016;
+    box-shadow: 0 0 0 0.2rem rgba(45, 80, 22, 0.25);
+}

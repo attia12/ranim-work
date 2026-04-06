@@ -1,0 +1,79 @@
+pipeline {
+    agent any
+
+    environment {
+        MAVEN_CACHE = "/var/lib/jenkins/.m2/repository"
+        MAVEN_OPTS = "-Dmaven.repo.local=${MAVEN_CACHE}"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Recuperation du code depuis GitHub...'
+                git branch: 'marketplace-and-delivery-modules',
+                    credentialsId: 'github-credentials',
+                    url: 'https://github.com/Ghofran2212/projet-integration.git'
+            }
+        }
+
+        stage('Compilation') {
+            steps {
+                echo 'Compilation du projet...'
+                sh "mvn clean compile -DskipTests"
+            }
+        }
+
+        stage('Unit Tests') {
+            steps {
+                echo 'Execution des tests unitaires JUnit...'
+                sh "mvn test"
+            }
+            post {
+                always {
+                    junit testResults: '**/target/surefire-reports/*.xml',
+                          allowEmptyResults: true
+                    archiveArtifacts artifacts: 'target/site/jacoco/**/*',
+                          allowEmptyArchive: true, fingerprint: true
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh "mvn sonar:sonar -DskipTests"
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage('Package') {
+            steps {
+                echo 'Creation du JAR...'
+                sh "mvn package -DskipTests"
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                }
+            }
+        }
+    }
+
+    post {
+        success { echo 'Pipeline termine avec succes !' }
+        failure { echo 'Le pipeline a echoue. Consultez les logs.' }
+        always {
+            script {
+                try { cleanWs() } catch (err) { echo "Impossible de nettoyer : ${err.message}" }
+            }
+        }
+    }
+}

@@ -1,0 +1,517 @@
+<!-- Content Header -->
+<div class="content-header"
+  style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%); color: white; padding: 2rem; border-radius: 0;">
+  <div class="container-fluid">
+    <div class="row align-items-center">
+      <div class="col-sm-8">
+        <h1 class="m-0 font-weight-bold">{{isAdmin ? 'Global Gear Inventory' : 'Gear Provider Dashboard'}}</h1>
+        <p class="mb-0 mt-1" style="opacity: 0.9;">Manage your outdoor equipment inventory</p>
+      </div>
+      <div class="col-sm-4 text-right">
+        <button *ngIf="!isAdmin" class="btn btn-light btn-sm px-4" (click)="openAddModal()">
+          <i class="fas fa-plus mr-2"></i>Add Product
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main content -->
+<div class="content" style="background-color: var(--color-bg-light); min-height: calc(100vh - 200px);">
+  <div class="container-fluid">
+
+    <!-- Stats Cards Row -->
+    <div class="row pt-4">
+      <div class="col-lg-4 col-md-6 mb-3">
+        <div class="card stats-card h-100 shadow-sm border-0">
+          <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-muted mb-1 small uppercase">Total Products</p>
+              <h3 class="mb-0 font-weight-bold">{{totalItems}}</h3>
+            </div>
+            <div class="stats-icon bg-primary text-white p-3 rounded-circle">
+              <i class="fas fa-box fa-lg"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-md-6 mb-3">
+        <div class="card stats-card h-100 shadow-sm border-0">
+          <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-muted mb-1 small uppercase">Total Stock</p>
+              <h3 class="mb-0 font-weight-bold">{{totalStock}}</h3>
+            </div>
+            <div class="stats-icon bg-success text-white p-3 rounded-circle">
+              <i class="fas fa-warehouse fa-lg"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-md-12 mb-3">
+        <div class="card stats-card h-100 shadow-sm border-0">
+          <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-muted mb-1 small uppercase">Active Rentals</p>
+              <h3 class="mb-0 font-weight-bold">12</h3>
+            </div>
+            <div class="stats-icon bg-warning text-white p-3 rounded-circle">
+              <i class="fas fa-calendar-check fa-lg"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Warehouses Section -->
+    <div class="row mt-4" *ngIf="!isAdmin">
+      <div class="col-12">
+          <div class="card shadow-sm border-0">
+              <div class="card-header d-flex justify-content-between align-items-center bg-white">
+                  <h5 class="mb-0 font-weight-bold"><i class="fas fa-warehouse text-warning mr-2"></i>My Warehouses</h5>
+                  <button class="btn btn-warning btn-sm rounded-pill px-3" (click)="openAddWarehouseModal()">
+                      <i class="fas fa-plus mr-1"></i> Add Warehouse
+                  </button>
+              </div>
+              <div class="card-body p-3">
+                  <div *ngIf="warehouses.length === 0" class="text-center text-muted py-3 small">
+                      No warehouses yet. Add one to organize your equipment.
+                  </div>
+                  <div class="row" *ngIf="warehouses.length > 0">
+                      <div class="col-md-4 mb-3" *ngFor="let w of warehouses">
+                          <div class="card border shadow-sm h-100" style="border-radius:12px;">
+                              <div class="card-body p-3">
+                                  <div class="d-flex justify-content-between align-items-start mb-2">
+                                      <h6 class="font-weight-bold mb-0"><i class="fas fa-warehouse text-warning mr-2"></i>{{w.name}}</h6>
+                                      <div>
+                                          <button class="btn btn-sm btn-outline-secondary rounded-pill mr-1" (click)="openEditWarehouseModal(w)"><i class="fas fa-edit"></i></button>
+                                          <button class="btn btn-sm btn-outline-danger rounded-pill" (click)="deleteWarehouse(w.id)"><i class="fas fa-trash"></i></button>
+                                      </div>
+                                  </div>
+                                  <p class="small text-muted mb-1"><i class="fas fa-map-marker-alt mr-1"></i>{{w.address||'—'}}, {{w.city||'—'}}</p>
+                                  <p class="small text-muted mb-2" *ngIf="w.phone"><i class="fas fa-phone mr-1"></i>{{w.phone}}</p>
+                                  <button class="btn btn-outline-primary rounded-pill px-2 py-1" style="font-size:11px;"
+                                      (click)="selectedWarehouseFilter=(selectedWarehouseFilter===w.id?null:w.id)">
+                                      <i class="fas fa-filter mr-1"></i>{{selectedWarehouseFilter===w.id?'Clear filter':'Filter gear'}}
+                                  </button>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+    </div>
+
+    <!-- Inventory Section -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0 font-weight-bold">{{ isAdmin ? 'Global Gear Inventory' : 'My Gear Inventory' }}</h5>
+            <div class="d-flex align-items-center flex-wrap gap-2">
+              <span class="text-muted small mr-2">Sort by:</span>
+              <select class="form-control form-control-sm" style="width:auto;min-width:130px;" [(ngModel)]="sortField" (change)="applySort()" name="sortField">
+                <option value="name">Name</option>
+                <option value="stock">Stock</option>
+                <option value="price">Price</option>
+                <option value="category">Category</option>
+                <option value="warehouse">Warehouse</option>
+              </select>
+              <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" (click)="toggleSortDir()" title="Toggle sort direction">
+                <i class="fas" [ngClass]="sortDir === 'asc' ? 'fa-sort-amount-up' : 'fa-sort-amount-down'"></i>
+                {{ sortDir === 'asc' ? 'A→Z' : 'Z→A' }}
+              </button>
+              <select *ngIf="warehouses.length > 0" class="form-control form-control-sm" style="width:auto;min-width:140px;"
+                [(ngModel)]="selectedWarehouseFilter" (change)="applySort()" name="warehouseFilter">
+                <option [ngValue]="null">All Warehouses</option>
+                <option *ngFor="let w of warehouses" [ngValue]="w.id">{{ w.name }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0" aria-label="Gear Inventory">
+                <thead style="background-color: var(--color-primary); color: white;">
+                  <tr>
+                    <th class="px-4 py-3 border-0" style="cursor:pointer" (click)="sortByField('name')">
+                      Product <i class="fas fa-sort ml-1 opacity-50"></i>
+                    </th>
+                    <th class="py-3 border-0" style="cursor:pointer" (click)="sortByField('category')">
+                      Category <i class="fas fa-sort ml-1 opacity-50"></i>
+                    </th>
+                    <th class="py-3 border-0" style="cursor:pointer" (click)="sortByField('price')">
+                      Price <i class="fas fa-sort ml-1 opacity-50"></i>
+                    </th>
+                    <th class="py-3 border-0" style="cursor:pointer" (click)="sortByField('stock')">
+                      Stock <i class="fas fa-sort ml-1 opacity-50"></i>
+                    </th>
+                    <th class="py-3 border-0">Rating</th>
+                    <th class="py-3 border-0" style="min-width:140px; cursor:pointer" (click)="sortByField('warehouse')">
+                      Warehouse <i class="fas fa-sort ml-1 opacity-50"></i>
+                    </th>
+                    <th *ngIf="isAdmin" class="py-3 border-0">Provider</th>
+                    <th class="py-3 border-0 text-right px-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let product of sortedProducts">
+                    <td class="px-4 py-3">
+                      <div class="d-flex align-items-center">
+                        <img [src]="product.imageUrl" [alt]="product.name || 'Product image'" class="rounded mr-3"
+                          style="width:44px;height:44px;object-fit:cover;border:2px solid var(--color-accent-earth);">
+                        <div>
+                          <div class="font-weight-bold" style="color:var(--color-text-primary)">{{product.name}}</div>
+                          <small style="color:var(--color-text-secondary)">{{product.description | slice:0:35}}...</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3">
+                      <span class="badge px-2 py-1"
+                        style="background:var(--color-bg-light);color:var(--color-text-primary);border:1px solid var(--color-accent-earth);">
+                        {{product.category || '—'}}
+                      </span>
+                    </td>
+                    <td class="py-3 font-weight-bold" style="color:var(--color-primary)">
+                      <span *ngIf="product.purchasePrice">${{product.purchasePrice}}</span>
+                      <span *ngIf="!product.purchasePrice && product.pricePerDay">${{product.pricePerDay}}/day</span>
+                      <span *ngIf="!product.purchasePrice && !product.pricePerDay && product.price">${{product.price}}</span>
+                      <span *ngIf="!product.purchasePrice && !product.pricePerDay && !product.price" class="text-muted">—</span>
+                    </td>
+                    <td class="py-3">
+                      <span [ngClass]="product.stock < 5 ? 'text-danger font-weight-bold' : ''" style="color:inherit">
+                        {{product.stock}} units
+                      </span>
+                    </td>
+                    <td class="py-3">
+                      <span style="color:var(--color-accent-earth)">
+                        <i *ngFor="let s of [1,2,3,4,5]" class="fas"
+                          [ngClass]="s <= product.rating ? 'fa-star' : 'far fa-star'"
+                          style="font-size:12px"></i>
+                      </span>
+                    </td>
+                    <td class="py-3">
+                      <span *ngIf="getWarehouseName(product.warehouseId) !== '—'"
+                        class="badge px-2 py-1"
+                        style="background:rgba(45,80,22,0.1);color:var(--color-primary);border:1px solid var(--color-primary-light);font-size:12px">
+                        <i class="fas fa-warehouse mr-1" style="font-size:10px"></i>
+                        {{getWarehouseName(product.warehouseId)}}
+                      </span>
+                      <span *ngIf="getWarehouseName(product.warehouseId) === '—'" class="text-muted small">—</span>
+                    </td>
+                    <td *ngIf="isAdmin" class="py-3">
+                      <small style="color:var(--color-text-secondary)">{{product.providerId || 'N/A'}}</small>
+                    </td>
+                    <td class="py-3 text-right px-4">
+                      <button *ngIf="product.availableForRent"
+                              class="btn btn-sm btn-outline-info mr-2 rounded-pill px-3"
+                              (click)="openAvailability(product)"
+                              title="Manage availability">
+                        <i class="fas fa-calendar-times"></i>
+                      </button>
+                      <button *ngIf="!isAdmin" class="btn btn-sm mr-2 rounded-pill px-3"
+                        style="background:var(--color-primary);color:white;border:none"
+                        (click)="openEditModal(product)">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button *ngIf="isAdmin" class="btn btn-sm btn-secondary mr-2 rounded-pill px-3" title="View only">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                      <button class="btn btn-sm rounded-pill px-3"
+                        style="background:var(--color-accent-terra);color:white;border:none"
+                        (click)="deleteProduct(product.id)"
+                        [title]="isAdmin ? 'Admin: Delete this product' : 'Delete'">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr *ngIf="sortedProducts.length === 0">
+                    <td [attr.colspan]="isAdmin ? 8 : 7" class="text-center py-5">
+                      <i class="fas fa-box-open fa-3x mb-3 d-block" style="color:var(--color-accent-earth);opacity:0.4"></i>
+                      <span style="color:var(--color-text-secondary)">No products found.</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal fade" [ngClass]="{'show d-block': showModal}" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title font-weight-bold">{{isEditing ? 'Edit Gear' : 'Add New Gear'}}</h5>
+        <button type="button" class="close text-white" (click)="closeModal(); saveError=''">
+          <span>&times;</span>
+        </button>
+      </div>
+      <form (ngSubmit)="saveProduct()">
+        <div class="modal-body p-4">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label font-weight-bold">Product Name</label>
+              <input type="text" class="form-control" [(ngModel)]="currentProduct.name" name="name" required
+                placeholder="e.g., Mountain Pro Tent">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label font-weight-bold">Category</label>
+              <select class="form-control" [(ngModel)]="currentProduct.categoryId" name="categoryId" required>
+                <option [ngValue]="undefined">Select Category</option>
+                <option *ngFor="let cat of categories" [value]="cat.id">{{cat.name}}</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label font-weight-bold">Description</label>
+            <textarea class="form-control" [(ngModel)]="currentProduct.description" name="description" rows="3"
+              placeholder="Describe the gear..."></textarea>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <div class="custom-control custom-checkbox mt-2">
+                <input type="checkbox" class="custom-control-input" id="rentCheck"
+                  [(ngModel)]="currentProduct.availableForRent" name="availableForRent">
+                <label class="custom-control-label" for="rentCheck">Available for Rent</label>
+              </div>
+              <div *ngIf="currentProduct.availableForRent" class="mt-2">
+                <label class="form-label font-weight-bold text-sm">Daily Rate ($)</label>
+                <input type="number" class="form-control" [(ngModel)]="currentProduct.pricePerDay" name="pricePerDay">
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="custom-control custom-checkbox mt-2">
+                <input type="checkbox" class="custom-control-input" id="saleCheck"
+                  [(ngModel)]="currentProduct.availableForSale" name="availableForSale">
+                <label class="custom-control-label" for="saleCheck">Available for Sale</label>
+              </div>
+              <div *ngIf="currentProduct.availableForSale" class="mt-2">
+                <label class="form-label font-weight-bold text-sm">Purchase Price ($)</label>
+                <input type="number" class="form-control" [(ngModel)]="currentProduct.purchasePrice"
+                  name="purchasePrice">
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label font-weight-bold">Condition</label>
+              <select class="form-control" [(ngModel)]="currentProduct.condition" name="condition">
+                <option value="">Select Condition</option>
+                <option value="NEW">New</option>
+                <option value="EXCELLENT">Excellent</option>
+                <option value="GOOD">Good</option>
+                <option value="FAIR">Fair</option>
+              </select>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label font-weight-bold">Weight (kg)</label>
+              <input type="number" class="form-control" [(ngModel)]="currentProduct.weight" name="weight">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label font-weight-bold">Initial Stock</label>
+              <input type="number" class="form-control" [(ngModel)]="currentProduct.stock" name="stock" required>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label font-weight-bold">Specifications</label>
+              <input type="text" class="form-control" [(ngModel)]="currentProduct.specifications" name="specifications"
+                placeholder="e.g. Dimensions, Material...">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label font-weight-bold">Image URL</label>
+              <input type="text" class="form-control" [(ngModel)]="currentProduct.imageUrl" name="imageUrl">
+            </div>
+          </div>
+
+          <div class="form-group mb-0">
+              <label class="small text-muted font-weight-bold">Warehouse (optional)</label>
+              <select class="form-control" [(ngModel)]="currentProduct.warehouseId" name="warehouseId">
+                  <option [ngValue]="undefined">— No warehouse —</option>
+                  <option *ngFor="let w of warehouses" [ngValue]="w.id">{{w.name}} — {{w.city}}</option>
+              </select>
+          </div>
+        </div>
+        <div class="modal-footer bg-light flex-column align-items-stretch p-3">
+            <!-- Inline validation / server error -->
+            <div *ngIf="saveError"
+                class="alert mb-3 py-2 px-3 d-flex align-items-start"
+                style="background:rgba(193,68,14,0.1);color:var(--color-accent-terra);border:1px solid var(--color-accent-terra);border-radius:8px;font-size:13px">
+                <i class="fas fa-exclamation-circle mr-2 mt-1" style="flex-shrink:0"></i>
+                <span>{{saveError}}</span>
+            </div>
+            <div class="d-flex justify-content-end">
+                <button type="button" class="btn btn-secondary rounded-pill px-4 mr-2" (click)="closeModal(); saveError=''">
+                    Cancel
+                </button>
+                <button type="submit" class="btn rounded-pill px-4 font-weight-bold"
+                    style="background:linear-gradient(135deg,var(--color-primary) 0%,var(--color-primary-light) 100%);color:white;border:none"
+                    [disabled]="saveLoading">
+                    <span *ngIf="saveLoading">
+                        <span class="spinner-border spinner-border-sm mr-2"></span>Saving...
+                    </span>
+                    <span *ngIf="!saveLoading">
+                        <i class="fas fa-save mr-2"></i>{{isEditing ? 'Update Gear' : 'Save Gear'}}
+                    </span>
+                </button>
+            </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showWarehouseModal" class="modal-backdrop fade show" (click)="closeWarehouseModal()"></div>
+<div *ngIf="showWarehouseModal" class="modal fade show d-block" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:16px;">
+            <div class="modal-header border-0 px-4 pt-4">
+                <h5 class="font-weight-bold mb-0"><i class="fas fa-warehouse text-warning mr-2"></i>{{ isEditingWarehouse ? 'Edit' : 'Add' }} Warehouse</h5>
+                <button type="button" class="close" (click)="closeWarehouseModal()"><span>&times;</span></button>
+            </div>
+            <div class="modal-body px-4 py-3">
+                <div class="form-group">
+                    <label class="small text-muted">Name *</label>
+                    <input class="form-control" [(ngModel)]="currentWarehouse.name" placeholder="e.g. Main Storage Tunis" required>
+                </div>
+                <div class="form-group">
+                    <label class="small text-muted">Address</label>
+                    <input class="form-control" [(ngModel)]="currentWarehouse.address" placeholder="Street address">
+                </div>
+                <div class="row">
+                    <div class="col-7"><div class="form-group"><label class="small text-muted">City</label><input class="form-control" [(ngModel)]="currentWarehouse.city" placeholder="Tunis"></div></div>
+                    <div class="col-5"><div class="form-group"><label class="small text-muted">Phone</label><input class="form-control" [(ngModel)]="currentWarehouse.phone" placeholder="71 000 000"></div></div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4">
+                <button class="btn btn-light rounded-pill px-4" (click)="closeWarehouseModal()">Cancel</button>
+                <button class="btn btn-warning rounded-pill px-4" (click)="saveWarehouse()" [disabled]="!currentWarehouse.name">
+                    {{ isEditingWarehouse ? 'Update' : 'Create' }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div *ngIf="showAvailabilityModal"
+     class="modal fade show d-block" tabindex="-1"
+     style="background:rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background:#2d5016; color:white;">
+        <h5 class="modal-title">
+          <i class="fas fa-calendar-times mr-2"></i>
+          Manage Availability —
+          {{ selectedEquipmentForAvailability?.name }}
+        </h5>
+        <button type="button" class="close text-white"
+                (click)="closeAvailability()">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Add new blocked period form -->
+        <h6 class="font-weight-bold mb-3">Block a period</h6>
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <label class="small text-muted">Start date</label>
+            <input type="date" class="form-control"
+                   [(ngModel)]="newBlockedPeriod.startDate"
+                   [min]="minBlockDate">
+          </div>
+          <div class="col-md-4">
+            <label class="small text-muted">End date</label>
+            <input type="date" class="form-control"
+                   [(ngModel)]="newBlockedPeriod.endDate"
+                   [min]="newBlockedPeriod.startDate || minBlockDate">
+          </div>
+          <div class="col-md-4">
+            <label class="small text-muted">Reason (optional)</label>
+            <input type="text" class="form-control"
+                   [(ngModel)]="newBlockedPeriod.reason"
+                   placeholder="e.g. Maintenance">
+          </div>
+        </div>
+        <div *ngIf="availabilityError"
+             class="alert alert-danger py-1 small">
+          {{ availabilityError }}
+        </div>
+        <button class="btn btn-success btn-sm mb-4"
+                (click)="addBlockedPeriod()">
+          <i class="fas fa-plus mr-1"></i> Block period
+        </button>
+
+        <!-- Existing blocked periods list -->
+        <h6 class="font-weight-bold mb-2">Blocked periods</h6>
+        <div *ngIf="isLoadingPeriods" class="text-muted small">
+          Loading...
+        </div>
+        <div *ngIf="!isLoadingPeriods && blockedPeriods.length === 0"
+             class="text-muted small">
+          No blocked periods defined.
+        </div>
+        <table *ngIf="blockedPeriods.length > 0"
+               class="table table-sm table-bordered" aria-label="Blocked periods">
+          <thead class="thead-light">
+            <tr>
+              <th>Start</th><th>End</th>
+              <th>Reason</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of blockedPeriods">
+              <td>{{ p.startDate | date }}</td>
+              <td>{{ p.endDate | date }}</td>
+              <td>{{ p.reason }}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-danger" (click)="removeBlockedPeriod(p.id)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <hr class="my-4">
+        <h6 class="font-weight-bold mb-2">
+          <i class="fas fa-user-clock mr-1 text-info"></i>
+          Camper bookings
+        </h6>
+        <div *ngIf="isLoadingPeriods" class="text-muted small">Loading...</div>
+        <div *ngIf="!isLoadingPeriods && bookedPeriods.length === 0"
+             class="text-muted small">
+          No active bookings for this equipment.
+        </div>
+        <table *ngIf="bookedPeriods.length > 0"
+               class="table table-sm table-bordered" aria-label="Booked periods">
+          <thead class="thead-light">
+            <tr>
+              <th>Start date</th>
+              <th>End date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of bookedPeriods">
+              <td>{{ p.startDate }}</td>
+              <td>{{ p.endDate }}</td>
+              <td>
+                <span class="badge badge-info">Booked by camper</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
