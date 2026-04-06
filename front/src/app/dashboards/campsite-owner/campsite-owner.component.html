@@ -115,7 +115,8 @@
         <div class="card">
           <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="card-title font-weight-bold mb-0" i18n>Availability</h5>
-            <button class="btn btn-xs btn-success" (click)="showAvailabilityForm = !showAvailabilityForm" i18n>
+            <button class="btn btn-xs btn-success"
+                    (click)="showAvailabilityForm ? showAvailabilityForm = false : openAvailabilityForm()" i18n>
               {{ showAvailabilityForm ? 'Cancel' : '+ Add Window' }}
             </button>
           </div>

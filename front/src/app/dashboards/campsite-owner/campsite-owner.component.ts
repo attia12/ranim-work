@@ -1,6 +1,7 @@
 // Module: Official Campsite & Booking | Layer: Frontend Component (Smart - Owner Dashboard)
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { CampsiteService } from '../../services/campsite.service';
 import { CampsiteBookingService } from '../../services/campsite-booking.service';
 import { CampsiteApiResponse, CampsiteRequest } from '../../models/campsite.model';
@@ -39,12 +40,20 @@ export class CampsiteOwnerComponent implements OnInit {
     private fb: FormBuilder,
     private campsiteService: CampsiteService,
     private bookingService: CampsiteBookingService,
-    private http: HttpClient
+    private http: HttpClient,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.initForms();
     this.loadMyCampsites();
+    this.route.queryParams.subscribe(params => {
+      if (params['action'] === 'new') {
+        this.openCreateForm();
+      } else if (params['action'] === 'availability') {
+        this.openAvailabilityForm();
+      }
+    });
   }
 
   initForms(): void {
@@ -105,7 +114,21 @@ export class CampsiteOwnerComponent implements OnInit {
 
   openCreateForm(): void {
     this.editingCampsite = null;
-    this.campsiteForm.reset({ type: 'OFFICIAL', capacity: 1, pricePerNight: 0 });
+    this.campsiteForm.reset({
+      name:          'Pine Forest Camp',
+      description:   'A peaceful campsite in the pine forest.',
+      country:       'Tunisia',
+      city:          'Ain Draham',
+      address:       'Route Forestiere km 5',
+      latitude:      36.78,
+      longitude:     8.69,
+      capacity:      20,
+      type:          'OFFICIAL',
+      pricePerNight: 35.00,
+      pictures:      'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800',
+      amenities:     'Toilets,Showers,BBQ,Parking',
+      rules:         'No loud music after 10pm. Fires only in designated areas.'
+    });
     this.showCampsiteForm = true;
   }
 
@@ -143,6 +166,17 @@ export class CampsiteOwnerComponent implements OnInit {
       next: () => { this.campsites = this.campsites.filter(c => c.id !== id); },
       error: (err) => { this.error = err.error?.error || 'Delete failed.'; }
     });
+  }
+
+  openAvailabilityForm(): void {
+    this.availForm.reset({
+      startDate:        '2026-05-01',
+      endDate:          '2026-05-31',
+      numberOfPlaces:   20,
+      weatherCondition: 'Sunny',
+      isBlocked:        false
+    });
+    this.showAvailabilityForm = true;
   }
 
   addAvailability(): void {
