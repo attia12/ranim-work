@@ -13,6 +13,7 @@ import tn.esprit.projetpidev.domain.enums.OutdoorCampsiteStatus;
 import tn.esprit.projetpidev.dto.outdoorcampsite.ModerationRequest;
 import tn.esprit.projetpidev.dto.outdoorcampsite.OutdoorCampsiteRequest;
 import tn.esprit.projetpidev.dto.outdoorcampsite.OutdoorCampsiteResponse;
+import tn.esprit.projetpidev.dto.notification.NotificationPayload;
 import tn.esprit.projetpidev.exception.ResourceNotFoundException;
 import tn.esprit.projetpidev.repositories.OutdoorCampsiteRepository;
 import tn.esprit.projetpidev.repositories.UserRepository;
@@ -31,6 +32,7 @@ public class IOutdoorCampsiteServiceImpl implements IOutdoorCampsiteService {
     private final OutdoorCampsiteRepository outdoorCampsiteRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final WsNotificationService wsNotificationService;
 
     @Override
     public OutdoorCampsiteResponse propose(OutdoorCampsiteRequest request, Long proposerId) {
@@ -91,7 +93,6 @@ public class IOutdoorCampsiteServiceImpl implements IOutdoorCampsiteService {
                 site.setApprovedBy(admin);
                 site.setApprovedAt(LocalDateTime.now());
                 site.setAdminNote(request.getAdminNote());
-                // Notify proposer
                 try {
                     emailService.sendOutdoorCampsiteApprovalEmail(
                             site.getProposedBy().getEmail(),
@@ -103,6 +104,14 @@ public class IOutdoorCampsiteServiceImpl implements IOutdoorCampsiteService {
                 } catch (Exception e) {
                     log.warn("Failed to send outdoor approval email: {}", e.getMessage());
                 }
+                wsNotificationService.sendToUser(
+                        site.getProposedBy().getId(),
+                        NotificationPayload.builder()
+                                .type("OUTDOOR_PROPOSAL_APPROVED")
+                                .message("Your outdoor proposal #" + id + " has been approved.")
+                                .referenceId(id)
+                                .build()
+                );
             }
             case "REJECT" -> {
                 site.setStatus(OutdoorCampsiteStatus.REJECTED);
@@ -118,6 +127,14 @@ public class IOutdoorCampsiteServiceImpl implements IOutdoorCampsiteService {
                 } catch (Exception e) {
                     log.warn("Failed to send outdoor rejection email: {}", e.getMessage());
                 }
+                wsNotificationService.sendToUser(
+                        site.getProposedBy().getId(),
+                        NotificationPayload.builder()
+                                .type("OUTDOOR_PROPOSAL_REJECTED")
+                                .message("Your outdoor proposal #" + id + " has been rejected.")
+                                .referenceId(id)
+                                .build()
+                );
             }
             case "SUSPEND" -> site.setStatus(OutdoorCampsiteStatus.SUSPENDED);
             default -> throw new IllegalArgumentException("Unknown moderation action: " + action);

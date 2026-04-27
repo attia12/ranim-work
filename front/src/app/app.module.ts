@@ -64,6 +64,7 @@ import { AdminOutdoorModerationComponent } from './dashboards/admin-outdoor-mode
 import { OutdoorCampsiteDetailComponent } from './frontoffice/pages/outdoor-campsite-detail/outdoor-campsite-detail.component';
 import { OutdoorBookingComponent } from './frontoffice/pages/outdoor-booking/outdoor-booking.component';
 import { CampsitePaymentComponent } from './frontoffice/pages/campsite-payment/campsite-payment.component';
+import { CampsiteAnalyticsComponent } from './dashboards/campsite-analytics/campsite-analytics.component';
 
 @NgModule({
   declarations: [
@@ -117,7 +118,8 @@ import { CampsitePaymentComponent } from './frontoffice/pages/campsite-payment/c
     AdminOutdoorModerationComponent,
     OutdoorCampsiteDetailComponent,
     OutdoorBookingComponent,
-    CampsitePaymentComponent
+    CampsitePaymentComponent,
+    CampsiteAnalyticsComponent
   ],
   imports: [
     BrowserModule,

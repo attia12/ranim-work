@@ -10,6 +10,7 @@
   },
   "files": [
     "src/main.ts",
+     "src/window-global-fix.ts",
     "src/main.server.ts",
     "server.ts"
   ],

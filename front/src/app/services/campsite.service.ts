@@ -9,6 +9,7 @@ import {
   CampsiteRequest,
   CampsitePage
 } from '../models/campsite.model';
+import { CampsiteStatusHistoryEntry, StatusPreview } from '../models/campsite-status.model';
 
 @Injectable({ providedIn: 'root' })
 export class CampsiteService {
@@ -81,5 +82,26 @@ export class CampsiteService {
   /** ADMIN: activate campsite */
   activate(id: number): Observable<CampsiteApiResponse> {
     return this.http.patch<CampsiteApiResponse>(`${this.apiUrl}/${id}/activate`, {});
+  }
+
+  /** ADMIN/OWNER: get status change history for a campsite */
+  getStatusHistory(id: number): Observable<CampsiteStatusHistoryEntry[]> {
+    return this.http.get<CampsiteStatusHistoryEntry[]>(
+      `${environment.apiUrl}/api/v1/campsite-status/${id}/history`
+    );
+  }
+
+  /** ADMIN: trigger status refresh for a single campsite */
+  refreshStatus(id: number): Observable<{ newStatus: string; reason: string; changed: boolean }> {
+    return this.http.post<{ newStatus: string; reason: string; changed: boolean }>(
+      `${environment.apiUrl}/api/v1/campsite-status/${id}/refresh`, {}
+    );
+  }
+
+  /** Preview what status would be applied without changing it */
+  previewStatus(id: number): Observable<StatusPreview> {
+    return this.http.get<StatusPreview>(
+      `${environment.apiUrl}/api/v1/campsite-status/current/${id}`
+    );
   }
 }

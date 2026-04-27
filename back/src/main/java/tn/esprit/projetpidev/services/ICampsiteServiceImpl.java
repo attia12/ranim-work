@@ -51,6 +51,8 @@ public class ICampsiteServiceImpl implements ICampsiteService {
                 .pictures(request.getPictures())
                 .amenities(request.getAmenities())
                 .rules(request.getRules())
+                .startDate(request.getStartDate())
+                .endDate(request.getEndDate())
                 .status(CampsiteStatus.ACTIVE)
                 .owner(owner)
                 .build();
@@ -83,6 +85,8 @@ public class ICampsiteServiceImpl implements ICampsiteService {
         campsite.setPictures(request.getPictures());
         campsite.setAmenities(request.getAmenities());
         campsite.setRules(request.getRules());
+        campsite.setStartDate(request.getStartDate());
+        campsite.setEndDate(request.getEndDate());
 
         log.info("Campsite updated: id={}", id);
         return mapToResponse(campsiteRepository.save(campsite));
@@ -180,6 +184,10 @@ public class ICampsiteServiceImpl implements ICampsiteService {
         r.setAmenities(splitCsv(c.getAmenities()));
         r.setRules(c.getRules());
         r.setStatus(c.getStatus());
+        r.setStartDate(c.getStartDate());
+        r.setEndDate(c.getEndDate());
+        r.setLastStatusUpdate(c.getLastStatusUpdate());
+        r.setLastStatusReason(c.getLastStatusReason());
         r.setCreatedAt(c.getCreatedAt());
         r.setUpdatedAt(c.getUpdatedAt());
         if (c.getOwner() != null) {

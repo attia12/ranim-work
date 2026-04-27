@@ -6,6 +6,7 @@ import { CampsiteService } from '../../services/campsite.service';
 import { CampsiteBookingService } from '../../services/campsite-booking.service';
 import { CampsiteApiResponse, CampsiteRequest } from '../../models/campsite.model';
 import { CampsiteBookingResponse } from '../../models/campsite-booking.model';
+import { CampsiteStatusHistoryEntry } from '../../models/campsite-status.model';
 import { AvailabilityResponse, AvailabilityRequest } from '../../models/availability.model';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -20,6 +21,7 @@ export class CampsiteOwnerComponent implements OnInit {
   campsites: CampsiteApiResponse[] = [];
   bookings: CampsiteBookingResponse[] = [];
   availabilities: AvailabilityResponse[] = [];
+  statusHistory: CampsiteStatusHistoryEntry[] = [];
   selectedCampsite: CampsiteApiResponse | null = null;
 
   loading = false;
@@ -32,6 +34,7 @@ export class CampsiteOwnerComponent implements OnInit {
 
   error = '';
   successMsg = '';
+  refreshing = false;
 
   today = new Date().toISOString().split('T')[0];
   types = ['OFFICIAL', 'OUTDOOR'];
@@ -70,7 +73,9 @@ export class CampsiteOwnerComponent implements OnInit {
       pricePerNight: [0, [Validators.required, Validators.min(0)]],
       pictures:      [''],
       amenities:     [''],
-      rules:         ['']
+      rules:         [''],
+      startDate:     [null],
+      endDate:       [null]
     });
 
     this.availForm = this.fb.group({
@@ -94,6 +99,46 @@ export class CampsiteOwnerComponent implements OnInit {
     this.selectedCampsite = campsite;
     this.loadBookings(campsite.id);
     this.loadAvailability(campsite.id);
+    this.loadStatusHistory(campsite.id);
+  }
+
+  loadStatusHistory(campsiteId: number): void {
+    this.campsiteService.getStatusHistory(campsiteId).subscribe({
+      next: (data) => this.statusHistory = data,
+      error: () => this.statusHistory = []
+    });
+  }
+
+  refreshStatus(campsiteId: number): void {
+    this.refreshing = true;
+    this.campsiteService.refreshStatus(campsiteId).subscribe({
+      next: (result: any) => {
+        this.refreshing = false;
+        this.successMsg = result.changed
+          ? `Status updated → ${result.newStatus}: ${result.reason}`
+          : `Status unchanged (${result.newStatus}): ${result.reason}`;
+        setTimeout(() => this.successMsg = '', 6000);
+        // reload campsite list + history to show new status
+        this.loadMyCampsites();
+        this.loadStatusHistory(campsiteId);
+      },
+      error: () => {
+        this.refreshing = false;
+        this.error = 'Status refresh failed. Make sure you are an admin or check backend logs.';
+      }
+    });
+  }
+
+  statusBadgeClass(status: string): string {
+    const map: Record<string, string> = {
+      ACTIVE: 'badge-success',
+      FULL: 'badge-warning',
+      PENDING: 'badge-info',
+      SUSPENDED: 'badge-secondary',
+      EXPIRED: 'badge-dark',
+      DELETED: 'badge-danger'
+    };
+    return map[status] || 'badge-light';
   }
 
   loadBookings(campsiteId: number): void {
@@ -137,7 +182,9 @@ export class CampsiteOwnerComponent implements OnInit {
     this.campsiteForm.patchValue({
       ...campsite,
       pictures: campsite.pictures?.join(',') || '',
-      amenities: campsite.amenities?.join(',') || ''
+      amenities: campsite.amenities?.join(',') || '',
+      startDate: campsite.startDate || null,
+      endDate: campsite.endDate || null
     });
     this.showCampsiteForm = true;
   }

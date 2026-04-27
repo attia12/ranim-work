@@ -15,6 +15,7 @@ import tn.esprit.projetpidev.domain.enums.OutdoorCampsiteStatus;
 import tn.esprit.projetpidev.domain.enums.Role;
 import tn.esprit.projetpidev.dto.outdoorbooking.OutdoorBookingRequest;
 import tn.esprit.projetpidev.dto.outdoorbooking.OutdoorBookingResponse;
+import tn.esprit.projetpidev.dto.notification.NotificationPayload;
 import tn.esprit.projetpidev.exception.ResourceNotFoundException;
 import tn.esprit.projetpidev.repositories.OutdoorBookingRepository;
 import tn.esprit.projetpidev.repositories.OutdoorCampsiteRepository;
@@ -29,6 +30,7 @@ public class IOutdoorBookingServiceImpl implements IOutdoorBookingService {
     private final OutdoorBookingRepository bookingRepository;
     private final OutdoorCampsiteRepository siteRepository;
     private final UserRepository userRepository;
+    private final WsNotificationService wsNotificationService;
 
     @Override
     public OutdoorBookingResponse create(OutdoorBookingRequest request, Long camperId) {
@@ -98,7 +100,17 @@ public class IOutdoorBookingServiceImpl implements IOutdoorBookingService {
 
         booking.setStatus(OutdoorBookingStatus.CANCELLED);
         log.info("OutdoorBooking cancelled: id={}", id);
-        return mapToResponse(bookingRepository.save(booking));
+        OutdoorBookingResponse response = mapToResponse(bookingRepository.save(booking));
+
+        wsNotificationService.sendToUser(
+                booking.getCamper().getId(),
+                NotificationPayload.builder()
+                        .type("OUTDOOR_BOOKING_CANCELLED")
+                        .message("Your outdoor booking #" + id + " has been cancelled.")
+                        .referenceId(id)
+                        .build()
+        );
+        return response;
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────

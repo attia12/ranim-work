@@ -49,6 +49,7 @@ import { OutdoorTripsComponent } from './frontoffice/pages/outdoor-trips/outdoor
 import { ProposeOutdoorComponent } from './frontoffice/pages/propose-outdoor/propose-outdoor.component';
 import { MyProposalsComponent } from './frontoffice/pages/my-proposals/my-proposals.component';
 import { AdminOutdoorModerationComponent } from './dashboards/admin-outdoor-moderation/admin-outdoor-moderation.component';
+import { CampsiteAnalyticsComponent } from './dashboards/campsite-analytics/campsite-analytics.component';
 import { OutdoorCampsiteDetailComponent } from './frontoffice/pages/outdoor-campsite-detail/outdoor-campsite-detail.component';
 import { OutdoorBookingComponent } from './frontoffice/pages/outdoor-booking/outdoor-booking.component';
 import { CampsitePaymentComponent } from './frontoffice/pages/campsite-payment/campsite-payment.component';
@@ -131,7 +132,10 @@ const routes: Routes = [
       { path: 'contracts', component: AdminManagementComponent, data: { type: 'contracts' } },
 
       // Module: Outdoor Campsite & Booking (Admin)
-      { path: 'outdoor-moderation', component: AdminOutdoorModerationComponent }
+      { path: 'outdoor-moderation', component: AdminOutdoorModerationComponent },
+
+      // Analytics
+      { path: 'campsite-analytics', component: CampsiteAnalyticsComponent }
     ]
   }
 ];

@@ -6,6 +6,7 @@ import tn.esprit.projetpidev.domain.enums.CampsiteStatus;
 import tn.esprit.projetpidev.domain.enums.CampsiteType;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,6 +30,10 @@ public class CampsiteResponse {
     private CampsiteStatus status;
     private Long ownerId;
     private String ownerName;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private LocalDateTime lastStatusUpdate;
+    private String lastStatusReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

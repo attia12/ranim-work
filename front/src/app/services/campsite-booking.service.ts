@@ -62,7 +62,15 @@ export class CampsiteBookingService {
     return this.http.patch<CampsiteBookingResponse>(`${this.bookingsUrl}/${id}/confirm`, {});
   }
 
-  /** Payment: pay for a booking */
+  /** Stripe: create a PaymentIntent and get clientSecret */
+  createPaymentIntent(bookingId: number, amount: number): Observable<{ clientSecret: string; publishableKey: string; paymentIntentId: string }> {
+    return this.http.post<{ clientSecret: string; publishableKey: string; paymentIntentId: string }>(
+      `${environment.apiUrl}/api/v1/stripe/payment-intent`,
+      { bookingId, amount }
+    );
+  }
+
+  /** Payment: record a completed payment */
   pay(request: CampsitePaymentRequest): Observable<CampsitePaymentResponse> {
     return this.http.post<CampsitePaymentResponse>(this.paymentsUrl, request);
   }

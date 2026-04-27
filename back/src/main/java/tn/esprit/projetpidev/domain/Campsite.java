@@ -12,6 +12,7 @@ import tn.esprit.projetpidev.domain.enums.CampsiteStatus;
 import tn.esprit.projetpidev.domain.enums.CampsiteType;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -75,6 +76,18 @@ public class Campsite {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
     private User owner;
+
+    /** Optional: date from which the campsite is open for bookings */
+    private LocalDate startDate;
+
+    /** Optional: date after which the campsite is considered expired */
+    private LocalDate endDate;
+
+    /** Set by the scheduler when it auto-changes status */
+    private LocalDateTime lastStatusUpdate;
+
+    /** Human-readable reason for the last automated status change */
+    private String lastStatusReason;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

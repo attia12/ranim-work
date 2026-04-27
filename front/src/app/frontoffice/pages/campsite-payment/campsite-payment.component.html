@@ -61,22 +61,8 @@
       </button>
     </div>
 
-    <!-- Card form -->
+    <!-- ── STRIPE CARD FORM ──────────────────────────────────────────── -->
     <div class="card border-0 shadow-sm p-4" *ngIf="selectedMethod === 'CARD'">
-      <div class="form-group">
-        <label class="small font-weight-bold text-muted text-uppercase">Card Number</label>
-        <div class="input-group">
-          <input type="text" class="form-control" placeholder="0000 0000 0000 0000"
-                 maxlength="19" inputmode="numeric"
-                 [value]="cardNumber"
-                 (input)="formatCardNumber($event)">
-          <div class="input-group-append">
-            <span class="input-group-text bg-white border-left-0">
-              <i class="fab" [ngClass]="cardBrandIcon"></i>
-            </span>
-          </div>
-        </div>
-      </div>
 
       <div class="form-group">
         <label class="small font-weight-bold text-muted text-uppercase">Cardholder Name</label>
@@ -84,22 +70,20 @@
                [(ngModel)]="cardName" autocomplete="cc-name">
       </div>
 
-      <div class="form-row">
-        <div class="form-group col-7">
-          <label class="small font-weight-bold text-muted text-uppercase">Expiry</label>
-          <input type="text" class="form-control" placeholder="MM/YY"
-                 maxlength="5" [class.is-invalid]="expiryExpired"
-                 [value]="cardExpiry"
-                 (input)="formatExpiry($event)">
-          <div class="invalid-feedback">Card has expired.</div>
+      <div class="form-group mb-0">
+        <label class="small font-weight-bold text-muted text-uppercase">Card Details</label>
+        <!-- Stripe CardElement mounts here -->
+        <div id="stripe-card-element"
+             style="padding: .55rem .75rem; border: 1px solid #ced4da; border-radius: .25rem; background: #fff; min-height: 42px;">
         </div>
-        <div class="form-group col-5">
-          <label class="small font-weight-bold text-muted text-uppercase">CVV</label>
-          <input type="password" class="form-control" placeholder="•••"
-                 maxlength="4" inputmode="numeric"
-                 [value]="cardCVV"
-                 (input)="sanitizeCVV($event)">
-        </div>
+        <small class="text-muted mt-1 d-block">
+          <i class="fas fa-lock mr-1"></i>Secured by <strong>Stripe</strong>
+        </small>
+      </div>
+
+      <!-- Test card hint -->
+      <div class="alert alert-info small mt-3 mb-0 py-2">
+        <strong>Test card:</strong> 4242 4242 4242 4242 &nbsp;·&nbsp; Any future date &nbsp;·&nbsp; Any 3-digit CVC
       </div>
     </div>
 
@@ -118,7 +102,7 @@
 
     <!-- Pay button -->
     <button class="btn btn-success btn-block btn-lg mt-4 rounded-pill"
-            [disabled]="processing || !isCardValid"
+            [disabled]="processing"
             (click)="pay()">
       <span *ngIf="processing" class="spinner-border spinner-border-sm mr-2"></span>
       <i class="fas fa-lock mr-2" *ngIf="!processing"></i>

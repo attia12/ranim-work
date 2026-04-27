@@ -32,7 +32,8 @@ export class AuthInterceptor implements HttpInterceptor {
         // FIX: If the server rejects the token (invalid signature, expired, etc.),
         // clear the stale token from localStorage and redirect to login.
         // Without this, the app stays stuck with a bad token and all requests fail.
-        if ((error.status === 401 || error.status === 403) && this.authService.getToken()) {
+        if (error.status === 401 && this.authService.getToken()) {
+          // Token is invalid or expired — clear session and redirect to login
           this.authService.logout();
           this.router.navigate(['/login']);
         }

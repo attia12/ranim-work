@@ -23,7 +23,10 @@ public interface CampsiteRepository extends JpaRepository<Campsite, Long> {
 
     @Query("""
             SELECT c FROM Campsite c
-            WHERE c.status = tn.esprit.projetpidev.domain.enums.CampsiteStatus.ACTIVE
+            WHERE c.status IN (
+                tn.esprit.projetpidev.domain.enums.CampsiteStatus.ACTIVE,
+                tn.esprit.projetpidev.domain.enums.CampsiteStatus.FULL
+              )
               AND (:country IS NULL OR LOWER(c.country) LIKE LOWER(CONCAT('%', :country, '%')))
               AND (:city    IS NULL OR LOWER(c.city)    LIKE LOWER(CONCAT('%', :city,    '%')))
               AND (:type    IS NULL OR c.type = :type)
@@ -40,4 +43,10 @@ public interface CampsiteRepository extends JpaRepository<Campsite, Long> {
     );
 
     List<Campsite> findByOwner_Id(Long ownerId);
+
+    /** Used by scheduler: all non-deleted campsites */
+    List<Campsite> findAllByStatusNot(CampsiteStatus status);
+
+    /** Used by scheduler: campsites with specific statuses */
+    List<Campsite> findAllByStatusIn(List<CampsiteStatus> statuses);
 }

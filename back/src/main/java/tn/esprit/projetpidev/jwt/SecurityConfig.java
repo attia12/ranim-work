@@ -68,6 +68,9 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
 
+                        // ── WebSocket ─────────────────────────────────────────────────────
+                        .requestMatchers("/ws/**").permitAll()
+
                         // ── Swagger / OpenAPI ─────────────────────────────────────────────
                         .requestMatchers(
                                 "/swagger-ui.html",
@@ -232,6 +235,12 @@ public class SecurityConfig {
 
                         // ── Campsite Payments ─────────────────────────────────────────────
                         .requestMatchers("/api/v1/campsite-payments/**").authenticated()
+
+                        // ── Stripe ────────────────────────────────────────────────────────
+                        .requestMatchers("/api/v1/stripe/**").authenticated()
+
+                        // ── Analytics ─────────────────────────────────────────────────────
+                        .requestMatchers("/api/v1/analytics/**").hasRole("ADMIN")
 
                         // ── Outdoor Campsites (Module 2) ──────────────────────────────────
                         .requestMatchers(HttpMethod.GET,    "/api/v1/outdoor-campsites", "/api/v1/outdoor-campsites/**").permitAll()

@@ -2,7 +2,7 @@
 // NOTE: Extended to support full API fields; legacy mock fields kept for backwards compat.
 
 export type CampsiteType = 'OFFICIAL' | 'OUTDOOR';
-export type CampsiteStatus = 'ACTIVE' | 'SUSPENDED' | 'DELETED';
+export type CampsiteStatus = 'PENDING' | 'ACTIVE' | 'FULL' | 'SUSPENDED' | 'EXPIRED' | 'DELETED';
 
 export interface Campsite {
   // Legacy fields (kept for mock compatibility)
@@ -53,6 +53,10 @@ export interface CampsiteApiResponse {
   status: CampsiteStatus;
   ownerId?: number;
   ownerName?: string;
+  startDate?: string;
+  endDate?: string;
+  lastStatusUpdate?: string;
+  lastStatusReason?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -71,6 +75,8 @@ export interface CampsiteRequest {
   pictures?: string;
   amenities?: string;
   rules?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface CampsitePage {

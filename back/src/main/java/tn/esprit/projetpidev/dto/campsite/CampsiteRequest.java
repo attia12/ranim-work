@@ -9,6 +9,7 @@ import lombok.Data;
 import tn.esprit.projetpidev.domain.enums.CampsiteType;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Data
 public class CampsiteRequest {
@@ -44,4 +45,10 @@ public class CampsiteRequest {
     private String amenities;
 
     private String rules;
+
+    /** Optional: date from which the campsite opens (null = no restriction) */
+    private LocalDate startDate;
+
+    /** Optional: date after which the campsite expires (null = no restriction) */
+    private LocalDate endDate;
 }

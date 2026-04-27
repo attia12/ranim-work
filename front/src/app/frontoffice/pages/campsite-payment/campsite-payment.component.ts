@@ -1,7 +1,8 @@
 // Module: Official Campsite & Booking | Layer: Frontend Component (Smart)
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CampsiteBookingService } from '../../../services/campsite-booking.service';
+import { loadStripe, Stripe, StripeCardElement } from '@stripe/stripe-js';
 import confetti from 'canvas-confetti';
 
 @Component({
@@ -9,24 +10,21 @@ import confetti from 'canvas-confetti';
   templateUrl: './campsite-payment.component.html',
   styleUrl: './campsite-payment.component.css'
 })
-export class CampsitePaymentComponent implements OnInit, OnDestroy {
+export class CampsitePaymentComponent implements OnInit, AfterViewInit, OnDestroy {
 
   bookingId: number = 0;
   amount: number = 0;
 
   selectedMethod: 'CARD' | 'PAYPAL' | 'BANK_TRANSFER' = 'CARD';
 
-  cardNumber = '';
   cardName = '';
-  cardExpiry = '';
-  cardCVV = '';
-  cardBrandIcon = 'fa-credit-card';
-  expiryExpired = false;
 
   processing = false;
   paid = false;
   error = '';
 
+  private stripe: Stripe | null = null;
+  private cardElement: StripeCardElement | null = null;
   private confettiInterval: any;
 
   constructor(
@@ -40,63 +38,125 @@ export class CampsitePaymentComponent implements OnInit, OnDestroy {
     this.amount    = Number(this.route.snapshot.queryParamMap.get('amount'));
   }
 
+  ngAfterViewInit(): void {
+    if (this.selectedMethod === 'CARD') {
+      this.mountCardElement();
+    }
+  }
+
   ngOnDestroy(): void {
     clearInterval(this.confettiInterval);
+    if (this.cardElement) {
+      this.cardElement.destroy();
+      this.cardElement = null;
+    }
   }
 
   selectMethod(method: 'CARD' | 'PAYPAL' | 'BANK_TRANSFER'): void {
     this.selectedMethod = method;
     this.error = '';
-  }
-
-  formatCardNumber(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const raw = input.value.replace(/\D/g, '').slice(0, 16);
-    this.cardNumber = raw.replace(/(.{4})/g, '$1 ').trim();
-    input.value = this.cardNumber;
-    if (/^4/.test(raw))               this.cardBrandIcon = 'fa-cc-visa';
-    else if (/^5[1-5]/.test(raw))     this.cardBrandIcon = 'fa-cc-mastercard';
-    else                              this.cardBrandIcon = 'fa-credit-card';
-  }
-
-  formatExpiry(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const raw = input.value.replace(/\D/g, '').slice(0, 4);
-    this.cardExpiry = raw.length >= 3 ? raw.slice(0, 2) + '/' + raw.slice(2) : raw;
-    input.value = this.cardExpiry;
-    const match = this.cardExpiry.match(/^(\d{2})\/(\d{2})$/);
-    if (match) {
-      const month = parseInt(match[1], 10);
-      const year  = 2000 + parseInt(match[2], 10);
-      this.expiryExpired = new Date(year, month, 1) <= new Date();
+    if (method === 'CARD') {
+      setTimeout(() => this.mountCardElement(), 0);
     } else {
-      this.expiryExpired = false;
+      if (this.cardElement) {
+        this.cardElement.destroy();
+        this.cardElement = null;
+      }
     }
   }
 
-  sanitizeCVV(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    input.value = input.value.replace(/\D/g, '');
-    this.cardCVV = input.value;
-  }
+  private mountCardElement(): void {
+    if (this.cardElement) return; // already mounted
 
-  get isCardValid(): boolean {
-    if (this.selectedMethod !== 'CARD') return true;
-    return this.cardNumber.replace(/\s/g, '').length === 16
-      && this.cardName.trim().length >= 3
-      && /^\d{2}\/\d{2}$/.test(this.cardExpiry)
-      && !this.expiryExpired
-      && this.cardCVV.length >= 3;
+    // Get publishable key from backend, then mount
+    this.bookingService.createPaymentIntent(this.bookingId, this.amount).subscribe({
+      next: async (data) => {
+        this.stripe = await loadStripe(data.publishableKey);
+        if (!this.stripe) { this.error = 'Stripe failed to load.'; return; }
+
+        const elements = this.stripe.elements();
+        this.cardElement = elements.create('card', {
+          style: {
+            base: {
+              fontSize: '16px',
+              color: '#32325d',
+              fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+              '::placeholder': { color: '#aab7c4' }
+            },
+            invalid: { color: '#dc3545' }
+          }
+        });
+        const container = document.getElementById('stripe-card-element');
+        if (container) {
+          this.cardElement.mount(container);
+        }
+
+        // Store clientSecret for later use during pay()
+        (this as any)._clientSecret = data.clientSecret;
+        (this as any)._paymentIntentId = data.paymentIntentId;
+      },
+      error: () => {
+        this.error = 'Could not initialize payment. Please try again.';
+      }
+    });
   }
 
   pay(): void {
-    if (!this.isCardValid) {
-      this.error = 'Please fill in all card details correctly.';
+    if (this.selectedMethod === 'CARD') {
+      this.payWithStripe();
+    } else {
+      this.payDirect();
+    }
+  }
+
+  private payWithStripe(): void {
+    if (!this.stripe || !this.cardElement) {
+      this.error = 'Card not ready yet. Please wait a moment.';
       return;
     }
+    const clientSecret = (this as any)._clientSecret;
+    if (!clientSecret) {
+      this.error = 'Payment session expired. Please refresh.';
+      return;
+    }
+
     this.processing = true;
     this.error = '';
 
+    this.stripe.confirmCardPayment(clientSecret, {
+      payment_method: {
+        card: this.cardElement,
+        billing_details: { name: this.cardName || 'Cardholder' }
+      }
+    }).then(result => {
+      if (result.error) {
+        this.processing = false;
+        this.error = result.error.message || 'Card payment failed.';
+      } else if (result.paymentIntent?.status === 'succeeded') {
+        // Record the payment in our backend
+        this.bookingService.pay({
+          bookingId:     this.bookingId,
+          amount:        this.amount,
+          method:        'CARD',
+          transactionId: result.paymentIntent.id
+        }).subscribe({
+          next: () => {
+            this.processing = false;
+            this.paid = true;
+            this.launchConfetti();
+          },
+          error: (err) => {
+            this.processing = false;
+            this.error = err.error?.message || 'Payment succeeded but booking confirmation failed. Contact support.';
+          }
+        });
+      }
+    });
+  }
+
+  private payDirect(): void {
+    this.processing = true;
+    this.error = '';
     this.bookingService.pay({
       bookingId:     this.bookingId,
       amount:        this.amount,

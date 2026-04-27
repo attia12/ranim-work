@@ -42,7 +42,8 @@ export class SidebarComponent implements OnInit {
         { title: 'Trips', icon: 'fa-compass', link: '/admin/guide', roles: [UserRole.ADMIN] },
         { title: 'Events', icon: 'fa-calendar-alt', link: '/admin/events', roles: [UserRole.ADMIN] },
         { title: 'Outdoor Moderation', icon: 'fa-mountain', link: '/admin/outdoor-moderation', roles: [UserRole.ADMIN] },
-        { title: 'Booking Management', icon: 'fa-calendar-check', link: '/admin/campsite-manager', roles: [UserRole.ADMIN] }
+        { title: 'Booking Management', icon: 'fa-calendar-check', link: '/admin/campsite-manager', roles: [UserRole.ADMIN] },
+        { title: 'Analytics', icon: 'fa-chart-bar', link: '/admin/campsite-analytics', roles: [UserRole.ADMIN] }
       ]
     },
     { title: 'My Gear', icon: 'fa-shopping-bag', link: '/admin/gear-provider', roles: [UserRole.GEAR_PROVIDER] },

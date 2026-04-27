@@ -15,6 +15,7 @@ import tn.esprit.projetpidev.domain.enums.Role;
 import tn.esprit.projetpidev.dto.campsitebooking.CampsiteBookingRequest;
 import tn.esprit.projetpidev.dto.campsitebooking.CampsiteBookingResponse;
 import tn.esprit.projetpidev.exception.ResourceNotFoundException;
+import tn.esprit.projetpidev.dto.notification.NotificationPayload;
 import tn.esprit.projetpidev.repositories.CampsiteBookingRepository;
 import tn.esprit.projetpidev.repositories.CampsiteRepository;
 import tn.esprit.projetpidev.repositories.UserRepository;
@@ -33,6 +34,7 @@ public class ICampsiteBookingServiceImpl implements ICampsiteBookingService {
     private final CampsiteRepository campsiteRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final WsNotificationService wsNotificationService;
 
     @Override
     public CampsiteBookingResponse create(CampsiteBookingRequest request, Long camperId) {
@@ -128,7 +130,17 @@ public class ICampsiteBookingServiceImpl implements ICampsiteBookingService {
 
         // TODO: trigger refund logic via payment stub service
         log.info("CampsiteBooking cancelled: id={}, reason={}", id, reason);
-        return mapToResponse(bookingRepository.save(booking));
+        CampsiteBookingResponse response = mapToResponse(bookingRepository.save(booking));
+
+        wsNotificationService.sendToUser(
+                booking.getCamper().getId(),
+                NotificationPayload.builder()
+                        .type("CAMPSITE_BOOKING_CANCELLED")
+                        .message("Your campsite booking #" + id + " has been cancelled.")
+                        .referenceId(id)
+                        .build()
+        );
+        return response;
     }
 
     @Override
@@ -150,6 +162,15 @@ public class ICampsiteBookingServiceImpl implements ICampsiteBookingService {
         } catch (Exception e) {
             log.warn("Failed to send booking confirmation email for booking {}: {}", id, e.getMessage());
         }
+
+        wsNotificationService.sendToUser(
+                booking.getCamper().getId(),
+                NotificationPayload.builder()
+                        .type("CAMPSITE_BOOKING_CONFIRMED")
+                        .message("Your campsite booking #" + id + " has been confirmed.")
+                        .referenceId(id)
+                        .build()
+        );
 
         log.info("CampsiteBooking confirmed: id={}", id);
         return mapToResponse(saved);
