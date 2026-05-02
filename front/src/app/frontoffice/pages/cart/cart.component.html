@@ -45,10 +45,10 @@
                                     </td>
                                     <td class="py-3 align-middle small">
                                         <span *ngIf="item.transactionType === 'BUY'">
-                                            {{ (item.purchasePrice || item.price) | currency:'TND ' }}
+                                            {{ (item.purchasePrice || item.price) | currency:'EUR' }}
                                         </span>
                                         <span *ngIf="item.transactionType === 'RENT'" class="text-info">
-                                            {{ item.pricePerDay | currency:'TND ' }}/d × {{ item.rentalDays }}d
+                                            {{ item.pricePerDay | currency:'EUR' }}/d × {{ item.rentalDays }}d
                                         </span>
                                     </td>
                                     <td class="py-3 align-middle">
@@ -66,7 +66,7 @@
                                         </div>
                                     </td>
                                     <td class="py-3 align-middle font-weight-bold text-success small">
-                                        {{ getItemPrice(item) * item.quantity | currency:'TND ' }}
+                                        {{ getItemPrice(item) * item.quantity | currency:'EUR' }}
                                     </td>
                                     <td class="py-3 align-middle text-right pr-4">
                                         <button class="btn btn-link text-danger p-0" (click)="removeItem(item)">
@@ -92,7 +92,7 @@
                     <h5 class="font-weight-bold mb-4">Order Summary</h5>
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Subtotal</span>
-                        <span class="font-weight-bold">{{ total | currency:'TND ' }}</span>
+                        <span class="font-weight-bold">{{ total | currency:'EUR' }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Shipping</span>
@@ -114,17 +114,17 @@
                         </div>
                       </div>
                       <small class="text-danger" *ngIf="couponError">{{ couponError }}</small>
-                      <small class="text-success" *ngIf="couponApplied">Coupon applied! -{{ couponDiscount | currency:'TND ' }}</small>
+                      <small class="text-success" *ngIf="couponApplied">Coupon applied! -{{ couponDiscount | currency:'EUR' }}</small>
                     </div>
                     <!-- Coupon discount line -->
                     <div class="d-flex justify-content-between mb-1" *ngIf="couponApplied">
                       <span class="text-success">Discount</span>
-                      <span class="text-success">-{{ couponDiscount | currency:'TND ' }}</span>
+                      <span class="text-success">-{{ couponDiscount | currency:'EUR' }}</span>
                     </div>
 
                     <div class="d-flex justify-content-between mb-4 h5">
                         <span class="font-weight-bold">Total</span>
-                        <span class="font-weight-bold text-success">{{ (total - couponDiscount) | currency:'TND ' }}</span>
+                        <span class="font-weight-bold text-success">{{ (total - couponDiscount) | currency:'EUR' }}</span>
                     </div>
 
                     <!-- Opens modal, does NOT submit yet -->
@@ -192,7 +192,7 @@
                     </div>
                 </div>
                 <span class="font-weight-bold text-success small">
-                    {{ getItemPrice(item) * item.quantity | currency:'TND ' }}
+                    {{ getItemPrice(item) * item.quantity | currency:'EUR' }}
                 </span>
             </div>
 
@@ -206,7 +206,7 @@
             </small>
             <div class="d-flex justify-content-between align-items-center py-2 border-top mt-1">
                 <span class="h5 font-weight-bold mb-0">Total</span>
-                <span class="h5 font-weight-bold text-success mb-0">{{ (total - couponDiscount) | currency:'TND ' }}</span>
+                <span class="h5 font-weight-bold text-success mb-0">{{ (total - couponDiscount) | currency:'EUR' }}</span>
             </div>
 
             <div *ngIf="checkoutError" class="alert alert-danger mt-3 small py-2">

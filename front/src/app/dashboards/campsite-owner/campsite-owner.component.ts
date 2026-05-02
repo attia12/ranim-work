@@ -157,6 +157,29 @@ export class CampsiteOwnerComponent implements OnInit {
     });
   }
 
+  private initPlacesAutocomplete(): void {
+    const input = document.getElementById('location-autocomplete') as HTMLInputElement;
+    if (!input || !(window as any).google?.maps?.places) return;
+    const ac = new (window as any).google.maps.places.Autocomplete(input, { types: ['geocode'] });
+    ac.addListener('place_changed', () => {
+      const place = ac.getPlace();
+      if (!place.geometry) return;
+      let city = '';
+      let country = '';
+      for (const comp of (place.address_components || [])) {
+        if (comp.types.includes('locality') || comp.types.includes('postal_town')) city = comp.long_name;
+        if (comp.types.includes('country')) country = comp.long_name;
+      }
+      this.campsiteForm.patchValue({
+        city,
+        country,
+        address: place.formatted_address || '',
+        latitude: place.geometry.location.lat(),
+        longitude: place.geometry.location.lng()
+      });
+    });
+  }
+
   openCreateForm(): void {
     this.editingCampsite = null;
     this.campsiteForm.reset({
@@ -175,6 +198,7 @@ export class CampsiteOwnerComponent implements OnInit {
       rules:         'No loud music after 10pm. Fires only in designated areas.'
     });
     this.showCampsiteForm = true;
+    setTimeout(() => this.initPlacesAutocomplete(), 100);
   }
 
   openEditForm(campsite: CampsiteApiResponse): void {
@@ -187,6 +211,7 @@ export class CampsiteOwnerComponent implements OnInit {
       endDate: campsite.endDate || null
     });
     this.showCampsiteForm = true;
+    setTimeout(() => this.initPlacesAutocomplete(), 100);
   }
 
   saveCampsite(): void {

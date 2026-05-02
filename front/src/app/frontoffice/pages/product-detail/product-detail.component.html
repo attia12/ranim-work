@@ -84,13 +84,13 @@
             <div class="mb-3">
               <ng-container *ngIf="selectedMode === 'BUY' && product.purchasePrice">
                 <h3 class="fw-bold text-success mb-0">
-                  {{ product.purchasePrice | currency:'TND ' }}
+                  {{ product.purchasePrice | currency:'EUR' }}
                 </h3>
                 <small class="text-muted">One-time purchase</small>
               </ng-container>
               <ng-container *ngIf="selectedMode === 'RENT' && product.pricePerDay">
                 <h3 class="fw-bold text-info mb-0">
-                  {{ product.pricePerDay | currency:'TND ' }}
+                  {{ product.pricePerDay | currency:'EUR' }}
                   <small class="h6 fw-normal text-muted">/ day</small>
                 </h3>
               </ng-container>
@@ -145,7 +145,7 @@
             <!-- Buy total price -->
             <div *ngIf="selectedMode === 'BUY'" class="mb-3">
               <span class="text-muted small">Total: </span>
-              <strong class="text-success">{{ totalPrice | currency:'TND ' }}</strong>
+              <strong class="text-success">{{ totalPrice | currency:'EUR' }}</strong>
             </div>
 
             <!-- Cart success alert -->

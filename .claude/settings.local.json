@@ -27,7 +27,8 @@
       "Bash(find /c/Users/ops/Documents/ranim/front/src/app -type d \\\\\\(-name campsites -o -name campsite* -o -name outdoor* -o -name my-bookings \\\\\\))",
       "Bash(find /c/Users/ops/Documents/ranim/front/src/app/services -type f -name *campsite* -o -name *outdoor* -o -name *booking*)",
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtb2hhbWVkeWFzc2luZWF0dGlhLmRldkBnbWFpbC5jb20iLCJyb2xlIjoiUk9MRV9DT01QRVJTIiwiaWF0IjoxNzc3MzAwNjc4LCJleHAiOjE3NzczODcwNzh9.tUbn06uUo56CgVOBvOWbgxPoZVVbOnsI7jYgUvAYC9s\" curl -s http://localhost:9099/auth/me -H \"Authorization: Bearer $TOKEN\")",
-      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtb2hhbWVkeWFzc2luZWF0dGlhLmRldkBnbWFpbC5jb20iLCJyb2xlIjoiUk9MRV9DT01QRVJTIiwiaWF0IjoxNzc3MzAwNjc4LCJleHAiOjE3NzczODcwNzh9.tUbn06uUo56CgVOBvOWbgxPoZVVbOnsI7jYgUvAYC9s\" curl -s \"http://localhost:9099/api/v1/campsites?page=0&size=10\" -H \"Authorization: Bearer $TOKEN\")"
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJtb2hhbWVkeWFzc2luZWF0dGlhLmRldkBnbWFpbC5jb20iLCJyb2xlIjoiUk9MRV9DT01QRVJTIiwiaWF0IjoxNzc3MzAwNjc4LCJleHAiOjE3NzczODcwNzh9.tUbn06uUo56CgVOBvOWbgxPoZVVbOnsI7jYgUvAYC9s\" curl -s \"http://localhost:9099/api/v1/campsites?page=0&size=10\" -H \"Authorization: Bearer $TOKEN\")",
+      "WebFetch(domain:api.open-meteo.com)"
     ]
   }
 }

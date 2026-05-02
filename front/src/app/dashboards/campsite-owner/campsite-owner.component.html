@@ -59,7 +59,7 @@
               <td>{{ c.name }}</td>
               <td>{{ c.city }}, {{ c.country }}</td>
               <td><span class="badge" [class.badge-primary]="c.type==='OFFICIAL'" [class.badge-success]="c.type==='OUTDOOR'">{{ c.type }}</span></td>
-              <td>{{ c.pricePerNight | currency:'TND':'symbol':'1.0-2' }}</td>
+              <td>{{ c.pricePerNight | currency:'EUR':'symbol':'1.0-2' }}</td>
               <td><span class="badge" [ngClass]="statusBadgeClass(c.status)">{{ c.status }}</span></td>
               <td>
                 <button class="btn btn-info btn-sm mr-1" (click)="selectCampsite(c)" aria-label="Manage bookings" i18n>Manage</button>
@@ -95,7 +95,7 @@
                   <td>{{ b.checkInDate }}</td>
                   <td>{{ b.checkOutDate }}</td>
                   <td>{{ b.numberOfGuests }}</td>
-                  <td>{{ b.totalPrice | currency:'TND':'symbol':'1.0-2' }}</td>
+                  <td>{{ b.totalPrice | currency:'EUR':'symbol':'1.0-2' }}</td>
                   <td><span class="badge" [ngClass]="badgeClass(b.status)">{{ b.status }}</span></td>
                   <td>
                     <button class="btn btn-xs btn-success" *ngIf="b.status==='PENDING'" (click)="confirmBooking(b.id)" aria-label="Confirm booking" i18n>Confirm</button>
@@ -224,6 +224,17 @@
           <label i18n>Name *</label>
           <input class="form-control" formControlName="name" [class.is-invalid]="campsiteForm.get('name')?.invalid && campsiteForm.get('name')?.touched">
           <div class="invalid-feedback" i18n>Name is required.</div>
+        </div>
+        <div class="col-12 form-group">
+          <label i18n>Search Location</label>
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <span class="input-group-text"><i class="fas fa-map-marker-alt text-success"></i></span>
+            </div>
+            <input id="location-autocomplete" class="form-control"
+                   placeholder="Type a city, address or place…" autocomplete="off">
+          </div>
+          <small class="text-muted">Selecting a place will auto-fill city, country, address and coordinates.</small>
         </div>
         <div class="col-6 form-group"><label i18n>Country *</label><input class="form-control" formControlName="country"></div>
         <div class="col-6 form-group"><label i18n>City *</label><input class="form-control" formControlName="city"></div>

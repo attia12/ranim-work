@@ -158,6 +158,6 @@ export class PaymentComponent implements OnInit {
   }
 
   formatAmount(amount: number): string {
-    return 'TND ' + (amount || 0).toFixed(3);
+    return '€' + (amount || 0).toFixed(2);
   }
 }

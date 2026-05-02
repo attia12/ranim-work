@@ -36,8 +36,8 @@
         <!-- Price summary -->
         <div class="card bg-light border-0 p-3 mb-4" *ngIf="nights > 0">
           <div class="d-flex justify-content-between">
-            <span class="text-muted" i18n>{{ nights }} night(s) × {{ campsite?.pricePerNight | currency:'TND':'symbol':'1.0-2' }}</span>
-            <strong class="text-success">{{ totalPrice | currency:'TND':'symbol':'1.0-2' }}</strong>
+            <span class="text-muted" i18n>{{ nights }} night(s) × {{ campsite?.pricePerNight | currency:'EUR':'symbol':'1.0-2' }}</span>
+            <strong class="text-success">{{ totalPrice | currency:'EUR':'symbol':'1.0-2' }}</strong>
           </div>
         </div>
 
