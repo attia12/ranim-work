@@ -13,6 +13,7 @@ import { OutdoorBookingResponse, OutdoorBookingPage } from '../../../models/outd
 export class MyBookingsComponent implements OnInit {
 
   officialBookings: CampsiteBookingResponse[] = [];
+  outdoorCampsiteBookings: CampsiteBookingResponse[] = [];
   outdoorBookings: OutdoorBookingResponse[] = [];
   loading = false;
   cancellingId: number | null = null;
@@ -34,7 +35,8 @@ export class MyBookingsComponent implements OnInit {
     this.loading = true;
     this.bookingService.getMyBookings(0, 50).subscribe({
       next: (data: BookingPage) => {
-        this.officialBookings = data.content;
+        this.officialBookings = data.content.filter(b => b.campsiteType !== 'OUTDOOR');
+        this.outdoorCampsiteBookings = data.content.filter(b => b.campsiteType === 'OUTDOOR');
         this.loading = false;
       },
       error: () => { this.loading = false; }
@@ -71,6 +73,15 @@ export class MyBookingsComponent implements OnInit {
       next: (updated) => {
         const idx = this.outdoorBookings.findIndex(b => b.id === updated.id);
         if (idx >= 0) this.outdoorBookings[idx] = updated;
+      }
+    });
+  }
+
+  cancelOutdoorCampsite(id: number): void {
+    this.bookingService.cancel(id, '').subscribe({
+      next: (updated) => {
+        const idx = this.outdoorCampsiteBookings.findIndex(b => b.id === updated.id);
+        if (idx >= 0) this.outdoorCampsiteBookings[idx] = updated;
       }
     });
   }

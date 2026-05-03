@@ -39,20 +39,24 @@ public class CampsiteStatusEvaluator {
             return new Evaluation(CampsiteStatus.EXPIRED, "End date " + campsite.getEndDate() + " has passed.");
         }
 
-        // 2. Check start date (not yet open)
-        if (campsite.getStartDate() != null && campsite.getStartDate().isAfter(today)) {
-            return new Evaluation(CampsiteStatus.PENDING, "Start date " + campsite.getStartDate() + " not reached yet.");
-        }
+        // 2. Check weather forecast across the campsite's own date range
+        //    startDate → endDate. Fallback: today if no startDate, today+16 if no endDate (API max).
+        LocalDate forecastStart = (campsite.getStartDate() != null) ? campsite.getStartDate() : today;
+        LocalDate forecastEnd   = (campsite.getEndDate()   != null) ? campsite.getEndDate()   : today.plusDays(16);
+        // Open-Meteo free tier supports up to 16 days ahead; clamp if range exceeds that
+        if (forecastEnd.isAfter(today.plusDays(16))) forecastEnd = today.plusDays(16);
+        // If the start is in the past, clamp to today (can't fetch past forecasts)
+        if (forecastStart.isBefore(today)) forecastStart = today;
 
-        // 3. Check weather
-        Optional<WeatherData> weather = weatherService.getCurrentWeather(campsite.getLatitude(), campsite.getLongitude());
-        if (weather.isPresent() && weather.get().isSevere()) {
-            WeatherData.CurrentWeather cw = weather.get().getCurrentWeather();
+        Optional<WeatherData> forecast = weatherService.getForecastWeather(
+                campsite.getLatitude(), campsite.getLongitude(), forecastStart, forecastEnd);
+        if (forecast.isPresent() && forecast.get().isForecastSevere()) {
+            String detail = forecast.get().getFirstSevereDay();
             return new Evaluation(CampsiteStatus.SUSPENDED,
-                    "Severe weather: code=" + cw.getWeathercode() + ", wind=" + cw.getWindspeed() + " km/h.");
+                    "Severe weather forecast (" + forecastStart + " → " + forecastEnd + "): " + detail);
         }
 
-        // 4. Check capacity (fully booked today)
+        // 3. Check capacity (fully booked today)
         if (campsite.getCapacity() != null && campsite.getCapacity() > 0) {
             int guestsToday = bookingRepository.sumGuestsOverlapping(
                     campsite.getId(), today, today.plusDays(1));

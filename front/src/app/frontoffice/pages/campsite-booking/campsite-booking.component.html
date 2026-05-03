@@ -33,19 +33,24 @@
           <div class="invalid-feedback" i18n>At least 1 guest required.</div>
         </div>
 
-        <!-- Price summary -->
-        <div class="card bg-light border-0 p-3 mb-4" *ngIf="nights > 0">
-          <div class="d-flex justify-content-between">
-            <span class="text-muted" i18n>{{ nights }} night(s) × {{ campsite?.pricePerNight | currency:'EUR':'symbol':'1.0-2' }}</span>
+        <!-- Availability error -->
+        <div class="alert alert-warning" *ngIf="availabilityError" role="alert">
+          <i class="fas fa-exclamation-triangle mr-2"></i>{{ availabilityError }}
+        </div>
+
+        <!-- Price summary (OFFICIAL only) -->
+        <div class="card bg-light border-0 p-3 mb-4" *ngIf="nights > 0 && campsite?.type !== 'OUTDOOR'">
+          <div class="d-flex justify-content-between mb-1">
+            <span class="text-muted">{{ nights }} night(s) × {{ campsite?.pricePerNight | currency:'EUR':'symbol':'1.0-2' }} × {{ guests }} guest(s)</span>
             <strong class="text-success">{{ totalPrice | currency:'EUR':'symbol':'1.0-2' }}</strong>
           </div>
         </div>
 
         <button type="submit" class="btn btn-success btn-block btn-lg"
-                [disabled]="bookingForm.invalid || submitting || nights === 0"
+                [disabled]="bookingForm.invalid || submitting || nights === 0 || !!availabilityError"
                 aria-label="Confirm booking" i18n>
           <span *ngIf="submitting" class="spinner-border spinner-border-sm mr-2"></span>
-          {{ submitting ? 'Processing...' : 'Proceed to Payment' }}
+          {{ submitting ? 'Processing...' : (campsite?.type === 'OUTDOOR' ? 'Confirm Booking' : 'Proceed to Payment') }}
         </button>
 
       </form>

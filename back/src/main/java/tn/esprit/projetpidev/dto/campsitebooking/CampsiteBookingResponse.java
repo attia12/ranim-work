@@ -3,6 +3,7 @@ package tn.esprit.projetpidev.dto.campsitebooking;
 
 import lombok.Data;
 import tn.esprit.projetpidev.domain.enums.CampsiteBookingStatus;
+import tn.esprit.projetpidev.domain.enums.CampsiteType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,6 +17,7 @@ public class CampsiteBookingResponse {
     private String campsiteName;
     private String campsiteCountry;
     private String campsiteCity;
+    private CampsiteType campsiteType;
     private Long camperId;
     private String camperFullName;
     private LocalDate checkInDate;

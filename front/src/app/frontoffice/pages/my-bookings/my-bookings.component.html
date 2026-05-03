@@ -46,7 +46,7 @@
             <p class="text-muted small mb-0">
               <i class="fas fa-users mr-1"></i>
               {{ b.numberOfGuests }} guest(s) &nbsp;|&nbsp;
-              <strong class="text-success">{{ b.totalPrice | currency:'EUR':'symbol':'1.0-2' }}</strong>
+              <strong class="text-success" *ngIf="b.totalPrice > 0">{{ b.totalPrice | currency:'EUR':'symbol':'1.0-2' }}</strong>
             </p>
           </div>
           <div class="text-right">
@@ -74,9 +74,43 @@
 
   <!-- Outdoor bookings -->
   <div *ngIf="activeTab === 'outdoor' && !loading">
-    <div class="text-center text-muted py-4" *ngIf="outdoorBookings.length === 0" i18n>
+    <div class="text-center text-muted py-4" *ngIf="outdoorBookings.length === 0 && outdoorCampsiteBookings.length === 0" i18n>
       No outdoor campsite bookings yet.
     </div>
+
+    <!-- Outdoor campsite bookings (booked via the official campsite flow, type=OUTDOOR) -->
+    <div class="card border-0 shadow-sm mb-3" *ngFor="let b of outdoorCampsiteBookings">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h5 class="font-weight-bold mb-1">{{ b.campsiteName }}</h5>
+            <p class="text-muted small mb-1">
+              <i class="fas fa-map-marker-alt text-success mr-1"></i>
+              {{ b.campsiteCity }}, {{ b.campsiteCountry }}
+            </p>
+            <p class="text-muted small mb-0">
+              <i class="fas fa-calendar mr-1"></i>
+              {{ b.checkInDate }} → {{ b.checkOutDate }}
+              &nbsp;|&nbsp;
+              <strong class="text-success" i18n>FREE</strong>
+            </p>
+          </div>
+          <div class="text-right">
+            <span class="badge px-2 py-1 d-block mb-2" [ngClass]="badgeClass(b.status)">
+              {{ b.status }}
+            </span>
+            <button class="btn btn-sm btn-outline-danger"
+                    *ngIf="b.status !== 'CANCELLED'"
+                    (click)="cancelOutdoorCampsite(b.id)"
+                    aria-label="Cancel booking" i18n>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- True outdoor bookings (from outdoor-bookings API) -->
     <div class="card border-0 shadow-sm mb-3" *ngFor="let b of outdoorBookings">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-start">

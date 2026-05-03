@@ -59,7 +59,10 @@
               <td>{{ c.name }}</td>
               <td>{{ c.city }}, {{ c.country }}</td>
               <td><span class="badge" [class.badge-primary]="c.type==='OFFICIAL'" [class.badge-success]="c.type==='OUTDOOR'">{{ c.type }}</span></td>
-              <td>{{ c.pricePerNight | currency:'EUR':'symbol':'1.0-2' }}</td>
+              <td>
+                <span *ngIf="c.type !== 'OUTDOOR'">{{ c.pricePerNight | currency:'EUR':'symbol':'1.0-2' }}</span>
+                <span *ngIf="c.type === 'OUTDOOR'" class="text-muted">—</span>
+              </td>
               <td><span class="badge" [ngClass]="statusBadgeClass(c.status)">{{ c.status }}</span></td>
               <td>
                 <button class="btn btn-info btn-sm mr-1" (click)="selectCampsite(c)" aria-label="Manage bookings" i18n>Manage</button>
@@ -95,7 +98,10 @@
                   <td>{{ b.checkInDate }}</td>
                   <td>{{ b.checkOutDate }}</td>
                   <td>{{ b.numberOfGuests }}</td>
-                  <td>{{ b.totalPrice | currency:'EUR':'symbol':'1.0-2' }}</td>
+                  <td>
+                    <span *ngIf="b.totalPrice > 0">{{ b.totalPrice | currency:'EUR':'symbol':'1.0-2' }}</span>
+                    <span *ngIf="b.totalPrice === 0" class="text-muted">—</span>
+                  </td>
                   <td><span class="badge" [ngClass]="badgeClass(b.status)">{{ b.status }}</span></td>
                   <td>
                     <button class="btn btn-xs btn-success" *ngIf="b.status==='PENDING'" (click)="confirmBooking(b.id)" aria-label="Confirm booking" i18n>Confirm</button>
@@ -244,7 +250,14 @@
           <select class="form-control" formControlName="type"><option *ngFor="let t of types" [value]="t">{{ t }}</option></select>
         </div>
         <div class="col-6 form-group"><label i18n>Capacity *</label><input type="number" class="form-control" formControlName="capacity" min="1"></div>
-        <div class="col-6 form-group"><label i18n>Price/Night *</label><input type="number" class="form-control" formControlName="pricePerNight" min="0" step="0.01"></div>
+        <div class="col-6 form-group" *ngIf="campsiteForm.get('type')?.value !== 'OUTDOOR'">
+          <label i18n>Price/Night *</label>
+          <input type="number" class="form-control" formControlName="pricePerNight" min="0" step="0.01">
+        </div>
+        <div class="col-6 form-group" *ngIf="campsiteForm.get('type')?.value === 'OUTDOOR'">
+          <label i18n>Price/Night</label>
+          <input class="form-control" value="FREE" disabled>
+        </div>
         <div class="col-6 form-group"><label i18n>Address</label><input class="form-control" formControlName="address"></div>
         <div class="col-12 form-group"><label i18n>Amenities (comma-separated)</label><input class="form-control" formControlName="amenities" placeholder="WiFi, Pool"></div>
         <div class="col-12 form-group"><label i18n>Picture URLs (comma-separated)</label><input class="form-control" formControlName="pictures"></div>

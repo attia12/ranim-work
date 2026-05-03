@@ -71,11 +71,12 @@
         <div class="card border-0 bg-light p-3 rounded">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <span class="h3 font-weight-bold text-success mb-0" *ngIf="campsite.pricePerNight">
-                {{ campsite.pricePerNight | currency:'EUR':'symbol':'1.0-2' }}
-              </span>
-              <small class="text-muted" *ngIf="campsite.pricePerNight"> / night</small>
-              <span class="h3 font-weight-bold text-success mb-0" *ngIf="!campsite.pricePerNight" i18n>FREE</span>
+              <ng-container *ngIf="campsite.type !== 'OUTDOOR'">
+                <span class="h3 font-weight-bold text-success mb-0" *ngIf="campsite.pricePerNight">
+                  {{ campsite.pricePerNight | currency:'EUR':'symbol':'1.0-2' }}
+                </span>
+                <small class="text-muted" *ngIf="campsite.pricePerNight"> / night</small>
+              </ng-container>
             </div>
             <button class="btn btn-success btn-lg rounded-pill px-4" (click)="bookNow()"
                     *ngIf="campsite.status === 'ACTIVE'" aria-label="Book this campsite" i18n>

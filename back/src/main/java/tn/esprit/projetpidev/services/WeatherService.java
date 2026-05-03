@@ -12,23 +12,44 @@ import java.util.Optional;
 @Service
 public class WeatherService {
 
-    private static final String OPEN_METEO_URL =
+    private static final String CURRENT_URL =
             "https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true";
+
+    private static final String FORECAST_URL =
+            "https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}" +
+            "&daily=weathercode,windspeed_10m_max&timezone=auto&start_date={start}&end_date={end}";
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    /**
-     * Fetches current weather for the given coordinates.
-     * Returns empty if coordinates are null or the API call fails.
-     */
+    /** Fetches current weather (legacy). */
     public Optional<WeatherData> getCurrentWeather(Double latitude, Double longitude) {
         if (latitude == null || longitude == null) return Optional.empty();
         try {
             WeatherData data = restTemplate.getForObject(
-                    OPEN_METEO_URL, WeatherData.class, latitude, longitude);
+                    CURRENT_URL, WeatherData.class, latitude, longitude);
             return Optional.ofNullable(data);
         } catch (Exception e) {
             log.warn("Weather API call failed for ({},{}): {}", latitude, longitude, e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Fetches daily forecast for the given coordinates and date range.
+     * Returns empty if coordinates are null or the API call fails.
+     */
+    public Optional<WeatherData> getForecastWeather(Double latitude, Double longitude,
+                                                     java.time.LocalDate startDate,
+                                                     java.time.LocalDate endDate) {
+        if (latitude == null || longitude == null) return Optional.empty();
+        try {
+            WeatherData data = restTemplate.getForObject(
+                    FORECAST_URL, WeatherData.class,
+                    latitude, longitude, startDate.toString(), endDate.toString());
+            return Optional.ofNullable(data);
+        } catch (Exception e) {
+            log.warn("Forecast API call failed for ({},{}) [{} to {}]: {}",
+                    latitude, longitude, startDate, endDate, e.getMessage());
             return Optional.empty();
         }
     }

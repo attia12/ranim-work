@@ -78,6 +78,17 @@ export class CampsiteOwnerComponent implements OnInit {
       endDate:       [null]
     });
 
+    this.campsiteForm.get('type')!.valueChanges.subscribe(type => {
+      const priceCtrl = this.campsiteForm.get('pricePerNight')!;
+      if (type === 'OUTDOOR') {
+        priceCtrl.setValue(0);
+        priceCtrl.clearValidators();
+      } else {
+        priceCtrl.setValidators([Validators.required, Validators.min(0)]);
+      }
+      priceCtrl.updateValueAndValidity();
+    });
+
     this.availForm = this.fb.group({
       startDate:      ['', Validators.required],
       endDate:        ['', Validators.required],

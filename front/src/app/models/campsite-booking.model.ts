@@ -17,6 +17,7 @@ export interface CampsiteBookingResponse {
   campsiteName: string;
   campsiteCountry: string;
   campsiteCity: string;
+  campsiteType?: 'OFFICIAL' | 'OUTDOOR';
   camperId: number;
   camperFullName: string;
   checkInDate: string;

@@ -35,6 +35,8 @@ public class ICampsiteBookingServiceImpl implements ICampsiteBookingService {
     private final UserRepository userRepository;
     private final EmailService emailService;
     private final WsNotificationService wsNotificationService;
+    private final CampsiteStatusEvaluator statusEvaluator;
+    private final CampsiteStatusUpdater statusUpdater;
 
     @Override
     public CampsiteBookingResponse create(CampsiteBookingRequest request, Long camperId) {
@@ -128,9 +130,13 @@ public class ICampsiteBookingServiceImpl implements ICampsiteBookingService {
         booking.setStatus(CampsiteBookingStatus.CANCELLED);
         booking.setCancellationReason(reason);
 
-        // TODO: trigger refund logic via payment stub service
         log.info("CampsiteBooking cancelled: id={}, reason={}", id, reason);
         CampsiteBookingResponse response = mapToResponse(bookingRepository.save(booking));
+
+        // Immediately re-evaluate campsite status so it becomes ACTIVE again without waiting for the scheduler
+        Campsite campsite = booking.getCampsite();
+        CampsiteStatusEvaluator.Evaluation eval = statusEvaluator.evaluate(campsite);
+        statusUpdater.applyIfChanged(campsite, eval.status(), eval.reason(), "BOOKING_CANCELLED");
 
         wsNotificationService.sendToUser(
                 booking.getCamper().getId(),
@@ -198,6 +204,7 @@ public class ICampsiteBookingServiceImpl implements ICampsiteBookingService {
         r.setCampsiteName(b.getCampsite().getName());
         r.setCampsiteCountry(b.getCampsite().getCountry());
         r.setCampsiteCity(b.getCampsite().getCity());
+        r.setCampsiteType(b.getCampsite().getType());
         r.setCamperId(b.getCamper().getId());
         r.setCamperFullName(b.getCamper().getFullname());
         r.setCheckInDate(b.getCheckInDate());
