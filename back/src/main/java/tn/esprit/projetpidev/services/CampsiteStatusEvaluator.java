@@ -42,9 +42,9 @@ public class CampsiteStatusEvaluator {
         // 2. Check weather forecast across the campsite's own date range
         //    startDate → endDate. Fallback: today if no startDate, today+16 if no endDate (API max).
         LocalDate forecastStart = (campsite.getStartDate() != null) ? campsite.getStartDate() : today;
-        LocalDate forecastEnd   = (campsite.getEndDate()   != null) ? campsite.getEndDate()   : today.plusDays(16);
-        // Open-Meteo free tier supports up to 16 days ahead; clamp if range exceeds that
-        if (forecastEnd.isAfter(today.plusDays(16))) forecastEnd = today.plusDays(16);
+        LocalDate forecastEnd   = (campsite.getEndDate()   != null) ? campsite.getEndDate()   : today.plusDays(15);
+        // Open-Meteo free tier: 16-day window means indices 0-15 → max date = today+15
+        if (forecastEnd.isAfter(today.plusDays(15))) forecastEnd = today.plusDays(15);
         // If the start is in the past, clamp to today (can't fetch past forecasts)
         if (forecastStart.isBefore(today)) forecastStart = today;
 

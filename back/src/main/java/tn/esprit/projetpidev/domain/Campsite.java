@@ -69,6 +69,11 @@ public class Campsite {
     @Column(columnDefinition = "TEXT")
     private String rules;
 
+    // Stored as comma-separated enum values: FOREST,LAKE,MOUNTAIN,BEACH,RIVER,PLAIN
+    // Used by the AI recommendation engine for terrain preference scoring
+    @Column(columnDefinition = "TEXT")
+    private String naturalFeatures;
+
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private CampsiteStatus status = CampsiteStatus.ACTIVE;

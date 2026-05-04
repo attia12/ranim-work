@@ -1,0 +1,149 @@
+<section class="reco-section" role="region" aria-label="Sélection personnalisée de campsites">
+
+  <!-- Loading skeletons -->
+  <ng-container *ngIf="loading">
+    <div class="container py-5">
+      <div class="reco-header mb-5">
+        <div class="skeleton-title mb-2"></div>
+        <div class="skeleton-sub"></div>
+      </div>
+      <div class="reco-track">
+        <div class="reco-card skeleton-card" *ngFor="let s of skeletons">
+          <div class="skeleton-img"></div>
+          <div class="p-3">
+            <div class="skeleton-line w-75 mb-2"></div>
+            <div class="skeleton-line w-50 mb-2"></div>
+            <div class="skeleton-line w-60"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Fallback -->
+  <ng-container *ngIf="!loading && error">
+    <div class="container py-5">
+      <div class="reco-fallback text-center">
+        <div class="reco-fallback-icon mb-4">🏕️</div>
+        <h3 class="fw-bold mb-2">Explorez nos campsites</h3>
+        <p class="text-muted mb-4">Faites vos premières réservations pour recevoir des recommandations personnalisées.</p>
+        <a routerLink="/campsites" class="btn reco-explore-btn px-5 py-2">
+          <i class="fas fa-campground me-2"></i>Voir tous les campsites
+        </a>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Carousel -->
+  <ng-container *ngIf="!loading && !error && recommendations.length > 0">
+    <div class="container py-5">
+
+      <!-- Header -->
+      <div class="reco-header mb-5 d-flex justify-content-between align-items-end">
+        <div>
+          <span class="reco-label d-block mb-1">IA · Personnalisé</span>
+          <h2 class="reco-title fw-bold mb-1">Sélection pour vous</h2>
+          <p class="reco-subtitle mb-0">Basé sur vos réservations et préférences</p>
+        </div>
+        <div class="reco-arrows d-none d-md-flex gap-2">
+          <button class="reco-btn-nav" (click)="prev()" aria-label="Précédent">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button class="reco-btn-nav" (click)="next()" aria-label="Suivant">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Cards -->
+      <div class="reco-track" role="list">
+        <div
+          class="reco-card"
+          role="listitem"
+          *ngFor="let campsite of recommendations; let i = index"
+          [class.reco-card--active]="i === activeIndex"
+          (click)="navigate(campsite.campsiteId)"
+          tabindex="0"
+          (keyup.enter)="navigate(campsite.campsiteId)">
+
+          <!-- Image with overlay -->
+          <div class="reco-card-img">
+            <img
+              *ngIf="campsite.imageUrl"
+              [src]="campsite.imageUrl"
+              [alt]="campsite.campsiteName"
+              class="reco-img"
+              loading="lazy">
+            <div *ngIf="!campsite.imageUrl" class="reco-img-placeholder">
+              <span class="reco-tent">⛺</span>
+            </div>
+            <!-- gradient overlay -->
+            <div class="reco-img-overlay"></div>
+
+            <!-- Score ring — top right -->
+            <div class="reco-score-badge">
+              <svg width="52" height="52" viewBox="0 0 52 52">
+                <circle cx="26" cy="26" r="20" fill="rgba(0,0,0,0.45)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                <circle
+                  cx="26" cy="26" r="20"
+                  fill="none"
+                  [attr.stroke]="scoreColor(campsite.score)"
+                  stroke-width="3.5"
+                  stroke-linecap="round"
+                  stroke-dasharray="125.7"
+                  [attr.stroke-dashoffset]="svgCircle(campsite.score)"
+                  transform="rotate(-90 26 26)"/>
+                <text x="26" y="31" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">
+                  {{ campsite.score.toFixed(0) }}
+                </text>
+              </svg>
+            </div>
+
+            <!-- Feature chips — bottom left of image -->
+            <div class="reco-img-chips">
+              <span class="reco-chip" *ngFor="let f of campsite.naturalFeatures | slice:0:2">
+                {{ featureIcon(f) }} {{ f }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="reco-card-body">
+            <h5 class="reco-card-title">{{ campsite.campsiteName }}</h5>
+
+            <div class="reco-card-meta">
+              <span class="reco-weather-tag">
+                {{ weatherIcon(campsite.weatherDescription) }}
+                {{ campsite.weatherDescription || 'Beau temps' }}
+              </span>
+              <span class="reco-price-tag">
+                {{ campsite.pricePerNight | currency:'EUR':'symbol':'1.0-0' }}<span class="reco-per">/nuit</span>
+              </span>
+            </div>
+
+            <div class="reco-cta">
+              <span>Voir le campsite</span>
+              <i class="fas fa-arrow-right ms-2"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dots + mobile arrows -->
+      <div class="reco-footer mt-4 d-flex justify-content-center align-items-center gap-3">
+        <button class="reco-btn-nav d-md-none" (click)="prev()"><i class="fas fa-chevron-left"></i></button>
+        <div class="reco-dots d-flex gap-2 align-items-center">
+          <button
+            class="reco-dot"
+            *ngFor="let campsite of recommendations; let i = index"
+            [class.reco-dot--active]="i === activeIndex"
+            (click)="goTo(i)"
+            [attr.aria-label]="'Campsite ' + (i + 1)">
+          </button>
+        </div>
+        <button class="reco-btn-nav d-md-none" (click)="next()"><i class="fas fa-chevron-right"></i></button>
+      </div>
+
+    </div>
+  </ng-container>
+</section>

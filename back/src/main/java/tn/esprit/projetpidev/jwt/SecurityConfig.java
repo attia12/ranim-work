@@ -218,6 +218,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/events/**").hasAnyRole("ADMIN", "EVENT_ORGANIZER")
 
                         // ── Campsites (Module 1) ───────────────────────────────────────────
+                        // Recommendation endpoint must be matched BEFORE the wildcard permitAll below
+                        .requestMatchers(HttpMethod.GET,    "/api/v1/campsites/recommended").authenticated()
                         .requestMatchers(HttpMethod.GET,    "/api/v1/campsites", "/api/v1/campsites/**").permitAll()
                         .requestMatchers(HttpMethod.POST,   "/api/v1/campsites").hasAnyRole("COMPSITEOWNERS", "ADMIN")
                         .requestMatchers(HttpMethod.PUT,    "/api/v1/campsites/**").hasAnyRole("COMPSITEOWNERS", "ADMIN")

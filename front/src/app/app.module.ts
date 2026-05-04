@@ -65,6 +65,7 @@ import { OutdoorCampsiteDetailComponent } from './frontoffice/pages/outdoor-camp
 import { OutdoorBookingComponent } from './frontoffice/pages/outdoor-booking/outdoor-booking.component';
 import { CampsitePaymentComponent } from './frontoffice/pages/campsite-payment/campsite-payment.component';
 import { CampsiteAnalyticsComponent } from './dashboards/campsite-analytics/campsite-analytics.component';
+import { RecommendationCarouselComponent } from './frontoffice/components/recommendation-carousel/recommendation-carousel.component';
 
 @NgModule({
   declarations: [
@@ -119,7 +120,9 @@ import { CampsiteAnalyticsComponent } from './dashboards/campsite-analytics/camp
     OutdoorCampsiteDetailComponent,
     OutdoorBookingComponent,
     CampsitePaymentComponent,
-    CampsiteAnalyticsComponent
+    CampsiteAnalyticsComponent,
+    // AI Recommendation Carousel
+    RecommendationCarouselComponent
   ],
   imports: [
     BrowserModule,

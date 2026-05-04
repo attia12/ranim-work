@@ -38,8 +38,28 @@ public class WeatherData {
     }
 
     /**
-     * Returns true if any day in the daily forecast is severe.
-     * WMO codes: 65+ = heavy rain, 71+ = snow, 95+ = thunderstorm. Wind > 60 km/h also counts.
+     * WMO codes considered truly severe for camping:
+     *   65-67  Heavy rain / freezing rain
+     *   73-75  Moderate to heavy snow
+     *   77     Snow grains
+     *   82     Violent rain showers
+     *   95-99  Thunderstorm (with or without hail)
+     *
+     * NOT severe (campsite stays ACTIVE):
+     *   51-63  Light/moderate drizzle or rain
+     *   71     Light snow
+     *   80-81  Slight/moderate rain showers
+     */
+    private static final java.util.Set<Integer> SEVERE_CODES = java.util.Set.of(
+            65, 66, 67,      // heavy rain / freezing rain
+            73, 75, 77,      // moderate-heavy snow / snow grains
+            82,              // violent showers
+            95, 96, 99       // thunderstorm
+    );
+
+    /**
+     * Returns true if any day in the daily forecast is severe enough to suspend the campsite.
+     * Wind > 60 km/h is always considered severe regardless of weather code.
      */
     public boolean isForecastSevere() {
         if (daily == null || daily.getWeathercode() == null) return false;
@@ -48,7 +68,7 @@ public class WeatherData {
         for (int i = 0; i < codes.size(); i++) {
             int code = codes.get(i);
             double wind = (winds != null && i < winds.size()) ? winds.get(i) : 0.0;
-            if (code >= 65 || wind > 60.0) return true;
+            if (SEVERE_CODES.contains(code) || wind > 60.0) return true;
         }
         return false;
     }
@@ -62,7 +82,7 @@ public class WeatherData {
         for (int i = 0; i < codes.size(); i++) {
             int code = codes.get(i);
             double wind = (winds != null && i < winds.size()) ? winds.get(i) : 0.0;
-            if (code >= 65 || wind > 60.0) {
+            if (SEVERE_CODES.contains(code) || wind > 60.0) {
                 String date = (times != null && i < times.size()) ? times.get(i) : "unknown";
                 return "date=" + date + ", code=" + code + ", wind=" + wind + " km/h";
             }
@@ -73,6 +93,7 @@ public class WeatherData {
     /** Legacy: still used for current_weather checks if needed. */
     public boolean isSevere() {
         if (currentWeather == null) return false;
-        return currentWeather.getWeathercode() >= 65 || currentWeather.getWindspeed() > 60.0;
+        return SEVERE_CODES.contains(currentWeather.getWeathercode())
+                || currentWeather.getWindspeed() > 60.0;
     }
 }

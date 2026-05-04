@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { ProductService } from '../../../services/product.service';
 import { CampsiteService } from '../../../services/campsite.service';
 import { Product } from '../../../models/product.model';

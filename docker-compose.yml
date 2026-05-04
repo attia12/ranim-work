@@ -1,6 +1,6 @@
-version: '3.9'
-
 services:
+
+  # ── MySQL Database ────────────────────────────────────────────────────────
   db:
     image: mysql:8.0
     container_name: campway-db
@@ -8,18 +8,72 @@ services:
       - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
-      MYSQL_DATABASE: CampwayDB
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-CampwayDB}
     volumes:
       - campway_db_data:/var/lib/mysql
+    networks:
+      - campway-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-root}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     restart: unless-stopped
 
+  # ── MailDev (local email) ─────────────────────────────────────────────────
   maildev:
     image: maildev/maildev
     container_name: campway-maildev
     ports:
-      - "1025:1025"   # SMTP
-      - "1080:1080"   # Web UI → http://localhost:1080
+      - "1025:1025"
+      - "1080:1080"
+    networks:
+      - campway-net
     restart: unless-stopped
+
+  # ── Redis Cache ───────────────────────────────────────────────────────────
+  redis:
+    image: redis:7.2-alpine
+    container_name: campway-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - campway-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # ── FastAPI AI Recommender ────────────────────────────────────────────────
+  campsite-recommender:
+    build:
+      context: ./campsite-recommender
+      dockerfile: Dockerfile
+    container_name: campway-recommender
+    ports:
+      - "8001:8001"
+    environment:
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:9099}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    networks:
+      - campway-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+networks:
+  campway-net:
+    driver: bridge
 
 volumes:
   campway_db_data:
+  redis-data:

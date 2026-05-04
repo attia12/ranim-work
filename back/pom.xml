@@ -121,6 +121,24 @@
 
         <!-- FIX 3: Removed bare <junit> dependency (already included via spring-boot-starter-test) -->
         <!-- FIX 4: Removed TestNG (scope was 'compile' which pollutes production classpath; conflicts with JUnit 5) -->
+
+        <!-- AI Recommendation: WebClient (WebFlux reactor) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
+        <!-- AI Recommendation: Redis cache -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <!-- AI Recommendation: Spring Cache abstraction -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

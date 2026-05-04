@@ -50,6 +50,19 @@ public interface CampsiteBookingRepository extends JpaRepository<CampsiteBooking
 
     List<CampsiteBooking> findByCampsite_IdAndStatus(Long campsiteId, CampsiteBookingStatus status);
 
+    /** Recent confirmed bookings for a user since a given date (used by recommendation engine). */
+    @Query("""
+            SELECT b FROM CampsiteBooking b
+            WHERE b.camper.id = :camperId
+              AND b.checkInDate >= :since
+              AND b.status = tn.esprit.projetpidev.domain.enums.CampsiteBookingStatus.CONFIRMED
+            ORDER BY b.checkInDate DESC
+            """)
+    List<CampsiteBooking> findRecentConfirmedByCamperId(
+            @Param("camperId") Long camperId,
+            @Param("since") LocalDate since
+    );
+
     /** Total bookings count. */
     long count();
 
