@@ -48,6 +48,13 @@ public class CampsiteStatusEvaluator {
         // If the start is in the past, clamp to today (can't fetch past forecasts)
         if (forecastStart.isBefore(today)) forecastStart = today;
 
+        // If campsite opens beyond the forecast window, skip weather check entirely
+        if (forecastStart.isAfter(forecastEnd)) {
+            log.info("Campsite {} starts {} which is beyond forecast window ({}), skipping weather check",
+                    campsite.getId(), campsite.getStartDate(), forecastEnd);
+            return new Evaluation(CampsiteStatus.ACTIVE, "Campsite period is beyond the 16-day forecast window.");
+        }
+
         Optional<WeatherData> forecast = weatherService.getForecastWeather(
                 campsite.getLatitude(), campsite.getLongitude(), forecastStart, forecastEnd);
         if (forecast.isPresent() && forecast.get().isForecastSevere()) {

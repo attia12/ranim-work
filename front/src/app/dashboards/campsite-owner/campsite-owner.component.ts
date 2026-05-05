@@ -258,7 +258,12 @@ export class CampsiteOwnerComponent implements OnInit {
 
   saveCampsite(): void {
     if (this.campsiteForm.invalid) { this.campsiteForm.markAllAsTouched(); return; }
-    const req: CampsiteRequest = this.campsiteForm.value;
+    const raw = this.campsiteForm.value;
+    const req: CampsiteRequest = {
+      ...raw,
+      startDate: raw.startDate || null,
+      endDate:   raw.endDate   || null,
+    };
     const obs = this.editingCampsite
       ? this.campsiteService.update(this.editingCampsite.id, req)
       : this.campsiteService.create(req);
