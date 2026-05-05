@@ -38,6 +38,11 @@ export class CampsiteOwnerComponent implements OnInit {
 
   today = new Date().toISOString().split('T')[0];
   types = ['OFFICIAL', 'OUTDOOR'];
+  allFeatures = ['FOREST', 'LAKE', 'MOUNTAIN', 'BEACH', 'RIVER', 'PLAIN'];
+  featureIcons: Record<string, string> = {
+    FOREST: '🌲', LAKE: '🏞️', MOUNTAIN: '⛰️', BEACH: '🏖️', RIVER: '🌊', PLAIN: '🌾'
+  };
+  selectedFeatures: string[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -74,8 +79,9 @@ export class CampsiteOwnerComponent implements OnInit {
       pictures:      [''],
       amenities:     [''],
       rules:         [''],
-      startDate:     [null],
-      endDate:       [null]
+      startDate:        [null],
+      endDate:          [null],
+      naturalFeatures:  ['']
     });
 
     this.campsiteForm.get('type')!.valueChanges.subscribe(type => {
@@ -208,21 +214,38 @@ export class CampsiteOwnerComponent implements OnInit {
       amenities:     'Toilets,Showers,BBQ,Parking',
       rules:         'No loud music after 10pm. Fires only in designated areas.'
     });
+    this.selectedFeatures = [];
     this.showCampsiteForm = true;
     setTimeout(() => this.initPlacesAutocomplete(), 100);
   }
 
   openEditForm(campsite: CampsiteApiResponse): void {
     this.editingCampsite = campsite;
+    this.selectedFeatures = campsite.naturalFeatures ? [...campsite.naturalFeatures] : [];
     this.campsiteForm.patchValue({
       ...campsite,
       pictures: campsite.pictures?.join(',') || '',
       amenities: campsite.amenities?.join(',') || '',
       startDate: campsite.startDate || null,
-      endDate: campsite.endDate || null
+      endDate: campsite.endDate || null,
+      naturalFeatures: this.selectedFeatures.join(',')
     });
     this.showCampsiteForm = true;
     setTimeout(() => this.initPlacesAutocomplete(), 100);
+  }
+
+  toggleFeature(feature: string): void {
+    const idx = this.selectedFeatures.indexOf(feature);
+    if (idx >= 0) {
+      this.selectedFeatures.splice(idx, 1);
+    } else {
+      this.selectedFeatures.push(feature);
+    }
+    this.campsiteForm.get('naturalFeatures')!.setValue(this.selectedFeatures.join(','));
+  }
+
+  hasFeature(feature: string): boolean {
+    return this.selectedFeatures.includes(feature);
   }
 
   saveCampsite(): void {

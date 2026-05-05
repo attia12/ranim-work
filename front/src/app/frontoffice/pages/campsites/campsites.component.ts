@@ -85,4 +85,11 @@ export class CampsitesComponent implements OnInit {
   get pages(): number[] {
     return Array.from({ length: this.totalPages }, (_, i) => i);
   }
+
+  featureIcon(feature: string): string {
+    const map: Record<string, string> = {
+      FOREST: '🌲', LAKE: '🏞️', MOUNTAIN: '⛰️', BEACH: '🏖️', RIVER: '🌊', PLAIN: '🌾'
+    };
+    return map[feature] ?? '🏕️';
+  }
 }

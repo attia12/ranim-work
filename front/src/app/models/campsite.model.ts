@@ -59,6 +59,7 @@ export interface CampsiteApiResponse {
   lastStatusReason?: string;
   createdAt?: string;
   updatedAt?: string;
+  naturalFeatures?: string[];
 }
 
 export interface CampsiteRequest {
@@ -77,6 +78,7 @@ export interface CampsiteRequest {
   rules?: string;
   startDate?: string;
   endDate?: string;
+  naturalFeatures?: string;
 }
 
 export interface CampsitePage {

@@ -51,4 +51,7 @@ public class CampsiteRequest {
 
     /** Optional: date after which the campsite expires (null = no restriction) */
     private LocalDate endDate;
+
+    /** Comma-separated natural features e.g. "FOREST,LAKE" */
+    private String naturalFeatures;
 }

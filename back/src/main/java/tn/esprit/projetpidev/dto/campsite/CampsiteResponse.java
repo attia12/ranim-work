@@ -36,4 +36,5 @@ public class CampsiteResponse {
     private String lastStatusReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private List<String> naturalFeatures;
 }

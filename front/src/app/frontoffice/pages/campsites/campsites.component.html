@@ -101,6 +101,16 @@
               {{ site.description }}
             </p>
 
+            <!-- Natural features chips -->
+            <div class="d-flex flex-wrap mb-2" style="gap:.3rem;" *ngIf="site.naturalFeatures?.length">
+              <span
+                class="badge border small"
+                style="background:#dcfce7;color:#15803d;border-color:#bbf7d0 !important;"
+                *ngFor="let f of site.naturalFeatures | slice:0:3">
+                {{ featureIcon(f) }} {{ f }}
+              </span>
+            </div>
+
             <!-- Amenities chips -->
             <div class="d-flex flex-wrap mb-3" style="gap:.3rem;" *ngIf="site.amenities?.length">
               <span class="badge badge-light border small" *ngFor="let am of site.amenities | slice:0:3">

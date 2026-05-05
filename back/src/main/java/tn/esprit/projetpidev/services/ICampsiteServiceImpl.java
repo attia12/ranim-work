@@ -53,6 +53,7 @@ public class ICampsiteServiceImpl implements ICampsiteService {
                 .rules(request.getRules())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
+                .naturalFeatures(request.getNaturalFeatures())
                 .status(CampsiteStatus.ACTIVE)
                 .owner(owner)
                 .build();
@@ -87,6 +88,7 @@ public class ICampsiteServiceImpl implements ICampsiteService {
         campsite.setRules(request.getRules());
         campsite.setStartDate(request.getStartDate());
         campsite.setEndDate(request.getEndDate());
+        campsite.setNaturalFeatures(request.getNaturalFeatures());
 
         log.info("Campsite updated: id={}", id);
         return mapToResponse(campsiteRepository.save(campsite));
@@ -182,6 +184,7 @@ public class ICampsiteServiceImpl implements ICampsiteService {
         r.setPricePerNight(c.getPricePerNight());
         r.setPictures(splitCsv(c.getPictures()));
         r.setAmenities(splitCsv(c.getAmenities()));
+        r.setNaturalFeatures(splitCsv(c.getNaturalFeatures()));
         r.setRules(c.getRules());
         r.setStatus(c.getStatus());
         r.setStartDate(c.getStartDate());
