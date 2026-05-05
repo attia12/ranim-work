@@ -1,0 +1,696 @@
+---
+title: "Campsite Recommendation System — File & Method Guide"
+author: "Campway Dev"
+date: "2026-05-05"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    theme: flatly
+---
+
+---
+
+# Overview
+
+The recommendation system has **3 layers** that talk to each other:
+
+```
+User visits home page
+       ↓
+  Angular (front)        → shows the recommendation carousel
+       ↓  HTTP GET
+  Spring Boot (back)     → fetches user data from DB, calls FastAPI
+       ↓  HTTP POST
+  FastAPI (Python)       → scores every campsite, returns top 5
+       ↓  HTTP GET
+  Open-Meteo API         → free weather data, no API key needed
+```
+
+---
+
+# Layer 1 — FastAPI (Python microservice)
+
+> Folder: `campsite-recommender/`
+> Started with: `python -m uvicorn app.main:app --reload --port 8001`
+
+---
+
+## `app/main.py`
+
+**What it is:** The entry point of the FastAPI application.
+
+**What it does:**
+
+- Creates the FastAPI app and starts it
+- Sets up CORS so Spring Boot (on port 9099) can call it
+- Shares a single HTTP client (`httpx.AsyncClient`) across all requests so we don't open a new connection every time
+- Registers the `/api/v1/campsites/recommended` route
+- Adds a `/health` endpoint so other services can check if it is alive
+- If something goes wrong, returns a clean error message (RFC 7807 format)
+
+**Simple analogy:** This is the front door of the Python service. All requests come in here first.
+
+---
+
+## `app/config.py`
+
+**What it is:** Settings / environment variables.
+
+**What it does:**
+
+- Reads configuration from `.env` file or environment variables
+- Defines: host, port, CORS origin
+
+**Simple analogy:** The settings file. Change it when you deploy to production.
+
+---
+
+## `app/dependencies.py`
+
+**What it is:** Dependency injection setup for FastAPI.
+
+**What it does:**
+
+- Creates one instance of `WeatherService` (shared across requests)
+- Creates one instance of `ScoringEngine` (shared across requests)
+- FastAPI injects these into route functions automatically
+
+**Simple analogy:** A factory that hands out the tools each route needs, without creating them from scratch every time.
+
+---
+
+## `app/models/campsite.py`
+
+**What it is:** Data shapes for a campsite.
+
+**Key pieces:**
+
+| Name | What it is |
+|------|-----------|
+| `NaturalFeature` | Enum: FOREST, LAKE, MOUNTAIN, BEACH, RIVER, PLAIN |
+| `CampsiteDTO` | A campsite candidate sent by Spring Boot (id, name, features, price, lat/lng, rating, image) |
+
+**Simple analogy:** A blueprint that says "a campsite must have these fields". If Spring Boot sends something that doesn't match, FastAPI rejects it with a 422 error.
+
+---
+
+## `app/models/booking.py`
+
+**What it is:** Data shape for one past booking.
+
+**Key fields:** `campsite_id`, `campsite_name`, `natural_features`, `price_per_night`, `check_in` (date), `check_out` (date), `latitude`, `longitude`
+
+**Why `check_in` and `check_out` are plain strings from Spring Boot:**
+Java's `LocalDate` serializes as a JSON array `[2024, 7, 5]` which Pydantic rejects. Spring Boot converts them to strings `"2024-07-05"` before sending.
+
+---
+
+## `app/models/review.py`
+
+**What it is:** Data shape for a campsite review.
+
+**Key fields:** `campsite_id`, `score` (1.0 to 5.0)
+
+Currently always sent as an empty list `[]` — review feature not yet connected.
+
+---
+
+## `app/models/recommendation.py`
+
+**What it is:** Data shapes for the input and output of the scoring endpoint.
+
+| Name | What it is |
+|------|-----------|
+| `RecommendationRequest` | What Spring Boot sends: user_id, their bookings, reviews, all candidate campsites |
+| `ScoreBreakdown` | The 5 sub-scores: terrain, budget, season, rating, weather |
+| `RecommendedCampsite` | One result: campsite info + final score + breakdown + weather description |
+
+---
+
+## `app/services/profile_builder.py`
+
+**What it is:** Turns the user's booking history into a preference profile.
+
+**Methods:**
+
+### `build_user_profile(bookings, reviews)`
+
+- Looks at every past booking
+- Counts which natural features appear most often → `preferred_features`
+- Averages the price per night → `avg_budget`
+- Looks at which month each booking was → converts to season → most common season = `preferred_season`
+- Returns a `UserProfile` object
+
+**Example:**
+User booked forest campsites in June and July at ~30€/night.
+Profile: `preferred_features=[FOREST]`, `avg_budget=30.0`, `preferred_season=SUMMER`
+
+### `get_season_score(preferred_season, today_season)`
+
+- Returns 1.0 if seasons match exactly
+- Returns 0.5 if seasons are adjacent (e.g. spring/summer)
+- Returns 0.0 if opposite seasons
+
+**Simple analogy:** Figures out "what kind of camper is this person?"
+
+---
+
+## `app/services/scoring_engine.py`
+
+**What it is:** Scores every candidate campsite against the user profile.
+
+**Weights:**
+
+| Component | Weight | Measures |
+|-----------|--------|----------|
+| Terrain   | 35%    | Do the campsite's features match what the user likes? |
+| Budget    | 25%    | Is the price close to what the user usually pays? |
+| Season    | 20%    | Is today's season the user's preferred season? |
+| Rating    | 10%    | Global average rating of the campsite (0–5 stars) |
+| Weather   | 10%    | How good is the weather at the campsite right now? |
+
+**Methods:**
+
+### `_terrain_score(profile, campsite)`
+
+- Counts how many of the user's preferred features appear in the campsite
+- Score = matching features / total preferred features
+- If the user has no preferences → score = 0 (no history to compare)
+
+### `_budget_score(profile, campsite)`
+
+- Uses a bell-curve formula (Gaussian)
+- Exact match → 1.0
+- The further the price from the user's average → closer to 0
+
+### `_rating_score(campsite)`
+
+- Normalizes rating from 0–5 to 0–1
+- A campsite with rating 4.0 gets score 0.8
+
+### `score_campsite(profile, campsite, weather_score)`
+
+- Combines all 5 sub-scores using the weights
+- Returns a `ScoreBreakdown` with each component and a total out of 100
+
+### `rank_campsites(profile, campsites, weather_scores)`
+
+- Scores every campsite
+- Sorts by total score descending
+- Returns the **top 5** only
+
+**Simple analogy:** A judge that gives each campsite a score out of 100 based on how well it fits the user.
+
+---
+
+## `app/services/weather_service.py`
+
+**What it is:** Gets weather quality scores for each campsite location.
+
+**How it works:**
+
+1. Takes a list of (latitude, longitude) pairs
+2. Calls the **Open-Meteo free API** (no API key) for each location
+3. Looks at the WMO weather code returned
+4. Converts it to a score between 0.0 and 1.0
+
+**WMO code → score mapping (key ones):**
+
+| Condition | WMO Code | Score |
+|-----------|----------|-------|
+| Clear sky | 0 | 1.0 |
+| Partly cloudy | 1–2 | 0.8 |
+| Overcast | 3 | 0.6 |
+| Light drizzle | 51–55 | 0.4 |
+| Rain showers | 61–65 | 0.2 |
+| Thunderstorm | 95–99 | 0.0 |
+
+**In-process cache:** Results are cached for 10 minutes per location. Same coordinates within 10 minutes → no second API call.
+
+**Concurrency:** All campsite weather calls are made at the same time using `asyncio.gather` — so 10 campsites = 1 batch wait, not 10 sequential waits.
+
+**Fallback:** If Open-Meteo is unreachable → weather score = 0.5 (neutral). The rest of scoring still works.
+
+### `get_weather_scores(locations)`
+
+Main method. Takes list of (lat, lng) tuples, returns a dict mapping each to a `WeatherResult` (score + description).
+
+**Simple analogy:** Checks the weather for every candidate campsite at the same time, gives each one a "camping weather" score.
+
+---
+
+## `app/routers/recommendations.py`
+
+**What it is:** The single API endpoint the Python service exposes.
+
+**Endpoint:** `POST /api/v1/campsites/recommended`
+
+**What it does step by step:**
+
+1. Receives the `RecommendationRequest` from Spring Boot
+2. Calls `build_user_profile()` to understand what the user likes
+3. Collects all campsite GPS coordinates
+4. Calls `weather_service.get_weather_scores()` for all of them at once
+5. Calls `scoring_engine.rank_campsites()` to score and rank
+6. Returns top 5 as a list of `RecommendedCampsite`
+
+**Simple analogy:** The receptionist that receives the request, hands it to the right people, and sends back the result.
+
+---
+
+## `tests/test_scoring.py`
+
+**What it is:** Unit tests for the scoring engine.
+
+**What it tests:** terrain score with matches/no matches, budget score near/far from average, season score exact/adjacent/opposite, empty booking history, that only top 5 are returned.
+
+---
+
+## `tests/test_weather.py`
+
+**What it is:** Unit tests for the weather service.
+
+**What it tests:** sunny day returns score ≥ 0.9, storm returns 0.0, timeout returns 0.5, 10 concurrent requests all succeed.
+
+Uses `httpx.MockTransport` — no real API calls during tests.
+
+---
+
+---
+
+# Layer 2 — Spring Boot (Java backend)
+
+> Package: `tn.esprit.projetpidev`
+
+---
+
+## `config/WebClientConfig.java`
+
+**What it is:** Creates the HTTP client used to call FastAPI.
+
+**What it does:**
+- Creates a Spring `WebClient` bean with the FastAPI base URL (`http://localhost:8001`)
+- URL comes from `application.properties` → `ai.service.url`
+
+**Simple analogy:** Sets up a phone line from Spring Boot to FastAPI.
+
+---
+
+## `config/RedisConfig.java`
+
+**What it is:** Configures the Redis cache.
+
+**What it does:**
+- Enables Spring's `@Cacheable` annotations (`@EnableCaching`)
+- Sets TTL to **30 minutes** for the "recommendations" cache
+- Stores cached values as JSON (not Java binary) so they are readable
+
+**Why 30 minutes:** Recommendations don't change very fast. No need to call FastAPI + Open-Meteo on every page load.
+
+---
+
+## `dto/recommendation/AiRequestDTO.java`
+
+**What it is:** The JSON body sent from Spring Boot to FastAPI.
+
+**Fields:** `userId`, `bookings` (list), `reviews` (list, always empty), `allCampsites` (list of candidates)
+
+---
+
+## `dto/recommendation/BookingHistoryDTO.java`
+
+**What it is:** One past booking, formatted for FastAPI.
+
+**Key note:** `checkIn` and `checkOut` are `String` type (not `LocalDate`).
+
+**Why:** WebClient serializes `LocalDate` as `[2024, 7, 5]` (a JSON array). FastAPI's Pydantic rejects arrays for `date` fields → 422 error. String `"2024-07-05"` works correctly.
+
+---
+
+## `dto/recommendation/CampsiteAiDTO.java`
+
+**What it is:** One candidate campsite, formatted for FastAPI.
+
+**Fields:** id, name, naturalFeatures (list), pricePerNight, latitude, longitude, globalAvgRating, imageUrl
+
+---
+
+## `dto/recommendation/RecommendedCampsiteDTO.java`
+
+**What it is:** One recommended campsite returned by FastAPI, received by Spring Boot.
+
+**Critical:** Uses `@JsonAlias` (NOT `@JsonProperty`) on each field.
+
+**Why this matters:**
+- `@JsonProperty("campsite_id")` affects both reading AND writing → Spring would send `campsite_id` to Angular → Angular model has `campsiteId` → all undefined → navigation crashes
+- `@JsonAlias("campsite_id")` affects reading ONLY → Spring reads snake_case from FastAPI, writes camelCase to Angular → Angular receives `campsiteId` correctly
+
+---
+
+## `dto/recommendation/ScoreBreakdownDTO.java`
+
+**What it is:** The 5 sub-scores from FastAPI.
+
+**Fields:** terrain, budget, season, rating, weather, total (all Double)
+
+---
+
+## `dto/recommendation/ReviewHistoryDTO.java`
+
+**What it is:** A user review. Always an empty list for now.
+
+---
+
+## `exception/RecommendationUnavailableException.java`
+
+**What it is:** A custom exception thrown when FastAPI is unreachable or returns an error.
+
+**What happens when thrown:** `GlobalExceptionHandler` catches it and returns HTTP 503 with `{"error":"recommendation_unavailable","fallback":true}`. Angular sees `fallback:true` and shows a friendly banner instead of crashing.
+
+---
+
+## `services/AiServiceClient.java`
+
+**What it is:** Makes the HTTP POST call to FastAPI.
+
+**Method: `fetchRecommendations(AiRequestDTO request)`**
+
+Step by step:
+1. POSTs the request JSON to `http://localhost:8001/api/v1/campsites/recommended`
+2. Waits up to **8 seconds** (timeout)
+3. If FastAPI returns any HTTP error (4xx or 5xx) → logs the full response body → throws `RecommendationUnavailableException`
+4. Deserializes the response into a list of `RecommendedCampsiteDTO`
+5. Returns the list (or empty list if FastAPI returned nothing)
+
+**Simple analogy:** The phone call to FastAPI. Handles busy signals and wrong numbers gracefully.
+
+---
+
+## `services/RecommendationService.java`
+
+**What it is:** Assembles the data needed by FastAPI and calls `AiServiceClient`.
+
+**Method: `getRecommendations(User user)`** — annotated with `@Cacheable("recommendations")`
+
+Step by step:
+1. Looks up the user's last 24 months of **confirmed** bookings (max 50)
+2. Collects the IDs of campsites the user already visited
+3. Loads all **ACTIVE** campsites, **excluding** already-visited ones (max 200 candidates)
+4. Builds an `AiRequestDTO` from the bookings and campsites
+5. Calls `AiServiceClient.fetchRecommendations()`
+6. Returns the result (up to 5 items)
+
+**Cache:** The `@Cacheable` means the second time the same user requests recommendations within 30 minutes, Spring returns the cached result immediately — no DB queries, no FastAPI call.
+
+**Simple analogy:** The organizer. Collects all the data, sends it to the scorer (FastAPI), gets results back.
+
+---
+
+## `controllers/CampsiteRecommendationController.java`
+
+**What it is:** The REST endpoint that Angular calls.
+
+**Endpoint:** `GET /api/v1/campsites/recommended`
+
+**What it does:**
+1. Reads the logged-in user's email from the JWT token
+2. Looks up the `User` object from the database
+3. Calls `recommendationService.getRecommendations(user)`
+4. Returns the list as JSON
+
+**Requires:** User must be logged in (JWT token in `Authorization` header).
+
+**Simple analogy:** The door between Angular and the recommendation logic. Opens only for logged-in users.
+
+---
+
+## `config/DataInitializer.java` (recommendation-relevant part)
+
+**What it is:** Seeds the database on startup with test data.
+
+**What it adds for recommendations:**
+- 5 campsite owners (owner1–owner5)
+- 10 campsites across Europe with diverse `naturalFeatures` (FOREST/LAKE/MOUNTAIN/BEACH/RIVER/PLAIN) and real GPS coordinates
+- 21 CONFIRMED bookings for camper1–camper4 across different seasons
+
+**Guard:** `if (campsiteRepo.count() > 0) return;` — if ANY campsites exist, seeding is skipped. To re-seed: truncate the campsite-related tables, then restart Spring Boot.
+
+---
+
+## `dto/weather/WeatherData.java`
+
+**What it is:** Parses the Open-Meteo API response used by the campsite status scheduler (separate from recommendation weather).
+
+**Key methods:**
+
+### `isForecastSevere()`
+
+Loops through the daily forecast array. For each day:
+- Skips null entries (Open-Meteo sometimes sends null at the edge of the window)
+- If weather code is in the SEVERE_CODES set → return true (campsite should be SUSPENDED)
+- If wind speed > 60 km/h → return true
+
+**SEVERE_CODES:** `65, 66, 67, 73, 75, 77, 82, 95, 96, 99`
+Codes 80/81 (light rain showers) are intentionally excluded — not dangerous for camping.
+
+### `getFirstSevereDay()`
+
+Same loop, but returns a human-readable description of the first bad day found.
+Used for the `lastStatusReason` field shown in the admin dashboard.
+
+---
+
+---
+
+# Layer 3 — Angular (Frontend)
+
+> Folder: `front/src/app/`
+
+---
+
+## `models/recommended-campsite.model.ts`
+
+**What it is:** TypeScript interfaces that match the JSON Spring Boot returns.
+
+```typescript
+RecommendedCampsite {
+  campsiteId: number
+  campsiteName: string
+  score: number                   // 0–100
+  scoreBreakdown: ScoreBreakdown  // the 5 sub-scores
+  weatherDescription: string      // e.g. "Ensoleillé, 22°C"
+  naturalFeatures: string[]       // e.g. ["FOREST", "LAKE"]
+  pricePerNight: number
+  imageUrl: string | null
+}
+```
+
+**Why camelCase:** Spring Boot re-serializes the FastAPI response (which is snake_case) into camelCase because `@JsonAlias` is read-only. Angular receives camelCase.
+
+---
+
+## `services/recommendation.service.ts`
+
+**What it is:** The Angular service that calls the backend.
+
+**Method: `getRecommendations()`**
+
+- Calls `GET /api/v1/campsites/recommended`
+- The JWT token is automatically added by the HTTP interceptor
+- If the call fails (401 not logged in, 503 FastAPI down) → returns `EMPTY` observable (completes with no data)
+
+**Simple analogy:** The messenger that fetches recommendations from the backend.
+
+---
+
+## `frontoffice/components/recommendation-carousel/recommendation-carousel.component.ts`
+
+**What it is:** The main carousel component shown on the home page.
+
+**Key properties:**
+
+| Property | What it does |
+|----------|-------------|
+| `recommendations` | The list of campsites to show |
+| `loading` | True while waiting for data → shows skeleton cards |
+| `error` | True if no recommendations → shows fallback banner |
+| `activeIndex` | Which card is currently "active" (highlighted) |
+
+**Key methods:**
+
+### `ngOnInit()`
+
+- Calls `recommendationService.getRecommendations()`
+- On success: stores data, starts auto-advance timer
+- On error or empty response: sets `error = true` → shows fallback
+
+### `prev()` / `next()` / `goTo(index)`
+
+- Navigate between cards
+- Wraps around (last → first, first → last)
+- Calls `cdr.markForCheck()` because the component uses `OnPush` change detection
+
+### `navigate(campsiteId)`
+
+- Navigates to `/campsites/{id}` when user clicks a card
+
+### `scoreColor(score)`
+
+- Returns a color based on the score:
+  - Green (`#16a34a`) if score ≥ 70
+  - Amber (`#d97706`) if score 45–69
+  - Red (`#dc2626`) if below 45
+
+### `svgCircle(score)`
+
+- Calculates the `stroke-dashoffset` for the SVG progress ring around the score
+- Score 100 → full circle, Score 0 → empty circle
+
+### `weatherIcon(description)`
+
+- Maps a French weather description to an emoji:
+  - "orage" → ⛈️
+  - "neige" → ❄️
+  - "pluie" / "averse" → 🌧️
+  - "couvert" / "nuageux" → 🌤️
+  - anything else → ☀️
+- Null-safe: if description is null/undefined → returns ☀️
+
+### `featureIcon(feature)`
+
+- Maps a feature name to an emoji:
+  - FOREST → 🌲, LAKE → 🏞️, MOUNTAIN → ⛰️, BEACH → 🏖️, RIVER → 🌊, PLAIN → 🌾
+
+### `startAutoAdvance()` / `stopAutoAdvance()`
+
+- Every 5 seconds, calls `next()` to move to the next card automatically
+- Stopped when the component is destroyed (`ngOnDestroy`)
+
+---
+
+## `recommendation-carousel.component.html`
+
+**What it is:** The template. Has 3 states:
+
+| State | When shown | What it shows |
+|-------|-----------|---------------|
+| Loading | `loading === true` | Animated skeleton cards (shimmer effect) |
+| Fallback | `!loading && error` | "Make your first bookings" message + link to /campsites |
+| Carousel | `!loading && !error && recommendations.length > 0` | The actual cards |
+
+**Each card contains:**
+- Full-height campsite image with gradient overlay at the bottom
+- SVG score ring (top right corner, inside the image)
+- Feature chips (bottom left of image, glassmorphism style)
+- Card body: campsite name, weather description + emoji, price per night
+- "Voir le campsite →" CTA that appears on hover
+
+---
+
+## `recommendation-carousel.component.css`
+
+**What it is:** The styles for the carousel.
+
+**Key design choices:**
+
+| Style | Effect |
+|-------|--------|
+| `scroll-snap-type: x mandatory` | Cards snap into place when scrolling |
+| `backdrop-filter: blur(6px)` | Feature chips have frosted glass effect |
+| `.reco-card:hover .reco-img { transform: scale(1.05) }` | Image zooms in on hover |
+| `.reco-cta { opacity: 0 }` → hover `opacity: 1` | CTA fades in on hover |
+| `@keyframes shimmer` | Skeleton cards animate with a moving highlight |
+| `.reco-dot--active { width: 22px }` | Active dot becomes a pill shape |
+
+**Responsive breakpoints:**
+- Mobile (< 640px): 1 card visible
+- Tablet (640px+): 2 cards visible
+- Desktop (992px+): 3 cards visible
+
+---
+
+## `frontoffice/pages/campsites/campsites.component.ts` & `.html`
+
+**Relevant addition:** `featureIcon(feature)` method and the green feature badges on each campsite card.
+
+Each campsite card now shows up to 3 natural feature badges (green, above amenities) if the campsite has `naturalFeatures` set.
+
+---
+
+## `dashboards/campsite-owner/campsite-owner.component.ts`
+
+**Relevant additions for naturalFeatures:**
+
+| Property/Method | What it does |
+|----------------|-------------|
+| `allFeatures` | The 6 possible features: FOREST, LAKE, MOUNTAIN, BEACH, RIVER, PLAIN |
+| `featureIcons` | Maps each feature to an emoji |
+| `selectedFeatures` | Array of currently selected features |
+| `toggleFeature(f)` | Adds or removes a feature from `selectedFeatures`, updates the form field |
+| `hasFeature(f)` | Returns true if the feature is currently selected (for the active chip style) |
+
+**In `openCreateForm()`:** Resets `selectedFeatures = []`
+**In `openEditForm(campsite)`:** Parses the campsite's `naturalFeatures` array into `selectedFeatures`
+
+**Admin vs owner loading:**
+```typescript
+isAdmin = false; // set in ngOnInit via authService.hasRole('ADMIN')
+
+loadMyCampsites() {
+  const req = this.isAdmin
+    ? this.campsiteService.getAllAdmin(0, 200)   // all campsites
+    : this.campsiteService.getMyCampsites(0, 50) // only owned
+  ...
+}
+```
+
+---
+
+---
+
+# Data Flow Summary
+
+```
+1. User opens home page → Angular calls GET /api/v1/campsites/recommended
+
+2. Spring Boot (RecommendationService):
+   - Loads user's last 24 months of confirmed bookings from MySQL
+   - Loads all ACTIVE campsites (excluding ones user already booked)
+   - Packages into AiRequestDTO
+
+3. Spring Boot (AiServiceClient):
+   - POSTs AiRequestDTO to FastAPI :8001/api/v1/campsites/recommended
+   - Waits max 8 seconds
+
+4. FastAPI (recommendations router):
+   - Builds user profile (preferred terrain, budget, season)
+   - Fetches weather for all candidate campsites in parallel
+   - Scores each campsite with 5 weighted components
+   - Returns top 5 sorted by score
+
+5. Spring Boot:
+   - Receives top 5 list
+   - Caches result in Redis for 30 minutes
+   - Returns JSON to Angular (camelCase fields)
+
+6. Angular (recommendation-carousel):
+   - Displays cards with image, score ring, weather, features, price
+   - Auto-advances every 5 seconds
+   - Click → navigate to campsite detail page
+```
+
+---
+
+# Quick Reference — Where to Change Things
+
+| I want to... | File to edit |
+|-------------|-------------|
+| Change scoring weights | `campsite-recommender/app/services/scoring_engine.py` → `WEIGHTS` dict |
+| Add a new natural feature | `campsite-recommender/app/models/campsite.py` → `NaturalFeature` enum |
+| Change cache duration | `back/.../config/RedisConfig.java` → `Duration.ofMinutes(30)` |
+| Change recommendation count (top 5) | `campsite-recommender/app/services/scoring_engine.py` → `rank_campsites()` slice |
+| Change auto-advance speed | `recommendation-carousel.component.ts` → `setInterval(..., 5000)` |
+| Change severe weather codes | `back/.../dto/weather/WeatherData.java` → `SEVERE_CODES` set |
+| Add a new scoring component | Add method in `scoring_engine.py`, add weight in `WEIGHTS`, add field to `ScoreBreakdown` in both Python and Java DTOs |

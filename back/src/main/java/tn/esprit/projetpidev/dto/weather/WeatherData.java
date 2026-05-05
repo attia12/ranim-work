@@ -51,9 +51,11 @@ public class WeatherData {
      *   80-81  Slight/moderate rain showers
      */
     private static final java.util.Set<Integer> SEVERE_CODES = java.util.Set.of(
+            61, 63,          // moderate / heavy rain
             65, 66, 67,      // heavy rain / freezing rain
-            73, 75, 77,      // moderate-heavy snow / snow grains
-            82,              // violent showers
+            71, 73, 75, 77,  // snow (all intensities)
+            80, 81, 82,      // rain showers (slight → violent)
+            85, 86,          // snow showers
             95, 96, 99       // thunderstorm
     );
 
