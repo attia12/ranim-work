@@ -12,6 +12,8 @@ public interface CampsitePaymentRepository extends JpaRepository<CampsitePayment
 
     Optional<CampsitePayment> findByBooking_Id(Long bookingId);
 
+    void deleteByBooking_Campsite_Id(Long campsiteId);
+
     /** Revenue grouped by month (last 12 months), newest first. */
     @Query(value = """
             SELECT DATE_FORMAT(p.paid_at, '%Y-%m') AS month, SUM(p.amount) AS revenue

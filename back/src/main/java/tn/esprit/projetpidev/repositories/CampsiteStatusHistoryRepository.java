@@ -9,4 +9,6 @@ import java.util.List;
 public interface CampsiteStatusHistoryRepository extends JpaRepository<CampsiteStatusHistory, Long> {
 
     List<CampsiteStatusHistory> findByCampsite_IdOrderByChangedAtDesc(Long campsiteId);
+
+    void deleteByCampsite_Id(Long campsiteId);
 }

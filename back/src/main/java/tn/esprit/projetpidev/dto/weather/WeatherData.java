@@ -66,9 +66,11 @@ public class WeatherData {
         java.util.List<Integer> codes = daily.getWeathercode();
         java.util.List<Double> winds = daily.getWindspeed10mMax();
         for (int i = 0; i < codes.size(); i++) {
-            int code = codes.get(i);
-            double wind = (winds != null && i < winds.size()) ? winds.get(i) : 0.0;
-            if (SEVERE_CODES.contains(code) || wind > 60.0) return true;
+            Integer codeVal = codes.get(i);
+            if (codeVal == null) continue;
+            Double windVal = (winds != null && i < winds.size()) ? winds.get(i) : null;
+            double wind = (windVal != null) ? windVal : 0.0;
+            if (SEVERE_CODES.contains(codeVal) || wind > 60.0) return true;
         }
         return false;
     }
@@ -80,11 +82,13 @@ public class WeatherData {
         java.util.List<Integer> codes = daily.getWeathercode();
         java.util.List<Double> winds = daily.getWindspeed10mMax();
         for (int i = 0; i < codes.size(); i++) {
-            int code = codes.get(i);
-            double wind = (winds != null && i < winds.size()) ? winds.get(i) : 0.0;
-            if (SEVERE_CODES.contains(code) || wind > 60.0) {
+            Integer codeVal = codes.get(i);
+            if (codeVal == null) continue;
+            Double windVal = (winds != null && i < winds.size()) ? winds.get(i) : null;
+            double wind = (windVal != null) ? windVal : 0.0;
+            if (SEVERE_CODES.contains(codeVal) || wind > 60.0) {
                 String date = (times != null && i < times.size()) ? times.get(i) : "unknown";
-                return "date=" + date + ", code=" + code + ", wind=" + wind + " km/h";
+                return "date=" + date + ", code=" + codeVal + ", wind=" + wind + " km/h";
             }
         }
         return null;

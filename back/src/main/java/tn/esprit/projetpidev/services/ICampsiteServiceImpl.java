@@ -15,7 +15,11 @@ import tn.esprit.projetpidev.domain.enums.Role;
 import tn.esprit.projetpidev.dto.campsite.CampsiteRequest;
 import tn.esprit.projetpidev.dto.campsite.CampsiteResponse;
 import tn.esprit.projetpidev.exception.ResourceNotFoundException;
+import tn.esprit.projetpidev.repositories.AvailabilityRepository;
+import tn.esprit.projetpidev.repositories.CampsiteBookingRepository;
+import tn.esprit.projetpidev.repositories.CampsitePaymentRepository;
 import tn.esprit.projetpidev.repositories.CampsiteRepository;
+import tn.esprit.projetpidev.repositories.CampsiteStatusHistoryRepository;
 import tn.esprit.projetpidev.repositories.UserRepository;
 
 import java.math.BigDecimal;
@@ -31,6 +35,10 @@ public class ICampsiteServiceImpl implements ICampsiteService {
 
     private final CampsiteRepository campsiteRepository;
     private final UserRepository userRepository;
+    private final AvailabilityRepository availabilityRepository;
+    private final CampsiteBookingRepository campsiteBookingRepository;
+    private final CampsitePaymentRepository campsitePaymentRepository;
+    private final CampsiteStatusHistoryRepository statusHistoryRepository;
 
     @Override
     public CampsiteResponse create(CampsiteRequest request, Long ownerId) {
@@ -100,13 +108,22 @@ public class ICampsiteServiceImpl implements ICampsiteService {
         User requester = findUser(requesterId);
         assertOwnerOrAdmin(requester);
 
-        if (requester.getRole() != Role.ADMIN && !campsite.getOwner().getId().equals(requesterId)) {
-            throw new IllegalStateException("You do not own this campsite.");
+        if (requester.getRole() == Role.ADMIN) {
+            // Hard delete: remove all dependent records then the campsite itself
+            campsitePaymentRepository.deleteByBooking_Campsite_Id(id);
+            campsiteBookingRepository.deleteByCampsite_Id(id);
+            statusHistoryRepository.deleteByCampsite_Id(id);
+            availabilityRepository.deleteByCampsite_Id(id);
+            campsiteRepository.deleteById(id);
+            log.info("Campsite hard-deleted by admin: id={}", id);
+        } else {
+            if (!campsite.getOwner().getId().equals(requesterId)) {
+                throw new IllegalStateException("You do not own this campsite.");
+            }
+            campsite.setStatus(CampsiteStatus.DELETED);
+            campsiteRepository.save(campsite);
+            log.info("Campsite soft-deleted by owner: id={}", id);
         }
-
-        campsite.setStatus(CampsiteStatus.DELETED);
-        campsiteRepository.save(campsite);
-        log.info("Campsite soft-deleted: id={}", id);
     }
 
     @Override

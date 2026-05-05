@@ -13,6 +13,8 @@ public interface AvailabilityRepository extends JpaRepository<Availability, Long
 
     List<Availability> findByCampsite_Id(Long campsiteId);
 
+    void deleteByCampsite_Id(Long campsiteId);
+
     @Query("""
             SELECT a FROM Availability a
             WHERE a.campsite.id = :campsiteId

@@ -18,6 +18,8 @@ public interface CampsiteBookingRepository extends JpaRepository<CampsiteBooking
 
     Page<CampsiteBooking> findByCampsite_Id(Long campsiteId, Pageable pageable);
 
+    void deleteByCampsite_Id(Long campsiteId);
+
     Page<CampsiteBooking> findAll(Pageable pageable);
 
     /** Counts active (non-cancelled) bookings overlapping the requested date range. */
