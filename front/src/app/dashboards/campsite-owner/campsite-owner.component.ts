@@ -259,10 +259,17 @@ export class CampsiteOwnerComponent implements OnInit {
   saveCampsite(): void {
     if (this.campsiteForm.invalid) { this.campsiteForm.markAllAsTouched(); return; }
     const raw = this.campsiteForm.value;
+    const parseCoord = (v: any): number | null => {
+      if (v === null || v === undefined || v === '') return null;
+      const n = parseFloat(String(v).replace(',', '.'));
+      return isNaN(n) ? null : n;
+    };
     const req: CampsiteRequest = {
       ...raw,
       startDate: raw.startDate || null,
       endDate:   raw.endDate   || null,
+      latitude:  parseCoord(raw.latitude),
+      longitude: parseCoord(raw.longitude),
     };
     const obs = this.editingCampsite
       ? this.campsiteService.update(this.editingCampsite.id, req)
