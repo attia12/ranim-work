@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { CampsiteService } from '../../services/campsite.service';
 import { CampsiteBookingService } from '../../services/campsite-booking.service';
+import { AuthService } from '../../services/auth.service';
 import { CampsiteApiResponse, CampsiteRequest } from '../../models/campsite.model';
 import { CampsiteBookingResponse } from '../../models/campsite-booking.model';
 import { CampsiteStatusHistoryEntry } from '../../models/campsite-status.model';
@@ -44,15 +45,19 @@ export class CampsiteOwnerComponent implements OnInit {
   };
   selectedFeatures: string[] = [];
 
+  isAdmin = false;
+
   constructor(
     private fb: FormBuilder,
     private campsiteService: CampsiteService,
     private bookingService: CampsiteBookingService,
     private http: HttpClient,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
+    this.isAdmin = this.authService.hasRole('ADMIN');
     this.initForms();
     this.loadMyCampsites();
     this.route.queryParams.subscribe(params => {
@@ -106,7 +111,10 @@ export class CampsiteOwnerComponent implements OnInit {
 
   loadMyCampsites(): void {
     this.loading = true;
-    this.campsiteService.getMyCampsites(0, 50).subscribe({
+    const req = this.isAdmin
+      ? this.campsiteService.getAllAdmin(0, 200)
+      : this.campsiteService.getMyCampsites(0, 50);
+    req.subscribe({
       next: (data) => { this.campsites = data.content; this.loading = false; },
       error: () => { this.loading = false; }
     });
