@@ -41,7 +41,11 @@ public class WeatherService {
     public Optional<WeatherData> getForecastWeather(Double latitude, Double longitude,
                                                      java.time.LocalDate startDate,
                                                      java.time.LocalDate endDate) {
-        if (latitude == null || longitude == null) return Optional.empty();
+        if (latitude == null || longitude == null) {
+            log.warn("Skipping weather check — campsite has null coordinates (lat={}, lon={})", latitude, longitude);
+            return Optional.empty();
+        }
+        log.info("Calling Open-Meteo forecast for ({},{}) from {} to {}", latitude, longitude, startDate, endDate);
         try {
             WeatherData data = restTemplate.getForObject(
                     FORECAST_URL, WeatherData.class,
