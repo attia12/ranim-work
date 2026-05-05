@@ -7,17 +7,22 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import tn.esprit.projetpidev.domain.Campsite;
 import tn.esprit.projetpidev.domain.CampsiteBooking;
+import tn.esprit.projetpidev.domain.CampsitePayment;
 import tn.esprit.projetpidev.domain.User;
 import tn.esprit.projetpidev.domain.enums.CampsiteBookingStatus;
+import tn.esprit.projetpidev.domain.enums.CampsitePaymentMethod;
+import tn.esprit.projetpidev.domain.enums.CampsitePaymentStatus;
 import tn.esprit.projetpidev.domain.enums.CampsiteStatus;
 import tn.esprit.projetpidev.domain.enums.CampsiteType;
 import tn.esprit.projetpidev.domain.enums.Role;
 import tn.esprit.projetpidev.repositories.CampsiteBookingRepository;
+import tn.esprit.projetpidev.repositories.CampsitePaymentRepository;
 import tn.esprit.projetpidev.repositories.CampsiteRepository;
 import tn.esprit.projetpidev.repositories.UserRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,10 +31,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
-    private final UserRepository       userRepo;
-    private final CampsiteRepository   campsiteRepo;
+    private final UserRepository            userRepo;
+    private final CampsiteRepository        campsiteRepo;
     private final CampsiteBookingRepository bookingRepo;
-    private final PasswordEncoder      passwordEncoder;
+    private final CampsitePaymentRepository paymentRepo;
+    private final PasswordEncoder           passwordEncoder;
 
     @Override
     public void run(String... args) throws Exception {
@@ -38,6 +44,7 @@ public class DataInitializer implements CommandLineRunner {
 
         seedUsers(password);
         seedCampsitesAndBookings();
+        seedAnalyticsData();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -352,7 +359,225 @@ public class DataInitializer implements CommandLineRunner {
         log.info("[Seed] ─────────────────────────────────────────────────────");
     }
 
-    // ── Helper ────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    // ANALYTICS SEED — payments, cancellations, fraud suspects
+    // Runs only once (guard: paymentRepo.count() == 0)
+    // ─────────────────────────────────────────────────────────────────────────
+    private void seedAnalyticsData() {
+        if (paymentRepo.count() > 0) {
+            log.info("[Seed] Analytics data already seeded — skipping");
+            return;
+        }
+
+        // ── Resolve campsites (must already exist) ────────────────────────────
+        List<Campsite> cs = campsiteRepo.findAll();
+        if (cs.size() < 10) { log.warn("[Seed] Not enough campsites for analytics seed"); return; }
+        // Sort by id so indices are deterministic
+        cs.sort((a, b) -> (int)(a.getId() - b.getId()));
+        Campsite c1 = cs.get(0), c2 = cs.get(1), c3 = cs.get(2), c4 = cs.get(3),
+                 c5 = cs.get(4), c6 = cs.get(5), c7 = cs.get(6), c8 = cs.get(7),
+                 c9 = cs.get(8), c10 = cs.get(9);
+
+        // ── Resolve campers ───────────────────────────────────────────────────
+        User p1  = camper(1), p2  = camper(2), p3  = camper(3), p4  = camper(4),
+             p5  = camper(5), p6  = camper(6), p7  = camper(7), p8  = camper(8),
+             p9  = camper(9), p10 = camper(10);
+        if (p1 == null || p10 == null) { log.warn("[Seed] Campers not found — skipping analytics"); return; }
+
+        List<CampsiteBooking> newBookings = new ArrayList<>();
+        List<CampsitePayment> payments    = new ArrayList<>();
+
+        // ── Step 1: payments for existing recommendation bookings (2024 history)
+        // These were already saved; we just add payments in bulk.
+        // paidAt set to mid-2024 so they appear in totalRevenue but NOT in last-12-months chart
+        List<CampsiteBooking> existing = bookingRepo.findAll();
+        CampsitePaymentMethod[] methods = CampsitePaymentMethod.values();
+        int mi = 0;
+        for (CampsiteBooking b : existing) {
+            if (b.getStatus() == CampsiteBookingStatus.CONFIRMED && b.getTotalPrice() != null) {
+                payments.add(payment(b, b.getTotalPrice(), methods[mi++ % 3],
+                        LocalDateTime.of(2024, 7, 10, 12, 0)));
+            }
+        }
+
+        // ── Step 2: CONFIRMED bookings spread over 12 months (Jun 2025 – May 2026)
+        // Each month gets 3–7 bookings to produce realistic revenue peaks in summer
+
+        // June 2025  — 4 bookings → ~€1 830
+        newBookings.add(confirmed(c3, p1,  "2025-06-05", "2025-06-10", 2, 475.00));
+        newBookings.add(confirmed(c5, p2,  "2025-06-12", "2025-06-17", 3, 275.00));
+        newBookings.add(confirmed(c9, p3,  "2025-06-18", "2025-06-23", 2, 350.00));
+        newBookings.add(confirmed(c2, p4,  "2025-06-25", "2025-06-30", 2, 450.00));
+
+        // July 2025  — 7 bookings → ~€3 310 (peak summer)
+        newBookings.add(confirmed(c3, p5,  "2025-07-01", "2025-07-08", 4, 760.00));
+        newBookings.add(confirmed(c2, p1,  "2025-07-05", "2025-07-11", 2, 525.00));
+        newBookings.add(confirmed(c10,p2,  "2025-07-08", "2025-07-13", 3, 360.00));
+        newBookings.add(confirmed(c6, p3,  "2025-07-14", "2025-07-20", 2, 455.00));
+        newBookings.add(confirmed(c1, p4,  "2025-07-20", "2025-07-25", 2, 225.00));
+        newBookings.add(confirmed(c5, p5,  "2025-07-22", "2025-07-27", 3, 550.00));
+        newBookings.add(confirmed(c9, p1,  "2025-07-28", "2025-08-02", 2, 490.00));
+
+        // August 2025 — 6 bookings → ~€2 885
+        newBookings.add(confirmed(c3, p2,  "2025-08-02", "2025-08-08", 3, 665.00));
+        newBookings.add(confirmed(c10,p3,  "2025-08-05", "2025-08-10", 2, 360.00));
+        newBookings.add(confirmed(c2, p4,  "2025-08-10", "2025-08-16", 2, 525.00));
+        newBookings.add(confirmed(c8, p5,  "2025-08-15", "2025-08-20", 3, 375.00));
+        newBookings.add(confirmed(c5, p1,  "2025-08-18", "2025-08-23", 2, 440.00));
+        newBookings.add(confirmed(c6, p2,  "2025-08-24", "2025-08-29", 2, 390.00));
+
+        // September 2025 — 5 bookings → ~€2 125
+        newBookings.add(confirmed(c9, p3,  "2025-09-02", "2025-09-07", 2, 490.00));
+        newBookings.add(confirmed(c7, p4,  "2025-09-08", "2025-09-13", 3, 300.00));
+        newBookings.add(confirmed(c4, p5,  "2025-09-14", "2025-09-19", 2, 210.00));
+        newBookings.add(confirmed(c1, p1,  "2025-09-20", "2025-09-25", 2, 700.00));
+        newBookings.add(confirmed(c8, p2,  "2025-09-25", "2025-09-30", 2, 250.00));
+
+        // October 2025 — 4 bookings → ~€1 415
+        newBookings.add(confirmed(c4, p3,  "2025-10-03", "2025-10-07", 2, 280.00));
+        newBookings.add(confirmed(c7, p4,  "2025-10-10", "2025-10-15", 3, 480.00));
+        newBookings.add(confirmed(c1, p5,  "2025-10-15", "2025-10-19", 2, 405.00));
+        newBookings.add(confirmed(c8, p1,  "2025-10-22", "2025-10-26", 2, 600.00));
+
+        // November 2025 — 3 bookings → ~€820
+        newBookings.add(confirmed(c4, p2,  "2025-11-05", "2025-11-09", 2, 280.00));
+        newBookings.add(confirmed(c7, p3,  "2025-11-12", "2025-11-16", 2, 240.00));
+        newBookings.add(confirmed(c1, p4,  "2025-11-20", "2025-11-24", 2, 300.00));
+
+        // December 2025 — 2 bookings → ~€635
+        newBookings.add(confirmed(c4, p5,  "2025-12-05", "2025-12-09", 2, 175.00));
+        newBookings.add(confirmed(c7, p1,  "2025-12-20", "2025-12-25", 3, 460.00));
+
+        // January 2026 — 2 bookings → ~€455
+        newBookings.add(confirmed(c7, p2,  "2026-01-08", "2026-01-12", 2, 240.00));
+        newBookings.add(confirmed(c4, p3,  "2026-01-20", "2026-01-24", 2, 215.00));
+
+        // February 2026 — 2 bookings → ~€525
+        newBookings.add(confirmed(c8, p4,  "2026-02-07", "2026-02-12", 2, 375.00));
+        newBookings.add(confirmed(c1, p5,  "2026-02-14", "2026-02-18", 2, 300.00));
+
+        // March 2026 — 3 bookings → ~€905
+        newBookings.add(confirmed(c2, p1,  "2026-03-05", "2026-03-10", 2, 375.00));
+        newBookings.add(confirmed(c6, p2,  "2026-03-12", "2026-03-17", 2, 325.00));
+        newBookings.add(confirmed(c9, p3,  "2026-03-20", "2026-03-25", 2, 350.00));
+
+        // April 2026 — 4 bookings → ~€1 540
+        newBookings.add(confirmed(c3, p4,  "2026-04-01", "2026-04-07", 2, 570.00));
+        newBookings.add(confirmed(c2, p5,  "2026-04-08", "2026-04-14", 2, 450.00));
+        newBookings.add(confirmed(c5, p1,  "2026-04-15", "2026-04-20", 3, 275.00));
+        newBookings.add(confirmed(c9, p2,  "2026-04-22", "2026-04-27", 2, 490.00));
+
+        // May 2026 — 3 bookings → ~€1 230 (current month, partial)
+        newBookings.add(confirmed(c3, p3,  "2026-05-01", "2026-05-06", 2, 475.00));
+        newBookings.add(confirmed(c6, p4,  "2026-05-02", "2026-05-07", 2, 390.00));
+        newBookings.add(confirmed(c10,p5,  "2026-05-03", "2026-05-08", 3, 540.00));
+
+        bookingRepo.saveAll(newBookings);
+
+        // Build payments for the new confirmed bookings with correct paidAt months
+        int idx = 0;
+        LocalDateTime[] paidDates = {
+            // June 2025 (4)
+            ldt(2025,6,6), ldt(2025,6,13), ldt(2025,6,19), ldt(2025,6,26),
+            // July 2025 (7)
+            ldt(2025,7,2), ldt(2025,7,6), ldt(2025,7,9), ldt(2025,7,15),
+            ldt(2025,7,21), ldt(2025,7,23), ldt(2025,7,29),
+            // August 2025 (6)
+            ldt(2025,8,3), ldt(2025,8,6), ldt(2025,8,11), ldt(2025,8,16),
+            ldt(2025,8,19), ldt(2025,8,25),
+            // September 2025 (5)
+            ldt(2025,9,3), ldt(2025,9,9), ldt(2025,9,15), ldt(2025,9,21), ldt(2025,9,26),
+            // October 2025 (4)
+            ldt(2025,10,4), ldt(2025,10,11), ldt(2025,10,16), ldt(2025,10,23),
+            // November 2025 (3)
+            ldt(2025,11,6), ldt(2025,11,13), ldt(2025,11,21),
+            // December 2025 (2)
+            ldt(2025,12,6), ldt(2025,12,21),
+            // January 2026 (2)
+            ldt(2026,1,9), ldt(2026,1,21),
+            // February 2026 (2)
+            ldt(2026,2,8), ldt(2026,2,15),
+            // March 2026 (3)
+            ldt(2026,3,6), ldt(2026,3,13), ldt(2026,3,21),
+            // April 2026 (4)
+            ldt(2026,4,2), ldt(2026,4,9), ldt(2026,4,16), ldt(2026,4,23),
+            // May 2026 (3)
+            ldt(2026,5,2), ldt(2026,5,3), ldt(2026,5,4)
+        };
+        CampsitePaymentMethod[] pm = { CampsitePaymentMethod.CARD, CampsitePaymentMethod.PAYPAL,
+                                       CampsitePaymentMethod.BANK_TRANSFER, CampsitePaymentMethod.CARD,
+                                       CampsitePaymentMethod.CARD, CampsitePaymentMethod.PAYPAL };
+        for (CampsiteBooking b : newBookings) {
+            payments.add(payment(b, b.getTotalPrice(), pm[idx % pm.length], paidDates[idx]));
+            idx++;
+        }
+
+        // ── Step 3: CANCELLED bookings for fraud suspects ─────────────────────
+        // camper6: 7 cancellations
+        List<CampsiteBooking> cancelled = new ArrayList<>();
+        cancelled.add(cancel(c1, p6,  "2025-06-10", "2025-06-15", "Changed plans"));
+        cancelled.add(cancel(c3, p6,  "2025-07-05", "2025-07-10", "Found cheaper option"));
+        cancelled.add(cancel(c5, p6,  "2025-08-01", "2025-08-06", "Family emergency"));
+        cancelled.add(cancel(c7, p6,  "2025-09-10", "2025-09-15", "Work conflict"));
+        cancelled.add(cancel(c2, p6,  "2025-10-05", "2025-10-09", "Changed plans"));
+        cancelled.add(cancel(c9, p6,  "2025-11-01", "2025-11-05", "Changed plans"));
+        cancelled.add(cancel(c4, p6,  "2026-01-15", "2026-01-19", "No reason given"));
+
+        // camper7: 6 cancellations
+        cancelled.add(cancel(c2, p7,  "2025-07-10", "2025-07-15", "Changed plans"));
+        cancelled.add(cancel(c6, p7,  "2025-08-05", "2025-08-10", "Price issue"));
+        cancelled.add(cancel(c8, p7,  "2025-09-15", "2025-09-20", "Changed plans"));
+        cancelled.add(cancel(c10,p7,  "2025-10-10", "2025-10-15", "Work conflict"));
+        cancelled.add(cancel(c3, p7,  "2025-12-01", "2025-12-05", "Changed plans"));
+        cancelled.add(cancel(c1, p7,  "2026-02-10", "2026-02-14", "Changed plans"));
+
+        // camper8: 6 cancellations
+        cancelled.add(cancel(c4, p8,  "2025-06-20", "2025-06-24", "Bad weather forecast"));
+        cancelled.add(cancel(c7, p8,  "2025-07-18", "2025-07-22", "Changed plans"));
+        cancelled.add(cancel(c9, p8,  "2025-08-20", "2025-08-25", "Illness"));
+        cancelled.add(cancel(c1, p8,  "2025-10-20", "2025-10-24", "Changed plans"));
+        cancelled.add(cancel(c5, p8,  "2026-01-08", "2026-01-12", "Changed plans"));
+        cancelled.add(cancel(c2, p8,  "2026-03-15", "2026-03-20", "Changed plans"));
+
+        // camper9: 5 cancellations
+        cancelled.add(cancel(c3, p9,  "2025-07-25", "2025-07-30", "Price issue"));
+        cancelled.add(cancel(c6, p9,  "2025-09-05", "2025-09-10", "Changed plans"));
+        cancelled.add(cancel(c10,p9,  "2025-11-10", "2025-11-14", "Work conflict"));
+        cancelled.add(cancel(c8, p9,  "2026-02-20", "2026-02-24", "Changed plans"));
+        cancelled.add(cancel(c4, p9,  "2026-04-10", "2026-04-14", "No reason given"));
+
+        // camper10: 5 cancellations
+        cancelled.add(cancel(c5, p10, "2025-08-12", "2025-08-17", "Changed plans"));
+        cancelled.add(cancel(c2, p10, "2025-10-01", "2025-10-05", "Found cheaper option"));
+        cancelled.add(cancel(c7, p10, "2025-12-10", "2025-12-14", "Family emergency"));
+        cancelled.add(cancel(c9, p10, "2026-01-25", "2026-01-29", "Changed plans"));
+        cancelled.add(cancel(c1, p10, "2026-03-10", "2026-03-14", "Changed plans"));
+
+        bookingRepo.saveAll(cancelled);
+
+        // ── Step 4: PENDING bookings (waiting for owner confirmation) ──────────
+        List<CampsiteBooking> pending = new ArrayList<>();
+        pending.add(pending(c3, p1, "2026-05-15", "2026-05-20", 2, 475.00));
+        pending.add(pending(c2, p2, "2026-05-18", "2026-05-23", 2, 375.00));
+        pending.add(pending(c6, p3, "2026-05-20", "2026-05-25", 3, 325.00));
+        pending.add(pending(c9, p4, "2026-05-22", "2026-05-27", 2, 490.00));
+        pending.add(pending(c10,p5, "2026-05-25", "2026-05-30", 2, 360.00));
+        bookingRepo.saveAll(pending);
+
+        paymentRepo.saveAll(payments);
+
+        log.info("[Seed] Analytics seeded: {} new confirmed bookings, {} payments, {} cancellations, {} pending",
+                newBookings.size(), payments.size(), cancelled.size(), pending.size());
+        log.info("[Seed] Total seeded revenue spans Jun 2025 – May 2026 (~€17 600)");
+        log.info("[Seed] Fraud suspects: camper6-10 (5-7 cancellations each)");
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private User camper(int i) {
+        return userRepo.findByEmail("camper" + i + "@campconnect.tn").orElse(null);
+    }
+
     private CampsiteBooking booking(
             Campsite campsite, User camper,
             String checkIn, String checkOut,
@@ -367,5 +592,50 @@ public class DataInitializer implements CommandLineRunner {
                 .totalPrice(BigDecimal.valueOf(total))
                 .status(CampsiteBookingStatus.CONFIRMED)
                 .build();
+    }
+
+    private CampsiteBooking confirmed(Campsite c, User u, String in, String out, int guests, double total) {
+        return CampsiteBooking.builder()
+                .campsite(c).camper(u)
+                .checkInDate(LocalDate.parse(in)).checkOutDate(LocalDate.parse(out))
+                .numberOfGuests(guests).totalPrice(BigDecimal.valueOf(total))
+                .status(CampsiteBookingStatus.CONFIRMED)
+                .build();
+    }
+
+    private CampsiteBooking cancel(Campsite c, User u, String in, String out, String reason) {
+        return CampsiteBooking.builder()
+                .campsite(c).camper(u)
+                .checkInDate(LocalDate.parse(in)).checkOutDate(LocalDate.parse(out))
+                .numberOfGuests(2).totalPrice(BigDecimal.ZERO)
+                .status(CampsiteBookingStatus.CANCELLED)
+                .cancellationReason(reason)
+                .build();
+    }
+
+    private CampsiteBooking pending(Campsite c, User u, String in, String out, int guests, double total) {
+        return CampsiteBooking.builder()
+                .campsite(c).camper(u)
+                .checkInDate(LocalDate.parse(in)).checkOutDate(LocalDate.parse(out))
+                .numberOfGuests(guests).totalPrice(BigDecimal.valueOf(total))
+                .status(CampsiteBookingStatus.PENDING)
+                .build();
+    }
+
+    private CampsitePayment payment(CampsiteBooking booking, BigDecimal amount,
+                                    CampsitePaymentMethod method, LocalDateTime paidAt) {
+        return CampsitePayment.builder()
+                .booking(booking)
+                .amount(amount)
+                .method(method)
+                .status(CampsitePaymentStatus.PAID)
+                .transactionId("TXN-" + booking.getId() + "-" + paidAt.getYear())
+                .referenceCode("REF-CW-" + paidAt.getYear() + paidAt.getMonthValue())
+                .paidAt(paidAt)
+                .build();
+    }
+
+    private LocalDateTime ldt(int year, int month, int day) {
+        return LocalDateTime.of(year, month, day, 10, 0);
     }
 }
