@@ -2,6 +2,7 @@
 package tn.esprit.projetpidev.dto.campsite;
 
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -26,7 +27,11 @@ public class CampsiteRequest {
     private String city;
 
     private String address;
+
+    @NotNull(message = "Latitude is required")
     private Double latitude;
+
+    @NotNull(message = "Longitude is required")
     private Double longitude;
 
     @Min(1)
@@ -35,7 +40,7 @@ public class CampsiteRequest {
     @NotNull
     private CampsiteType type;
 
-    @DecimalMin("0.0")
+    @DecimalMin(value = "0.0", message = "Price per night cannot be negative")
     private BigDecimal pricePerNight;
 
     /** Comma-separated picture URLs */
@@ -47,6 +52,7 @@ public class CampsiteRequest {
     private String rules;
 
     /** Optional: date from which the campsite opens (null = no restriction) */
+    @FutureOrPresent(message = "Start date must be today or a future date")
     private LocalDate startDate;
 
     /** Optional: date after which the campsite expires (null = no restriction) */

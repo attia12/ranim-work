@@ -1,6 +1,6 @@
 // Module: Official Campsite & Booking | Layer: Frontend Component (Smart - Owner Dashboard)
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { CampsiteService } from '../../services/campsite.service';
 import { CampsiteBookingService } from '../../services/campsite-booking.service';
@@ -36,8 +36,16 @@ export class CampsiteOwnerComponent implements OnInit {
   error = '';
   successMsg = '';
   refreshing = false;
+  backendErrors: Record<string, string> = {};
 
   today = new Date().toISOString().split('T')[0];
+
+  futureDateValidator = (control: AbstractControl): ValidationErrors | null => {
+    if (!control.value) return null;
+    const selected = new Date(control.value);
+    const todayDate = new Date(this.today);
+    return selected < todayDate ? { pastDate: true } : null;
+  };
   types = ['OFFICIAL', 'OUTDOOR'];
   allFeatures = ['FOREST', 'LAKE', 'MOUNTAIN', 'BEACH', 'RIVER', 'PLAIN'];
   featureIcons: Record<string, string> = {
@@ -76,15 +84,15 @@ export class CampsiteOwnerComponent implements OnInit {
       country:       ['', Validators.required],
       city:          ['', Validators.required],
       address:       [''],
-      latitude:      [null],
-      longitude:     [null],
+      latitude:      [null, Validators.required],
+      longitude:     [null, Validators.required],
       capacity:      [1, [Validators.required, Validators.min(1)]],
       type:          ['OFFICIAL', Validators.required],
       pricePerNight: [0, [Validators.required, Validators.min(0)]],
       pictures:      [''],
       amenities:     [''],
       rules:         [''],
-      startDate:        [null],
+      startDate:        [null, this.futureDateValidator],
       endDate:          [null],
       naturalFeatures:  ['']
     });
@@ -207,6 +215,8 @@ export class CampsiteOwnerComponent implements OnInit {
 
   openCreateForm(): void {
     this.editingCampsite = null;
+    this.backendErrors = {};
+    this.error = '';
     this.campsiteForm.reset({
       name:          'Pine Forest Camp',
       description:   'A peaceful campsite in the pine forest.',
@@ -228,6 +238,8 @@ export class CampsiteOwnerComponent implements OnInit {
   }
 
   openEditForm(campsite: CampsiteApiResponse): void {
+    this.backendErrors = {};
+    this.error = '';
     this.editingCampsite = campsite;
     this.selectedFeatures = campsite.naturalFeatures ? [...campsite.naturalFeatures] : [];
     this.campsiteForm.patchValue({
@@ -258,6 +270,7 @@ export class CampsiteOwnerComponent implements OnInit {
 
   saveCampsite(): void {
     if (this.campsiteForm.invalid) { this.campsiteForm.markAllAsTouched(); return; }
+    this.backendErrors = {};
     const raw = this.campsiteForm.value;
     const parseCoord = (v: any): number | null => {
       if (v === null || v === undefined || v === '') return null;
@@ -282,7 +295,16 @@ export class CampsiteOwnerComponent implements OnInit {
         this.loadMyCampsites();
         setTimeout(() => this.successMsg = '', 3000);
       },
-      error: (err) => { this.error = err.error?.error || 'Save failed.'; }
+      error: (err) => {
+        const body = err.error;
+        if (body && typeof body === 'object' && !body.error) {
+          // Field-level validation errors from backend: { fieldName: "message", ... }
+          this.backendErrors = body as Record<string, string>;
+          this.error = 'Please fix the validation errors below.';
+        } else {
+          this.error = body?.error || body?.message || 'Save failed.';
+        }
+      }
     });
   }
 

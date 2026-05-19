@@ -252,7 +252,10 @@
         <div class="col-6 form-group"><label i18n>Capacity *</label><input type="number" class="form-control" formControlName="capacity" min="1"></div>
         <div class="col-6 form-group" *ngIf="campsiteForm.get('type')?.value !== 'OUTDOOR'">
           <label i18n>Price/Night *</label>
-          <input type="number" class="form-control" formControlName="pricePerNight" min="0" step="0.01">
+          <input type="number" class="form-control" formControlName="pricePerNight" min="0" step="0.01"
+                 [class.is-invalid]="(campsiteForm.get('pricePerNight')?.invalid && campsiteForm.get('pricePerNight')?.touched) || backendErrors['pricePerNight']">
+          <div class="invalid-feedback" *ngIf="campsiteForm.get('pricePerNight')?.errors?.['min']">Price cannot be negative.</div>
+          <div class="invalid-feedback" *ngIf="backendErrors['pricePerNight']">{{ backendErrors['pricePerNight'] }}</div>
         </div>
         <div class="col-6 form-group" *ngIf="campsiteForm.get('type')?.value === 'OUTDOOR'">
           <label i18n>Price/Night</label>
@@ -278,9 +281,27 @@
           </div>
         </div>
 
-        <div class="col-6 form-group"><label i18n>Latitude (for weather)</label><input type="text" class="form-control" formControlName="latitude" placeholder="e.g. 36.78 or 36,78"></div>
-        <div class="col-6 form-group"><label i18n>Longitude (for weather)</label><input type="text" class="form-control" formControlName="longitude" placeholder="e.g. 8.69 or 8,69"></div>
-        <div class="col-6 form-group"><label i18n>Open From (optional)</label><input type="date" class="form-control" formControlName="startDate"></div>
+        <div class="col-6 form-group">
+          <label i18n>Latitude *</label>
+          <input type="text" class="form-control" formControlName="latitude" placeholder="e.g. 36.78"
+                 [class.is-invalid]="(campsiteForm.get('latitude')?.invalid && campsiteForm.get('latitude')?.touched) || backendErrors['latitude']">
+          <div class="invalid-feedback" *ngIf="campsiteForm.get('latitude')?.errors?.['required']">Latitude is required.</div>
+          <div class="invalid-feedback" *ngIf="backendErrors['latitude']">{{ backendErrors['latitude'] }}</div>
+        </div>
+        <div class="col-6 form-group">
+          <label i18n>Longitude *</label>
+          <input type="text" class="form-control" formControlName="longitude" placeholder="e.g. 8.69"
+                 [class.is-invalid]="(campsiteForm.get('longitude')?.invalid && campsiteForm.get('longitude')?.touched) || backendErrors['longitude']">
+          <div class="invalid-feedback" *ngIf="campsiteForm.get('longitude')?.errors?.['required']">Longitude is required.</div>
+          <div class="invalid-feedback" *ngIf="backendErrors['longitude']">{{ backendErrors['longitude'] }}</div>
+        </div>
+        <div class="col-6 form-group">
+          <label i18n>Open From</label>
+          <input type="date" class="form-control" formControlName="startDate" [min]="today"
+                 [class.is-invalid]="(campsiteForm.get('startDate')?.invalid && campsiteForm.get('startDate')?.touched) || backendErrors['startDate']">
+          <div class="invalid-feedback" *ngIf="campsiteForm.get('startDate')?.errors?.['pastDate']">Start date must be today or a future date.</div>
+          <div class="invalid-feedback" *ngIf="backendErrors['startDate']">{{ backendErrors['startDate'] }}</div>
+        </div>
         <div class="col-6 form-group"><label i18n>Close On (optional)</label><input type="date" class="form-control" formControlName="endDate"></div>
       </div>
       <div class="d-flex justify-content-end" style="gap:.5rem;">
