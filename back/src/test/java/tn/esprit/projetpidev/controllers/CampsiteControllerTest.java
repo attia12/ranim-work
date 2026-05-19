@@ -134,6 +134,8 @@ class CampsiteControllerTest {
         r.setCapacity(20);
         r.setType(CampsiteType.OFFICIAL);
         r.setPricePerNight(new BigDecimal("50.00"));
+        r.setLatitude(36.8);
+        r.setLongitude(10.1);
         return r;
     }
 
