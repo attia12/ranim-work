@@ -115,7 +115,8 @@ describe('CampsiteOwnerComponent', () => {
     component.editingCampsite = null;
     component.campsiteForm.patchValue({
       name: 'New Camp', country: 'Tunisia', city: 'Tunis',
-      capacity: 10, type: 'OFFICIAL', pricePerNight: 30
+      capacity: 10, type: 'OFFICIAL', pricePerNight: 30,
+      latitude: 36.8, longitude: 10.1
     });
     component.saveCampsite();
     expect(campsiteService.create).toHaveBeenCalled();
@@ -127,7 +128,8 @@ describe('CampsiteOwnerComponent', () => {
     component.editingCampsite = mockCampsite as any;
     component.campsiteForm.patchValue({
       name: 'Updated', country: 'Tunisia', city: 'Tunis',
-      capacity: 10, type: 'OFFICIAL', pricePerNight: 30
+      capacity: 10, type: 'OFFICIAL', pricePerNight: 30,
+      latitude: 36.8, longitude: 10.1
     });
     component.saveCampsite();
     expect(campsiteService.update).toHaveBeenCalledWith(1, jasmine.any(Object));
