@@ -16,6 +16,7 @@ import tn.esprit.projetpidev.domain.enums.CampsiteType;
 import tn.esprit.projetpidev.domain.enums.Role;
 import tn.esprit.projetpidev.dto.campsitebooking.CampsiteBookingRequest;
 import tn.esprit.projetpidev.dto.campsitebooking.CampsiteBookingResponse;
+import tn.esprit.projetpidev.domain.enums.CampsiteStatus;
 import tn.esprit.projetpidev.exception.ResourceNotFoundException;
 import tn.esprit.projetpidev.repositories.CampsiteBookingRepository;
 import tn.esprit.projetpidev.repositories.CampsiteRepository;
@@ -37,6 +38,9 @@ class ICampsiteBookingServiceImplTest {
     @Mock private CampsiteRepository campsiteRepository;
     @Mock private UserRepository userRepository;
     @Mock private EmailService emailService;
+    @Mock private WsNotificationService wsNotificationService;
+    @Mock private CampsiteStatusEvaluator statusEvaluator;
+    @Mock private CampsiteStatusUpdater statusUpdater;
 
     @InjectMocks
     private ICampsiteBookingServiceImpl bookingService;
@@ -141,6 +145,10 @@ class ICampsiteBookingServiceImplTest {
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         when(userRepository.findById(1L)).thenReturn(Optional.of(camper));
         when(bookingRepository.save(any())).thenReturn(booking);
+        when(statusEvaluator.evaluate(any())).thenReturn(
+                new CampsiteStatusEvaluator.Evaluation(CampsiteStatus.ACTIVE, "All checks passed."));
+        when(statusUpdater.applyIfChanged(any(), any(), any(), any())).thenReturn(false);
+        doNothing().when(wsNotificationService).sendToUser(any(), any());
 
         CampsiteBookingResponse response = bookingService.cancel(1L, 1L, "Changed plans");
 
@@ -172,6 +180,7 @@ class ICampsiteBookingServiceImplTest {
         when(bookingRepository.save(any())).thenReturn(booking);
         doNothing().when(emailService).sendBookingConfirmationEmail(
                 any(), any(), any(), any(), any(), any());
+        doNothing().when(wsNotificationService).sendToUser(any(), any());
 
         CampsiteBookingResponse response = bookingService.confirm(1L);
 

@@ -109,7 +109,8 @@
             "polyfills": [
               "@angular/localize/init",
               "zone.js",
-              "zone.js/testing"
+              "zone.js/testing",
+              "src/window-global-fix.ts"
             ],
             "tsConfig": "tsconfig.spec.json",
             "assets": [

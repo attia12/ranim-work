@@ -32,6 +32,7 @@ class IOutdoorCampsiteServiceImplTest {
     @Mock private OutdoorCampsiteRepository outdoorCampsiteRepository;
     @Mock private UserRepository userRepository;
     @Mock private EmailService emailService;
+    @Mock private WsNotificationService wsNotificationService;
 
     @InjectMocks
     private IOutdoorCampsiteServiceImpl service;
@@ -83,6 +84,7 @@ class IOutdoorCampsiteServiceImplTest {
         when(outdoorCampsiteRepository.save(any())).thenReturn(site);
         doNothing().when(emailService).sendOutdoorCampsiteApprovalEmail(
                 any(), any(), any(), anyBoolean(), any());
+        doNothing().when(wsNotificationService).sendToUser(any(), any());
 
         ModerationRequest req = new ModerationRequest();
         req.setAction("APPROVE");
@@ -92,6 +94,7 @@ class IOutdoorCampsiteServiceImplTest {
 
         assertThat(response.getStatus()).isEqualTo(OutdoorCampsiteStatus.APPROVED);
         verify(emailService).sendOutdoorCampsiteApprovalEmail(any(), any(), any(), eq(true), any());
+        verify(wsNotificationService).sendToUser(any(), any());
     }
 
     @Test
@@ -101,6 +104,7 @@ class IOutdoorCampsiteServiceImplTest {
         when(outdoorCampsiteRepository.save(any())).thenReturn(site);
         doNothing().when(emailService).sendOutdoorCampsiteApprovalEmail(
                 any(), any(), any(), anyBoolean(), any());
+        doNothing().when(wsNotificationService).sendToUser(any(), any());
 
         ModerationRequest req = new ModerationRequest();
         req.setAction("REJECT");
@@ -110,6 +114,7 @@ class IOutdoorCampsiteServiceImplTest {
 
         assertThat(response.getStatus()).isEqualTo(OutdoorCampsiteStatus.REJECTED);
         verify(emailService).sendOutdoorCampsiteApprovalEmail(any(), any(), any(), eq(false), any());
+        verify(wsNotificationService).sendToUser(any(), any());
     }
 
     @Test

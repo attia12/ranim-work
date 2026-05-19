@@ -18,7 +18,11 @@ import tn.esprit.projetpidev.domain.enums.Role;
 import tn.esprit.projetpidev.dto.campsite.CampsiteRequest;
 import tn.esprit.projetpidev.dto.campsite.CampsiteResponse;
 import tn.esprit.projetpidev.exception.ResourceNotFoundException;
+import tn.esprit.projetpidev.repositories.AvailabilityRepository;
+import tn.esprit.projetpidev.repositories.CampsiteBookingRepository;
+import tn.esprit.projetpidev.repositories.CampsitePaymentRepository;
 import tn.esprit.projetpidev.repositories.CampsiteRepository;
+import tn.esprit.projetpidev.repositories.CampsiteStatusHistoryRepository;
 import tn.esprit.projetpidev.repositories.UserRepository;
 
 import java.math.BigDecimal;
@@ -38,6 +42,18 @@ class ICampsiteServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private AvailabilityRepository availabilityRepository;
+
+    @Mock
+    private CampsiteBookingRepository campsiteBookingRepository;
+
+    @Mock
+    private CampsitePaymentRepository campsitePaymentRepository;
+
+    @Mock
+    private CampsiteStatusHistoryRepository statusHistoryRepository;
 
     @InjectMocks
     private ICampsiteServiceImpl campsiteService;
@@ -128,15 +144,17 @@ class ICampsiteServiceImplTest {
     // ── delete ───────────────────────────────────────────────────────────────
 
     @Test
-    void delete_byAdmin_softDeletes() {
+    void delete_byAdmin_hardDeletes() {
         when(campsiteRepository.findById(10L)).thenReturn(Optional.of(campsite));
         when(userRepository.findById(2L)).thenReturn(Optional.of(adminUser));
-        when(campsiteRepository.save(any())).thenReturn(campsite);
 
         campsiteService.delete(10L, 2L);
 
-        assertThat(campsite.getStatus()).isEqualTo(CampsiteStatus.DELETED);
-        verify(campsiteRepository).save(campsite);
+        verify(campsitePaymentRepository).deleteByBooking_Campsite_Id(10L);
+        verify(campsiteBookingRepository).deleteByCampsite_Id(10L);
+        verify(statusHistoryRepository).deleteByCampsite_Id(10L);
+        verify(availabilityRepository).deleteByCampsite_Id(10L);
+        verify(campsiteRepository).deleteById(10L);
     }
 
     // ── getById ──────────────────────────────────────────────────────────────
